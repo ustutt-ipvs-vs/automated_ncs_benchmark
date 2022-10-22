@@ -2,7 +2,7 @@
 
 constexpr unsigned pinEncoderA = 2;
 constexpr unsigned pinEncoderB = 3;
-constexpr int samplingPeriodMillis = 20;
+constexpr int samplingPeriodMillis = 50;
 
 Encoder encoder(pinEncoderA, pinEncoderB);
 

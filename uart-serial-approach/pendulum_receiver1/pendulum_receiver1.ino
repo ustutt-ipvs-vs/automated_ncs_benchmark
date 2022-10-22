@@ -83,8 +83,8 @@ constexpr float ESTEP_PER_RAD = encoderPPR / TWO_PI;
 
 // Variables for remote encoder input:
 int currentEncoderValue = 0;
-elapsedMillis lastEncoderValueTime = 0;
 bool encoderInitialized = false;
+bool newEncoderValueAvailable = false; // set to true after every received value
 
 // UTILITY FUNCTIONS
 
@@ -156,8 +156,6 @@ constexpr unsigned encoderPeriod = 2000;
 
 bool isUpright = false;
 
-elapsedMillis balanceTimer = 0;  // timer for balancing control loop
-
 // elapsedMicros profileTimer = 0;  // timer for measuring execution time
 
 
@@ -190,7 +188,7 @@ constexpr float Ly33 = 0.697134003054;
 constexpr float Ly43 = 1.249973302544;
 //*/
 
-constexpr unsigned balancePeriod = 50;
+constexpr unsigned balancePeriod = 50; // number of milliseconds between samples. Must equal the sample period on the sensor side.
 
 /*
 q = Float64[ 1, 0.01, (max_pos/max_ang)^2, 0.01 ]
@@ -423,9 +421,9 @@ void updateRotaryEncoderValue() {
   while (Serial.available() > 0) {
     currentEncoderValue = Serial.readStringUntil(';').toInt();
     encoderInitialized = true;
-    lastEncoderValueTime = 0;
     Serial.read();  // read newline
     //Serial.printf("Encoder Value: %i\n", currentEncoderValue);
+    newEncoderValueAvailable = true;
   }
 }
 
@@ -549,7 +547,6 @@ void loop() {
           Serial.println("<<< BALANCE >>>");
           Serial.send_now();
           CartState = BALANCE;
-          balanceTimer = 0;
         } else
           Serial.printf("Encoder: %d -> angle = %d steps = %f°\n", encoderAbs, encoderRel, RAD_TO_DEG * RAD_PER_ESTEP * encoderRel);
         Serial.send_now();
@@ -570,8 +567,8 @@ void loop() {
         }
         break;
       }
-      if (balanceTimer >= balancePeriod) {
-        balanceTimer -= balancePeriod;
+      if (newEncoderValueAvailable) {
+        newEncoderValueAvailable = false;
         ++k;
 
         // u_accel = 0.0;  // control disabled
