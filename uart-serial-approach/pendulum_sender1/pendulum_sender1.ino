@@ -7,7 +7,8 @@ constexpr int samplingPeriodMillis = 20;
 Encoder encoder(pinEncoderA, pinEncoderB);
 
 void setup() {
-  Serial.begin(12000000);
+  //Serial.begin(12000000);
+  Serial.begin(460800);
   pinMode(LED_BUILTIN, OUTPUT);
 }
 

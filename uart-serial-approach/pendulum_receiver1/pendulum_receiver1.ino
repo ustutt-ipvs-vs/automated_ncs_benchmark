@@ -375,7 +375,8 @@ void setup() {
   rotate.overrideSpeed(0);
   rotate.overrideAcceleration(1.0);
 
-  Serial.begin(12000000);
+  // Serial.begin(12000000);
+  Serial.begin(460800);
   delay(500);
   Serial.println("Homing and balancing test...");
 
