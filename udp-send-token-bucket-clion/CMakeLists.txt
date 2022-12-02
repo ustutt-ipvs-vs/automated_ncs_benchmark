@@ -1,0 +1,9 @@
+cmake_minimum_required(VERSION 3.22)
+project(udp_send_token_bucket_clion)
+
+set(CMAKE_CXX_STANDARD 17)
+
+add_executable(udp_send_token_bucket_clion udp_mass_send_token_bucket.cpp TokenBucket.cpp TokenBucketPrioTest.hpp TokenBucketPrioTest.cpp)
+
+target_link_libraries(udp_send_token_bucket_clion sockpp)
+target_link_libraries(udp_send_token_bucket_clion CppLinuxSerial)
