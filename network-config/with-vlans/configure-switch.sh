@@ -26,5 +26,5 @@ sudo ip link set dev br0 up
 sudo ip address add 10.0.1.4/24 dev br0
 
 
-# The custom scheduling then needs to be applied to enp1s0f1.100.
+# The custom scheduling then needs to be applied to enp1s0f0 (NOT enp1s0f0.100).
 # The priority provided through the VLAN PCP can be read from the skb->priority.
