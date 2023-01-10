@@ -36,6 +36,7 @@ void CrossTrafficSender::setupPayload() {
 }
 
 void CrossTrafficSender::sendPacket() {
+    tokenBucket.reportPacketReadyToSend(payloadSize);
     int priority = tokenBucket.getPriority();
     senderSocket.set_option(SOL_SOCKET, SO_PRIORITY, priority);
     senderSocket.send_to(payload.data(), receiverAddress);
