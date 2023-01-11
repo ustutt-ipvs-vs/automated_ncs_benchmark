@@ -15,9 +15,13 @@ class TokenBucket {
         int currentPriorityClass;
         high_resolution_clock::time_point lastBucketFillTime;
         int packetCount;
-        
 
-    public:
+public:
+    double getB() const;
+
+    double getR() const;
+
+public:
         TokenBucket(double b, double r, int initialPriorityClass);
         int getPriority();
         double getBucketLevel();

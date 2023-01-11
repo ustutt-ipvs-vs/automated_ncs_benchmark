@@ -45,3 +45,11 @@ void TokenBucket::resetTimeSinceLastBucketRefill(){
 double TokenBucket::getBucketLevel(){
     return currentBucketLevel;
 }
+
+double TokenBucket::getB() const {
+    return b;
+}
+
+double TokenBucket::getR() const {
+    return r;
+}
