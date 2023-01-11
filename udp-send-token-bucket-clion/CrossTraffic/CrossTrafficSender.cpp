@@ -3,14 +3,15 @@
 
 CrossTrafficSender::CrossTrafficSender(double b, double r, int initialPriority, int bytesPerSecond,
                                        std::string receiverHost, int receiverPort, std::string name)
-        : tokenBucket(b, r, initialPriority),
-          logger(name, b, r) {
+        : logger(name, b, r) {
     this->bytesPerSecond = bytesPerSecond;
     this->name = name;
     receiverAddress = inet_address(receiverHost, receiverPort);
 
     int packetDelayNanos = (1.0 / (static_cast<double>(bytesPerSecond) / static_cast<double>(payloadSize))) * 1E9;
     packetDelay = std::chrono::nanoseconds(packetDelayNanos);
+
+    tokenBucket = new TokenBucketPrioTest(b, r, initialPriority);
 
     setupPayload();
 
@@ -36,17 +37,18 @@ void CrossTrafficSender::setupPayload() {
 }
 
 void CrossTrafficSender::sendPacket() {
-    tokenBucket.reportPacketReadyToSend(payloadSize);
-    int priority = tokenBucket.getPriority();
+    tokenBucket->reportPacketReadyToSend(payloadSize);
+    int priority = tokenBucket->getPriority();
     senderSocket.set_option(SOL_SOCKET, SO_PRIORITY, priority);
     senderSocket.send_to(payload.data(), receiverAddress);
     packetCount++;
+    bytesSentTotal += payloadSize;
 
     if (packetCount % 100 == 0) {
-        logger.log(packetCount, bytesPerSecond,  tokenBucket);
+        logger.log(packetCount, bytesSentTotal, tokenBucket);
         std::cout << name << ": "
                   << "Sent " << packetCount << " packets."
-                  << "Bucket Level: " << tokenBucket.getBucketLevel()
-                  << " Prio: " << tokenBucket.getPriority() << std::endl;
+                  << "Bucket Level: " << tokenBucket->getBucketLevel()
+                  << " Prio: " << tokenBucket->getPriority() << std::endl;
     }
 }

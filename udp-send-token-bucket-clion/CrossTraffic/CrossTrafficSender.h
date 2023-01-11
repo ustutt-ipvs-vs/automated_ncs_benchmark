@@ -6,7 +6,7 @@
 #include <atomic>
 #include "../TokenBucket.hpp"
 #include "../TokenBucketPrioTest.hpp"
-#include "../Logging/StreamLogger.h"
+#include "../Logging/CrossTrafficLogger.h"
 
 using sockpp::udp_socket;
 using sockpp::inet_address;
@@ -16,15 +16,16 @@ private:
     int bytesPerSecond;
     int payloadSize = 1400;
     std::chrono::nanoseconds packetDelay;
-    int packetCount = 0;
+    unsigned long long packetCount = 0;
+    unsigned long long bytesSentTotal = 0;
     std::atomic<bool> stopSending{false};
     std::string name;
-    StreamLogger logger;
+    CrossTrafficLogger logger;
 
 
     udp_socket senderSocket;
     inet_address receiverAddress;
-    TokenBucketPrioTest tokenBucket;
+    TokenBucket* tokenBucket;
     std::vector<char> payload;
     void setupPayload();
     void sendPacket();
