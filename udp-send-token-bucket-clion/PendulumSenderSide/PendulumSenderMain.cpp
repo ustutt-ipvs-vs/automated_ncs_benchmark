@@ -13,16 +13,18 @@ double b = 2'000;
 double r = 1'000;
 int initialPriority = 0;
 
-PendulumSender sender(device, host, port, b, r, initialPriority);
+PendulumSender* sender;
 
 
 void sigIntHandler(int signal){
     std::cout << "Received Signal: " << signal << std::endl;
-    sender.stop();
+    sender->stop();
+    delete sender;
     exit(0);
 }
 
 int main(){
     signal(SIGINT, sigIntHandler);
-    sender.start();
+    sender = new PendulumSender(device, host, port, b, r, initialPriority);
+    sender->start();
 }

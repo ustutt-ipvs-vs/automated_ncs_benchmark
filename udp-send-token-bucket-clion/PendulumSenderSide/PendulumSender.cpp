@@ -12,13 +12,13 @@ PendulumSender::PendulumSender(std::string serialDeviceName, std::string receive
 
     serialSensor = SerialPort(serialDeviceName, BaudRate::B_460800, NumDataBits::EIGHT, Parity::NONE, NumStopBits::ONE);
     serialSensor.SetTimeout(-1);
-    serialSensor.Open();
 
     tokenBucket = new TokenBucketPrioTest(b, r, initialPriority);
 }
 
 void PendulumSender::start() {
-    //serialSensor.Open();
+    serialSensor.Open();
+
     // Wait for first serial values to arrive, before going into main loop:
     std::cout << "Waiting for first sensor value" << std::endl;
     serialSensor.Read(serialInputBuffer);

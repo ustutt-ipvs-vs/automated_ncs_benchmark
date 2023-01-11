@@ -10,15 +10,17 @@ std::string device = "/dev/ttyACM0";
 std::string host = "10.0.1.2";
 int port = 3000;
 
-PendulumReceiver receiver(device, host, port);
+PendulumReceiver* receiver;
 
 void sigIntHandler(int signal){
     std::cout << "Received Signal: " << signal << std::endl;
-    receiver.stop();
+    receiver->stop();
+    delete receiver;
     exit(0);
 }
 
 int main(){
     signal(SIGINT, sigIntHandler);
-    receiver.start();
+    receiver = new PendulumReceiver(device, host, port);
+    receiver->start();
 }
