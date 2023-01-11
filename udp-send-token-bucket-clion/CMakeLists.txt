@@ -5,7 +5,9 @@ set(CMAKE_CXX_STANDARD 17)
 
 add_executable(udp_send_token_bucket_clion udp_mass_send_token_bucket.cpp TokenBucket.cpp TokenBucketPrioTest.hpp TokenBucketPrioTest.cpp)
 add_executable(cross_traffic_host CrossTrafficHost.cpp TokenBucket.cpp TokenBucketPrioTest.hpp TokenBucketPrioTest.cpp)
-add_executable(cross_traffic CrossTraffic/CrossTrafficSender.cpp CrossTraffic/CrossTrafficSender.h CrossTraffic/CrossTrafficSenderOrchestrator.cpp CrossTraffic/CrossTrafficSenderOrchestrator.h CrossTraffic/CrossTrafficMain.cpp TokenBucket.cpp TokenBucketPrioTest.hpp TokenBucketPrioTest.cpp Logging/StreamLogger.cpp Logging/StreamLogger.h Logging/LogTimepointEntry.cpp Logging/LogTimepointEntry.h nlohmann/json.hpp)
+
+add_executable(cross_traffic CrossTraffic/CrossTrafficSender.cpp CrossTraffic/CrossTrafficSender.h CrossTraffic/CrossTrafficSenderOrchestrator.cpp CrossTraffic/CrossTrafficSenderOrchestrator.h CrossTraffic/CrossTrafficMain.cpp TokenBucket.cpp TokenBucketPrioTest.hpp TokenBucketPrioTest.cpp Logging/Logger.cpp Logging/Logger.h Logging/LogTimepointEntry.cpp Logging/LogTimepointEntry.h nlohmann/json.hpp Logging/CrossTrafficLogger.cpp Logging/CrossTrafficLogger.h)
+add_executable(pendulum_sender PendulumSenderSide/PendulumSender.cpp PendulumSenderSide/PendulumSender.h Logging/PendulumLogger.cpp Logging/PendulumLogger.h Logging/PendulumLogTimepointEntry.cpp Logging/PendulumLogTimepointEntry.h Logging/Logger.cpp Logging/Logger.h Logging/LogTimepointEntry.cpp Logging/LogTimepointEntry.h nlohmann/json.hpp TokenBucket.cpp TokenBucketPrioTest.hpp TokenBucketPrioTest.cpp PendulumSenderSide/PendulumMain.cpp)
 
 target_link_libraries(udp_send_token_bucket_clion sockpp)
 target_link_libraries(udp_send_token_bucket_clion CppLinuxSerial)
@@ -13,3 +15,6 @@ target_link_libraries(udp_send_token_bucket_clion CppLinuxSerial)
 target_link_libraries(cross_traffic_host sockpp)
 
 target_link_libraries(cross_traffic sockpp)
+
+target_link_libraries(pendulum_sender sockpp)
+target_link_libraries(pendulum_sender CppLinuxSerial)
