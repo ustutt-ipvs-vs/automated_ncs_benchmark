@@ -4,23 +4,18 @@
 
 #include "CrossTrafficLogger.h"
 
-CrossTrafficLogger::CrossTrafficLogger(std::string name, double b, double r) : Logger(name) {
-    this->b = b;
-    this->r = r;
-}
+CrossTrafficLogger::CrossTrafficLogger(std::string name) : Logger(name) {}
 
-void CrossTrafficLogger::log(unsigned long long packetCount, unsigned long long bytesSentTotal, TokenBucket* tokenBucket) {
+void CrossTrafficLogger::log(unsigned long long packetCount, unsigned long long bytesSentTotal,
+                             SchedulingInfoEntry *schedulingInfo) {
     time_point<system_clock> currentTime = system_clock::now();
-    LogTimepointEntry entry(currentTime, tokenBucket->getPriority(), tokenBucket->getBucketLevel(), packetCount,
-                            bytesSentTotal);
+    LogEntry entry(currentTime, packetCount, bytesSentTotal, schedulingInfo);
     timepointLogs.emplace_back(entry);
 }
 
 nlohmann::json CrossTrafficLogger::toJsonObject() {
     nlohmann::json jsonObject = {
             {"name",          name},
-            {"b",             b},
-            {"r",             r},
             {"timePointLogs", timepointLogs}
     };
     return jsonObject;

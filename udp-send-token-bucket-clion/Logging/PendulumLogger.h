@@ -7,17 +7,20 @@
 
 
 #include "Logger.h"
-#include "PendulumLogTimepointEntry.h"
+#include "LogEntries/PendulumLogEntry.h"
 
-class PendulumLogger : public Logger{
+class PendulumLogger : public Logger {
 public:
-    PendulumLogger(std::string name, double b, double r);
-    void log(unsigned long long packetCount, unsigned long long bytesSentTotal, TokenBucket* tokenBucket, std::string payload);
+    explicit PendulumLogger(std::string name);
+
+    void log(unsigned long long packetCount, unsigned long long bytesSentTotal, std::string payload,
+             SchedulingInfoEntry *schedulingInfo);
+    void log(unsigned long long packetCount, unsigned long long bytesSentTotal, std::string payload);
+
     nlohmann::json toJsonObject() override;
 
 private:
-    double b, r;
-    std::vector<PendulumLogTimepointEntry> timepointLogs;
+    std::vector<PendulumLogEntry> timepointLogs;
 };
 
 

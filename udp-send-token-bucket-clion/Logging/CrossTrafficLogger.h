@@ -10,13 +10,12 @@
 
 class CrossTrafficLogger : public Logger {
 public:
-    CrossTrafficLogger(std::string name, double b, double r);
-    void log(unsigned long long packetCount, unsigned long long bytesSentTotal, TokenBucket* tokenBucket);
+    explicit CrossTrafficLogger(std::string name);
+    void log(unsigned long long packetCount, unsigned long long bytesSentTotal, SchedulingInfoEntry* schedulingInfo);
     nlohmann::json toJsonObject() override;
 
 private:
-    double b, r;
-    std::vector<LogTimepointEntry> timepointLogs;
+    std::vector<LogEntry> timepointLogs;
 };
 
 

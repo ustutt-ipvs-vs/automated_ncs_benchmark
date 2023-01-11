@@ -5,29 +5,31 @@
 #include "PendulumLogger.h"
 #include <sstream>
 
-PendulumLogger::PendulumLogger(std::string name, double b, double r) : Logger(name) {
-    this->b = b;
-    this->r = r;
-}
+PendulumLogger::PendulumLogger(std::string name) : Logger(name) {}
 
-void PendulumLogger::log(unsigned long long packetCount, unsigned long long bytesSentTotal, TokenBucket *tokenBucket, std::string payload) {
+void PendulumLogger::log(unsigned long long packetCount, unsigned long long bytesSentTotal, std::string payload,
+                         SchedulingInfoEntry *schedulingInfo) {
     time_point<system_clock> currentTime = system_clock::now();
 
     // payload must be of the form "1234;5678;\n"
     int pendulumSensorValue, samplingPeriodMillis;
     std::stringstream(payload) >> pendulumSensorValue >> samplingPeriodMillis;
 
-    PendulumLogTimepointEntry entry(currentTime, tokenBucket->getPriority(), tokenBucket->getBucketLevel(), packetCount,
-                                    bytesSentTotal, pendulumSensorValue, samplingPeriodMillis);
+
+    PendulumLogEntry entry(currentTime, packetCount, bytesSentTotal, pendulumSensorValue,
+                           samplingPeriodMillis, schedulingInfo);
     timepointLogs.emplace_back(entry);
+}
+
+void PendulumLogger::log(unsigned long long int packetCount, unsigned long long int bytesSentTotal, std::string payload){
+    log(packetCount, bytesSentTotal, payload, nullptr);
 }
 
 nlohmann::json PendulumLogger::toJsonObject() {
     nlohmann::json jsonObject = {
             {"name",          name},
-            {"b",             b},
-            {"r",             r},
-            {"timePointLogs", timepointLogs}
+            {"timePointLogs", timepointLogs},
     };
     return jsonObject;
 }
+

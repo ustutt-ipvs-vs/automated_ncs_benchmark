@@ -5,7 +5,7 @@
 #include <string>
 #include <vector>
 #include "../TokenBucket.hpp"
-#include "LogTimepointEntry.h"
+#include "LogEntries/LogEntry.h"
 
 using std::chrono::time_point;
 using std::chrono::system_clock;
@@ -22,8 +22,6 @@ public:
 protected:
     std::string name;
     std::time_t startTime;
-    //double b, r;
-    //std::vector<LogTimepointEntry> timepointLogs;
 };
 
 

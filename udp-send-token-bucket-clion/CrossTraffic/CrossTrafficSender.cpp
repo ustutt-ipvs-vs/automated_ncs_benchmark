@@ -1,9 +1,9 @@
 #include <thread>
 #include "CrossTrafficSender.h"
+#include "../Logging/LogEntries/SchedulingInfoEntries/TokenBucketInfoEntry.h"
 
 CrossTrafficSender::CrossTrafficSender(double b, double r, int initialPriority, int bytesPerSecond,
-                                       std::string receiverHost, int receiverPort, std::string name)
-        : logger(name, b, r) {
+                                       std::string receiverHost, int receiverPort, std::string name): logger(name) {
     this->bytesPerSecond = bytesPerSecond;
     this->name = name;
     receiverAddress = inet_address(receiverHost, receiverPort);
@@ -45,7 +45,7 @@ void CrossTrafficSender::sendPacket() {
     bytesSentTotal += payloadSize;
 
     if (packetCount % 100 == 0) {
-        logger.log(packetCount, bytesSentTotal, tokenBucket);
+        logger.log(packetCount, bytesSentTotal, new TokenBucketInfoEntry(tokenBucket));
         std::cout << name << ": "
                   << "Sent " << packetCount << " packets."
                   << "Bucket Level: " << tokenBucket->getBucketLevel()
