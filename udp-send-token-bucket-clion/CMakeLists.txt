@@ -3,9 +3,6 @@ project(udp_send_token_bucket_clion)
 
 set(CMAKE_CXX_STANDARD 17)
 
-add_executable(udp_send_token_bucket_clion udp_mass_send_token_bucket.cpp TokenBucket.cpp TokenBucketPrioTest.hpp TokenBucketPrioTest.cpp)
-add_executable(cross_traffic_host CrossTrafficHost.cpp TokenBucket.cpp TokenBucketPrioTest.hpp TokenBucketPrioTest.cpp)
-
 add_executable(cross_traffic
         CrossTraffic/CrossTrafficSender.cpp
         CrossTraffic/CrossTrafficSender.h
@@ -61,10 +58,6 @@ add_executable(pendulum_receiver
         nlohmann/json.hpp
         )
 
-target_link_libraries(udp_send_token_bucket_clion sockpp)
-target_link_libraries(udp_send_token_bucket_clion CppLinuxSerial)
-
-target_link_libraries(cross_traffic_host sockpp)
 
 target_link_libraries(cross_traffic sockpp)
 
