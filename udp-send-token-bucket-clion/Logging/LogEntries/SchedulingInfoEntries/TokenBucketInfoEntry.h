@@ -7,7 +7,7 @@
 
 
 #include "SchedulingInfoEntry.h"
-#include "../../../TokenBucket.hpp"
+#include "../../../Scheduling/TokenBucket.hpp"
 
 class TokenBucketInfoEntry : public SchedulingInfoEntry{
 private:

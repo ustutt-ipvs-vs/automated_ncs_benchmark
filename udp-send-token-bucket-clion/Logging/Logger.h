@@ -4,7 +4,7 @@
 
 #include <string>
 #include <vector>
-#include "../TokenBucket.hpp"
+#include "../Scheduling/TokenBucket.hpp"
 #include "LogEntries/LogEntry.h"
 
 using std::chrono::time_point;
