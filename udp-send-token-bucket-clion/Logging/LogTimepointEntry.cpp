@@ -1,12 +1,12 @@
 #include "LogTimepointEntry.h"
 
 LogTimepointEntry::LogTimepointEntry(time_point<system_clock> timePoint, int priority, double bucketLevel,
-                                     int packetCount, int bytesSentPerSecond) {
+                                     int packetCount, int bytesSentTotal) {
     this->timePoint = timePoint;
     this->priority = priority;
     this->bucketLevel = bucketLevel;
     this->packetCount = packetCount;
-    this->bytesSentPerSecond = bytesSentPerSecond;
+    this->bytesSentTotal = bytesSentTotal;
 }
 
 time_point<system_clock> LogTimepointEntry::getTimePoint() const {
@@ -25,8 +25,8 @@ int LogTimepointEntry::getPacketCount() const {
     return packetCount;
 }
 
-int LogTimepointEntry::getBytesSentPerSecond() const {
-    return bytesSentPerSecond;
+int LogTimepointEntry::getBytesSentTotal() const {
+    return bytesSentTotal;
 }
 
 nlohmann::json LogTimepointEntry::toJsonObject() {
@@ -44,7 +44,7 @@ void to_json(nlohmann::json &jsonObject, const LogTimepointEntry &entry) {
             {"priority",           entry.getPriority()},
             {"bucketLevel",        entry.getBucketLevel()},
             {"packetCount",        entry.getPacketCount()},
-            {"bytesSentPerSecond", entry.getBytesSentPerSecond()}
+            {"bytesSentTotal", entry.getBytesSentTotal()}
     };
 }
 

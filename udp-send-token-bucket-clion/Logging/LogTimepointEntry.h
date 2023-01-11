@@ -8,12 +8,12 @@ using std::chrono::time_point;
 using std::chrono::system_clock;
 
 class LogTimepointEntry {
-private:
+protected:
     time_point<system_clock> timePoint;
     int priority;
     double bucketLevel;
     int packetCount;
-    int bytesSentPerSecond;
+    int bytesSentTotal;
 public:
     time_point<system_clock> getTimePoint() const;
 
@@ -23,10 +23,10 @@ public:
 
     int getPacketCount() const;
 
-    int getBytesSentPerSecond() const;
+    int getBytesSentTotal() const;
 
 public:
-    LogTimepointEntry(time_point<system_clock> timePoint, int priority, double bucketLevel, int packetCount, int bytesSentPerSecond);
+    LogTimepointEntry(time_point<system_clock> timePoint, int priority, double bucketLevel, int packetCount, int bytesSentTotal);
     nlohmann::json toJsonObject();
 };
 
