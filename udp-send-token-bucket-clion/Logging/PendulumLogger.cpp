@@ -13,8 +13,10 @@ void PendulumLogger::log(unsigned long long packetCount, unsigned long long byte
 
     // payload must be of the form "1234;5678;\n"
     int pendulumSensorValue, samplingPeriodMillis;
-    std::stringstream(payload) >> pendulumSensorValue >> samplingPeriodMillis;
-
+    std::stringstream stringStream(payload);
+    stringStream >> pendulumSensorValue;
+    stringStream.ignore(); // skip ';'
+    stringStream >> samplingPeriodMillis;
 
     PendulumLogEntry entry(currentTime, packetCount, bytesSentTotal, pendulumSensorValue,
                            samplingPeriodMillis, schedulingInfo);
