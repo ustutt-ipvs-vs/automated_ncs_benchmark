@@ -61,7 +61,7 @@ ActuatorLogEntry::ActuatorLogEntry(const time_point<system_clock> &timePoint, un
 
 // JSON converter class (used implicitly by nlohmann/json.hpp):
 void to_json(nlohmann::json &jsonObject, const ActuatorLogEntry &entry) {
-    long timePointAsUnixMillis = std::chrono::duration_cast<std::chrono::milliseconds>(
+    unsigned long long timePointAsUnixMillis = std::chrono::duration_cast<std::chrono::milliseconds>(
             entry.getTimePoint().time_since_epoch()).count();
 
     jsonObject = {

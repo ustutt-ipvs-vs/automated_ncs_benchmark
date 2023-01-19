@@ -36,7 +36,7 @@ SchedulingInfoEntry *LogEntry::getSchedulingInfo() const {
 
 // JSON converter class (used implicitely by nlohmann/json.hpp):
 void to_json(nlohmann::json &jsonObject, const LogEntry &entry) {
-    long timePointAsUnixMillis = std::chrono::duration_cast<std::chrono::milliseconds>(
+    unsigned long long timePointAsUnixMillis = std::chrono::duration_cast<std::chrono::milliseconds>(
             entry.getTimePoint().time_since_epoch()).count();
 
     jsonObject = {
