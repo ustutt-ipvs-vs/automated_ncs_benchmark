@@ -40,4 +40,5 @@ void PendulumReceiver::stop() {
     stopReceiving = true;
     receiverSocket.close();
     serialActuator.Close();
+    logger.saveToFile();
 }
