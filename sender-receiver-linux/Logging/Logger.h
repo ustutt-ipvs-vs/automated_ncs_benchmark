@@ -13,7 +13,6 @@ using std::chrono::system_clock;
 class Logger {
 public:
     Logger(std::string name);
-    //void log(int packetCount, int bytesSentTotal, TokenBucket* tokenBucket);
     virtual void saveToFile(std::string filename);
     virtual void saveToFile();
     virtual std::string toJsonString();
