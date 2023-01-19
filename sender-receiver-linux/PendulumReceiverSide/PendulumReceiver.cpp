@@ -32,6 +32,10 @@ void PendulumReceiver::start() {
         while (serialActuator.Available() > 0) {
             serialActuator.Read(serialInput);
             std::cout << "Actuator: " << serialInput << std::endl;
+
+            if (serialInput.rfind("log:", 0) == 0) {
+                logger.logActuator(serialInput);
+            }
         }
     }
 }

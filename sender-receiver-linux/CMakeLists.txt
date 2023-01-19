@@ -41,6 +41,8 @@ add_executable(pendulum_sender
         Logging/LogEntries/SchedulingInfoEntries/SchedulingInfoEntry.h
         Logging/LogEntries/SchedulingInfoEntries/TokenBucketInfoEntry.cpp
         Logging/LogEntries/SchedulingInfoEntries/TokenBucketInfoEntry.h
+        Logging/LogEntries/ActuatorLogEntry.cpp
+        Logging/LogEntries/ActuatorLogEntry.h
         )
 
 add_executable(pendulum_receiver
@@ -56,7 +58,8 @@ add_executable(pendulum_receiver
         Logging/LogEntries/LogEntry.cpp
         Logging/LogEntries/LogEntry.h
         nlohmann/json.hpp
-        )
+        Logging/LogEntries/ActuatorLogEntry.cpp
+        Logging/LogEntries/ActuatorLogEntry.h)
 
 
 target_link_libraries(cross_traffic sockpp)

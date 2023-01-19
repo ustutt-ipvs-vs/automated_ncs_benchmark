@@ -8,6 +8,7 @@
 
 #include "Logger.h"
 #include "LogEntries/PendulumLogEntry.h"
+#include "LogEntries/ActuatorLogEntry.h"
 
 class PendulumLogger : public Logger {
 public:
@@ -16,11 +17,13 @@ public:
     void log(unsigned long long packetCount, unsigned long long bytesSentTotal, std::string payload,
              SchedulingInfoEntry *schedulingInfo);
     void log(unsigned long long packetCount, unsigned long long bytesSentTotal, std::string payload);
+    void logActuator(std::string logString);
 
     nlohmann::json toJsonObject() override;
 
 private:
     std::vector<PendulumLogEntry> timepointLogs;
+    std::vector<ActuatorLogEntry> actuatorLogs;
 };
 
 
