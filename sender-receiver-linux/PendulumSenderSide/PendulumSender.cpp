@@ -47,7 +47,7 @@ void PendulumSender::sendPacket(std::string payload) {
     logger.log(packetCount, bytesSentTotal, payload, new TokenBucketInfoEntry(tokenBucket));
 
     if (packetCount % 10 == 0) {
-        std::cout << "PendulumSender: "<< ": "
+        std::cout << "PendulumSender: "
                   << "Sent " << packetCount << " packets."
                   << " Bucket Level: " << tokenBucket->getBucketLevel()
                   << " Prio: " << tokenBucket->getPriority()
