@@ -20,7 +20,11 @@ add_executable(cross_traffic
         Logging/CrossTrafficLogger.h
         Logging/LogEntries/SchedulingInfoEntries/TokenBucketInfoEntry.cpp
         Logging/LogEntries/SchedulingInfoEntries/TokenBucketInfoEntry.h
-        )
+        Scheduling/PriorityDeterminer.h
+        Logging/LogEntries/SchedulingInfoEntries/ConstantPrioInfoEntry.cpp
+        Logging/LogEntries/SchedulingInfoEntries/ConstantPrioInfoEntry.h
+        Scheduling/ConstantPriority.cpp
+        Scheduling/ConstantPriority.h)
 
 add_executable(pendulum_sender
         PendulumSenderSide/PendulumSender.cpp
@@ -41,9 +45,12 @@ add_executable(pendulum_sender
         Logging/LogEntries/SchedulingInfoEntries/SchedulingInfoEntry.h
         Logging/LogEntries/SchedulingInfoEntries/TokenBucketInfoEntry.cpp
         Logging/LogEntries/SchedulingInfoEntries/TokenBucketInfoEntry.h
+        Logging/LogEntries/SchedulingInfoEntries/ConstantPrioInfoEntry.cpp
+        Logging/LogEntries/SchedulingInfoEntries/ConstantPrioInfoEntry.h
         Logging/LogEntries/ActuatorLogEntry.cpp
         Logging/LogEntries/ActuatorLogEntry.h
-        )
+        Scheduling/ConstantPriority.cpp
+        Scheduling/ConstantPriority.h)
 
 add_executable(pendulum_receiver
         PendulumReceiverSide/PendulumReceiverMain.cpp

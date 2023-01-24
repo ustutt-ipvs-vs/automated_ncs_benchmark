@@ -25,7 +25,7 @@ private:
 
     udp_socket senderSocket;
     inet_address receiverAddress;
-    TokenBucket *tokenBucket;
+    PriorityDeterminer *priorityDeterminer;
     std::vector<char> payload;
 
     void setupPayload();
@@ -34,7 +34,7 @@ private:
 
 
 public:
-    CrossTrafficSender(double b, double r, int initialPriority, int bytesPerSecond, std::string receiverHost,
+    CrossTrafficSender(PriorityDeterminer* priorityDeterminer, int bytesPerSecond, std::string receiverHost,
                        int receiverPort, std::string name);
 
     void start();

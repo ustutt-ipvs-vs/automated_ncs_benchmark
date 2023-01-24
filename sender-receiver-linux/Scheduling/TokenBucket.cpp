@@ -1,5 +1,6 @@
 
 #include "TokenBucket.hpp"
+#include "../Logging/LogEntries/SchedulingInfoEntries/TokenBucketInfoEntry.h"
 
 TokenBucket::TokenBucket(double b, double r, int initialPriorityClass){
     this->b = b;
@@ -52,4 +53,14 @@ double TokenBucket::getB() const {
 
 double TokenBucket::getR() const {
     return r;
+}
+
+SchedulingInfoEntry *TokenBucket::getSchedulingInfoEntry() {
+    return new TokenBucketInfoEntry(this);
+}
+
+std::string TokenBucket::getDebugInfoString() {
+    std::stringstream ss;
+    ss << "Bucket Level: " << currentBucketLevel << " Priority: " << currentPriorityClass;
+    return ss.str();
 }

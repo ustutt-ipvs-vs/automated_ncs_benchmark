@@ -2,12 +2,13 @@
 #define TOKEN_BUCKET_H
 
 #include <chrono>
+#include "PriorityDeterminer.h"
 
 using std::chrono::high_resolution_clock;
 using std::chrono::duration_cast;
 using std::chrono::microseconds;
 
-class TokenBucket {
+class TokenBucket : public PriorityDeterminer {
     protected:
         double b;
         double r;
@@ -23,9 +24,11 @@ public:
 
 public:
         TokenBucket(double b, double r, int initialPriorityClass);
-        int getPriority();
+        int getPriority() override;
         double getBucketLevel();
-        void reportPacketReadyToSend(int payloadSizeBytes);
+        void reportPacketReadyToSend(int payloadSizeBytes) override;
+        SchedulingInfoEntry * getSchedulingInfoEntry() override;
+        std::string getDebugInfoString() override;
 
 
     protected:

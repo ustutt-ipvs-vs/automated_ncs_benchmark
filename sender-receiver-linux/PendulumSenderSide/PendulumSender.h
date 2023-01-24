@@ -25,7 +25,7 @@ private:
     std::string serialDeviceName;
     inet_address receiverAddress;
     udp_socket senderSocket;
-    TokenBucket* tokenBucket;
+    PriorityDeterminer* priorityDeterminer;
     std::atomic<bool> stopSending{false};
     SerialPort serialSensor;
     PendulumLogger logger;
@@ -35,7 +35,7 @@ private:
     unsigned long long bytesSentTotal = 0;
 
 public:
-    PendulumSender(std::string serialDeviceName, std::string receiverHost, int receiverPort, double b, double r, int initialPriority);
+    PendulumSender(PriorityDeterminer* priorityDeterminer, std::string serialDeviceName, std::string receiverHost, int receiverPort);
     void start();
     void stop();
 

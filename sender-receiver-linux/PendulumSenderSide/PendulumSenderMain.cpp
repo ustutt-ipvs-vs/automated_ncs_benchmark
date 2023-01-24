@@ -25,6 +25,7 @@ void sigIntHandler(int signal){
 
 int main(){
     signal(SIGINT, sigIntHandler);
-    sender = new PendulumSender(device, host, port, b, r, initialPriority);
+    PriorityDeterminer* determiner = new TokenBucketPrioTest(b, r, initialPriority);
+    sender = new PendulumSender(determiner, device, host, port);
     sender->start();
 }

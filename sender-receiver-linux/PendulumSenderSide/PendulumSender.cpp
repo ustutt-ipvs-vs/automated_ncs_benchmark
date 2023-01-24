@@ -5,15 +5,14 @@
 #include "PendulumSender.h"
 #include "../Logging/LogEntries/SchedulingInfoEntries/TokenBucketInfoEntry.h"
 
-PendulumSender::PendulumSender(std::string serialDeviceName, std::string receiverHost, int receiverPort, double b,
-                               double r, int initialPriority) : logger("pendulumsender") {
+PendulumSender::PendulumSender(PriorityDeterminer* priorityDeterminer, std::string serialDeviceName, std::string receiverHost, int receiverPort) : logger("pendulumsender") {
     this->serialDeviceName = serialDeviceName;
     receiverAddress = inet_address(receiverHost, receiverPort);
 
     serialSensor = SerialPort(serialDeviceName, BaudRate::B_460800, NumDataBits::EIGHT, Parity::NONE, NumStopBits::ONE);
     serialSensor.SetTimeout(-1);
 
-    tokenBucket = new TokenBucketPrioTest(b, r, initialPriority);
+    this->priorityDeterminer = priorityDeterminer;
 }
 
 void PendulumSender::start() {
@@ -37,20 +36,19 @@ void PendulumSender::stop() {
 }
 
 void PendulumSender::sendPacket(std::string payload) {
-    tokenBucket->reportPacketReadyToSend(payload.size());
-    int priority = tokenBucket->getPriority();
+    priorityDeterminer->reportPacketReadyToSend(payload.size());
+    int priority = priorityDeterminer->getPriority();
     senderSocket.set_option(SOL_SOCKET, SO_PRIORITY, priority);
     senderSocket.send_to(payload, receiverAddress);
     packetCount++;
     bytesSentTotal += payload.size();
 
-    logger.log(packetCount, bytesSentTotal, payload, new TokenBucketInfoEntry(tokenBucket));
+    logger.log(packetCount, bytesSentTotal, payload, priorityDeterminer->getSchedulingInfoEntry());
 
     if (packetCount % 10 == 0) {
         std::cout << "PendulumSender: "
-                  << "Sent " << packetCount << " packets."
-                  << " Bucket Level: " << tokenBucket->getBucketLevel()
-                  << " Prio: " << tokenBucket->getPriority()
+                  << "Sent " << packetCount << " packets. "
+                  << priorityDeterminer->getDebugInfoString()
                   << " Payload: " << payload
                   << std::endl;
     }
