@@ -50,7 +50,9 @@ add_executable(pendulum_sender
         Logging/LogEntries/ActuatorLogEntry.cpp
         Logging/LogEntries/ActuatorLogEntry.h
         Scheduling/ConstantPriority.cpp
-        Scheduling/ConstantPriority.h)
+        Scheduling/ConstantPriority.h
+        Logging/LogEntries/PauseLogEntry.h
+        Logging/LogEntries/PauseLogEntry.cpp)
 
 add_executable(pendulum_receiver
         PendulumReceiverSide/PendulumReceiverMain.cpp
@@ -66,7 +68,9 @@ add_executable(pendulum_receiver
         Logging/LogEntries/LogEntry.h
         nlohmann/json.hpp
         Logging/LogEntries/ActuatorLogEntry.cpp
-        Logging/LogEntries/ActuatorLogEntry.h)
+        Logging/LogEntries/ActuatorLogEntry.h
+        Logging/LogEntries/PauseLogEntry.h
+        Logging/LogEntries/PauseLogEntry.cpp)
 
 
 target_link_libraries(cross_traffic sockpp)
