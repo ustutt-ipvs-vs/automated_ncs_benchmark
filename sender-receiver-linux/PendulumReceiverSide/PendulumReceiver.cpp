@@ -4,10 +4,11 @@
 
 #include "PendulumReceiver.h"
 
-PendulumReceiver::PendulumReceiver(std::string serialDeviceName, std::string receiverHost, int receiverPort)
+PendulumReceiver::PendulumReceiver(std::string serialDeviceName, std::string receiverHost, int receiverPort, bool doPauses)
         : logger("pendulumreceiver") {
     this->serialDeviceName = serialDeviceName;
     this->receiverAddress = inet_address(receiverHost, receiverPort);
+    this->doPauses = doPauses;
 
     receiverSocket.bind(receiverAddress);
 
@@ -27,7 +28,11 @@ void PendulumReceiver::start() {
         bytesReceivedTotal += networkInput.size();
         logger.log(packetCount, bytesReceivedTotal, networkInput);
 
-        serialActuator.Write(networkInput);
+        if(doPauses && isTimeForPause()){
+            sendPauseSignal();
+        } else {
+            serialActuator.Write(networkInput);
+        }
 
         while (serialActuator.Available() > 0) {
             serialActuator.Read(serialInput);
@@ -35,9 +40,32 @@ void PendulumReceiver::start() {
 
             if (serialInput.rfind("log:", 0) == 0) {
                 logger.logActuator(serialInput);
+
+                if(!startedBalancing) {
+                    startedBalancing = true;
+                    lastPauseTime = high_resolution_clock::now();
+                }
             }
         }
     }
+}
+
+void PendulumReceiver::sendPauseSignal() {
+    // The pause signal has the form (for 800ms pause duration):
+    // PAUSE;800;
+    lastPauseTime = high_resolution_clock::now();
+    std::stringstream ss;
+    ss << "PAUSE;" << pauseDurationMillis << ";" << std::endl;
+    serialActuator.Write(ss.str());
+    logger.logPause(pauseDurationMillis);
+}
+
+bool PendulumReceiver::isTimeForPause() const {
+    if(!startedBalancing){
+        return false;
+    }
+    auto currentTime = high_resolution_clock::now();
+    return std::chrono::duration_cast<milliseconds>(currentTime - lastPauseTime).count() > timeBetweenPausesMillis;
 }
 
 void PendulumReceiver::stop() {
@@ -46,3 +74,4 @@ void PendulumReceiver::stop() {
     serialActuator.Close();
     logger.saveToFile();
 }
+

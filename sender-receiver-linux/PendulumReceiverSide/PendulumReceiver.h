@@ -9,6 +9,7 @@
 #include <CppLinuxSerial/SerialPort.hpp>
 #include <atomic>
 #include "../Logging/PendulumLogger.h"
+#include <chrono>
 
 using sockpp::udp_socket;
 using sockpp::inet_address;
@@ -20,6 +21,13 @@ using mn::CppLinuxSerial::Parity;
 using mn::CppLinuxSerial::NumStopBits;
 using sockpp::udp_socket;
 using sockpp::inet_address;
+
+using std::chrono::high_resolution_clock;
+using std::chrono::duration_cast;
+using std::chrono::duration;
+using std::chrono::milliseconds;
+using std::chrono::time_point;
+using std::chrono::system_clock;
 
 class PendulumReceiver {
 private:
@@ -37,11 +45,20 @@ private:
     unsigned long long packetCount = 0;
     unsigned long long bytesReceivedTotal = 0;
 
+    time_point<system_clock> lastPauseTime;
+    bool startedBalancing = false;
+    const unsigned int timeBetweenPausesMillis = 10'000;
+    const unsigned int pauseDurationMillis = 800;
+    bool doPauses = false;
+
 public:
-    PendulumReceiver(std::string serialDeviceName, std::string receiverHost, int receiverPort);
+    PendulumReceiver(std::string serialDeviceName, std::string receiverHost, int receiverPort, bool doPauses = false);
     void start();
     void stop();
 
+    bool isTimeForPause() const;
+
+    void sendPauseSignal();
 };
 
 

@@ -69,9 +69,16 @@ nlohmann::json PendulumLogger::toJsonObject() {
     nlohmann::json jsonObject = {
             {"name",          name},
             {"timePointLogs", timepointLogs},
-            {"actuatorLogs", actuatorLogs}
+            {"actuatorLogs", actuatorLogs},
+            {"pauseLogs", pauseLogs}
     };
     return jsonObject;
+}
+
+void PendulumLogger::logPause(unsigned int durationMillis) {
+    time_point<system_clock> currentTime = system_clock::now();
+    PauseLogEntry entry(currentTime, durationMillis);
+    pauseLogs.emplace_back(entry);
 }
 
 

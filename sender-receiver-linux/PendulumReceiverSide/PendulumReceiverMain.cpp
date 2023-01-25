@@ -21,6 +21,6 @@ void sigIntHandler(int signal){
 
 int main(){
     signal(SIGINT, sigIntHandler);
-    receiver = new PendulumReceiver(device, host, port);
+    receiver = new PendulumReceiver(device, host, port, true);
     receiver->start();
 }
