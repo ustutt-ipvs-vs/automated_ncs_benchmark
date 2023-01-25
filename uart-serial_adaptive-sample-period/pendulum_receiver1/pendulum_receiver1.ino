@@ -86,6 +86,9 @@ int currentEncoderValue = 0;
 bool encoderInitialized = false;
 bool newEncoderValueAvailable = false; // set to true after every received value
 
+bool hasPauseBeenSignaled = false;
+uint32_t pauseDurationMillis;
+
 // UTILITY FUNCTIONS
 
 int mod(int x, int y) {
@@ -435,6 +438,16 @@ void updateParametersForSamplingPeriod(unsigned samplingPeriod){
   Kxic = 0.25 * Kxc; // integral gain (TODO: incorporate into system model)
 }
 
+
+void pauseMotorBriefly(){
+  Serial.printf("HALTING NOW for %i ms\n", pauseDurationMillis);
+  rotate.overrideSpeed(0);
+  uint32_t startTime = millis();
+  while(millis() < startTime + pauseDurationMillis){}   // wait
+  updateRotaryEncoderValue();
+  newEncoderValueAvailable = false;  
+}
+
 void initializeCartState() {
   CartState = INIT;
   Serial.println("<<< INIT >>>");
@@ -509,15 +522,30 @@ void checkLimitSwitches() {
 
 
 void updateRotaryEncoderValue() {
-  while (Serial.available() > 0) {
-    currentEncoderValue = Serial.readStringUntil(';').toInt();
-    unsigned delaySinceLastSample = Serial.readStringUntil(';').toInt();
-    updateParametersForSamplingPeriod(delaySinceLastSample);
+  // The input has the following form:
+  // SensorValue;SamplingPeriod
+  // where the sampling period is in milliseconds
+  // Example:
+  // -443;50
+  //
+  // Additionally, pause signals of the following form can be transmitted (for pause with 800ms duration):
+  // PAUSE;800;
 
-    encoderInitialized = true;
+  while (Serial.available() > 0) {
+    String input1 = Serial.readStringUntil(';');
+    if(input1.startsWith("PAUSE")){
+      pauseDurationMillis = Serial.readStringUntil(';').toInt();
+      hasPauseBeenSignaled = true;
+    } else{
+      // normal sampling value:
+      currentEncoderValue = input1.toInt();
+      unsigned delaySinceLastSample = Serial.readStringUntil(';').toInt();
+      updateParametersForSamplingPeriod(delaySinceLastSample);
+      encoderInitialized = true;
+      newEncoderValueAvailable = true;
+    }
+
     Serial.read();  // read newline
-    //Serial.printf("Encoder Value: %i\n", currentEncoderValue);
-    newEncoderValueAvailable = true;
   }
 }
 
@@ -661,6 +689,12 @@ void loop() {
         }
         break;
       }
+
+      if(hasPauseBeenSignaled){
+          hasPauseBeenSignaled = false;
+          pauseMotorBriefly();
+      }
+        
       if (newEncoderValueAvailable) {
         newEncoderValueAvailable = false;
         ++k;
