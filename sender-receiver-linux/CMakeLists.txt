@@ -52,7 +52,7 @@ add_executable(pendulum_sender
         Scheduling/ConstantPriority.cpp
         Scheduling/ConstantPriority.h
         Logging/LogEntries/PauseLogEntry.h
-        Logging/LogEntries/PauseLogEntry.cpp)
+        Logging/LogEntries/PauseLogEntry.cpp Logging/LogEntries/SenderFeedbackLogEntry.cpp Logging/LogEntries/SenderFeedbackLogEntry.h)
 
 add_executable(pendulum_receiver
         PendulumReceiverSide/PendulumReceiverMain.cpp
@@ -70,7 +70,7 @@ add_executable(pendulum_receiver
         Logging/LogEntries/ActuatorLogEntry.cpp
         Logging/LogEntries/ActuatorLogEntry.h
         Logging/LogEntries/PauseLogEntry.h
-        Logging/LogEntries/PauseLogEntry.cpp)
+        Logging/LogEntries/PauseLogEntry.cpp Logging/LogEntries/SenderFeedbackLogEntry.cpp Logging/LogEntries/SenderFeedbackLogEntry.h)
 
 
 target_link_libraries(cross_traffic sockpp)

@@ -33,6 +33,7 @@ private:
 
     unsigned long long packetCount = 0;
     unsigned long long bytesSentTotal = 0;
+    unsigned long long feedbackPacketsCount = 0;
 
 public:
     PendulumSender(PriorityDeterminer* priorityDeterminer, std::string serialDeviceName, std::string receiverHost, int receiverPort);
@@ -42,6 +43,8 @@ public:
 
 private:
     void sendPacket(std::string payload);
+
+    void handleSenderFeedback();
 };
 
 

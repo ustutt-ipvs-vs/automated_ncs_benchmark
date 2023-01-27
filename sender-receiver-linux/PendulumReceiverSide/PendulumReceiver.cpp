@@ -52,10 +52,10 @@ void PendulumReceiver::start() {
 
 void PendulumReceiver::sendPauseSignal() {
     // The pause signal has the form (for 800ms pause duration):
-    // PAUSE;800;
+    // PAUSE:800;
     lastPauseTime = high_resolution_clock::now();
     std::stringstream ss;
-    ss << "PAUSE;" << pauseDurationMillis << ";" << std::endl;
+    ss << "PAUSE:" << pauseDurationMillis << ";\n";
     serialActuator.Write(ss.str());
     logger.logPause(pauseDurationMillis);
 }

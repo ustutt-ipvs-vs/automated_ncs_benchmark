@@ -25,7 +25,22 @@ void PendulumSender::start() {
 
     while (!stopSending) {
         serialSensor.Read(serialInputBuffer);
-        sendPacket(serialInputBuffer);
+
+        if (serialInputBuffer.rfind("FB:", 0) == 0) {
+            handleSenderFeedback();
+
+        } else if(serialInputBuffer.rfind("S:", 0) == 0){
+            sendPacket(serialInputBuffer);
+        }
+    }
+}
+
+void PendulumSender::handleSenderFeedback() {
+    logger.logSenderFeedback(serialInputBuffer);
+    feedbackPacketsCount++;
+
+    if(feedbackPacketsCount % 10 == 0){
+        std::cout << serialInputBuffer << std::endl;
     }
 }
 
