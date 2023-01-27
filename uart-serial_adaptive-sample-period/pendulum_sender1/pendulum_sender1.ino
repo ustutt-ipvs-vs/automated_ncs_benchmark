@@ -72,8 +72,6 @@ void checkAndHandleFeedback(){
       FeedbackSerial.read(); // read '\n'
       long latency = millis() - timestamp;
 
-      Serial.printf("Num: %i, Time: %i\n", receivedSequenceNumber, timestamp);
-
       if(lastReceivedSequenceNumber > 0){ // don't count packet loss for first received packet
         packetsLostTotal += max(0, receivedSequenceNumber - lastReceivedSequenceNumber - 1);
       }
