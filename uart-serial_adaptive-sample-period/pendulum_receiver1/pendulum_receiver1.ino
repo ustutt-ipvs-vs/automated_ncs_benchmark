@@ -3,6 +3,8 @@
 #include <TeensyStep.h>
 //#include <fastmath.h>
 
+#define FeedbackSerial Serial1
+
 //#define USE_BOUNCE2
 
 #define NEW_BOARD
@@ -76,7 +78,8 @@ float stepsPerMeter = trackLengthSteps / trackLengthMeters;  // initial guess
 // ENCODER PARAMETERS
 constexpr int encoderPPRhalf = 600 * 2;
 constexpr int encoderPPR = encoderPPRhalf * 2;
-constexpr int encoderOrigin = encoderPPRhalf - 2;
+//constexpr int encoderOrigin = encoderPPRhalf - 2;
+constexpr int encoderOrigin = encoderPPRhalf - 4; // Correct error of sensor
 constexpr int angleSign = 1;
 constexpr float RAD_PER_ESTEP = TWO_PI / encoderPPR;
 constexpr float ESTEP_PER_RAD = encoderPPR / TWO_PI;
@@ -88,6 +91,8 @@ bool newEncoderValueAvailable = false; // set to true after every received value
 
 bool hasPauseBeenSignaled = false;
 uint32_t pauseDurationMillis;
+
+unsigned long lastSequenceNumber = 0;
 
 // UTILITY FUNCTIONS
 
@@ -443,8 +448,9 @@ void pauseMotorBriefly(){
   Serial.printf("HALTING NOW for %i ms\n", pauseDurationMillis);
   rotate.overrideSpeed(0);
   uint32_t startTime = millis();
-  while(millis() < startTime + pauseDurationMillis){}   // wait
-  updateRotaryEncoderValue();
+  while(millis() < startTime + pauseDurationMillis){   // wait for pauseDurationMillis
+    updateRotaryEncoderValue(); // keep reading updates so that feedback to sender is not missing during pauses
+  }
   newEncoderValueAvailable = false;  
 }
 
@@ -478,7 +484,12 @@ void setup() {
   rotate.overrideAcceleration(1.0);
 
   // Serial.begin(12000000);
+  delay(5000);
   Serial.begin(460800);
+  Serial.setTimeout(20);
+  FeedbackSerial.begin(115200);
+  FeedbackSerial.setTimeout(20);
+
   delay(500);
   Serial.println("Homing and balancing test...");
 
@@ -522,31 +533,52 @@ void checkLimitSwitches() {
 
 
 void updateRotaryEncoderValue() {
-  // The input has the following form:
-  // SensorValue;SamplingPeriod
+  // The sample value string is of the following form:
+  // encoderValue;samplingPeriodMillis;sequenceNumber;currentTime;\n
   // where the sampling period is in milliseconds
-  // Example:
-  // -443;50
+  // for example
+  // S:-1204;50;1234;62345234;\n
   //
   // Additionally, pause signals of the following form can be transmitted (for pause with 800ms duration):
-  // PAUSE;800;
+  // PAUSE:800;\n
+
+  if(!(CartState == HOME || CartState == BALANCE)){
+    return;
+  }
 
   while (Serial.available() > 0) {
-    String input1 = Serial.readStringUntil(';');
+    String input1 = Serial.readStringUntil(':');
     if(input1.startsWith("PAUSE")){
       pauseDurationMillis = Serial.readStringUntil(';').toInt();
       hasPauseBeenSignaled = true;
-    } else{
+    } else if(input1.startsWith("S")){
       // normal sampling value:
-      currentEncoderValue = input1.toInt();
+      currentEncoderValue = Serial.readStringUntil(';').toInt();
       unsigned delaySinceLastSample = Serial.readStringUntil(';').toInt();
-      updateParametersForSamplingPeriod(delaySinceLastSample);
-      encoderInitialized = true;
-      newEncoderValueAvailable = true;
+      long sequenceNumber = Serial.readStringUntil(';').toInt();
+      long timestamp = Serial.readStringUntil(';').toInt();
+
+      //if(sequenceNumber > lastSequenceNumber){ // ignore re-ordered packets
+        updateParametersForSamplingPeriod(delaySinceLastSample);
+        if(CartState == BALANCE){
+          sendFeedbackToSender(sequenceNumber, timestamp);     
+        } 
+        encoderInitialized = true;
+        newEncoderValueAvailable = true;
+      //}
     }
 
-    Serial.read();  // read newline
+    Serial.read();  // read newline \n
   }
+}
+
+void sendFeedbackToSender(unsigned long sequenceNumber, unsigned long timestamp){
+  // The Feedback is of the following form:
+  // sequenceNumber;Timestamp;
+  // for example
+  // FB:123;34523890
+
+  FeedbackSerial.printf("FB:%i;%i;\n", sequenceNumber, timestamp);
 }
 
 void loop() {
