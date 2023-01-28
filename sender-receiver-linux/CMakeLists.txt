@@ -24,7 +24,8 @@ add_executable(cross_traffic
         Logging/LogEntries/SchedulingInfoEntries/ConstantPrioInfoEntry.cpp
         Logging/LogEntries/SchedulingInfoEntries/ConstantPrioInfoEntry.h
         Scheduling/ConstantPriority.cpp
-        Scheduling/ConstantPriority.h)
+        Scheduling/ConstantPriority.h
+        Scheduling/PriorityDeterminer.cpp)
 
 add_executable(pendulum_sender
         PendulumSenderSide/PendulumSender.cpp
@@ -52,7 +53,10 @@ add_executable(pendulum_sender
         Scheduling/ConstantPriority.cpp
         Scheduling/ConstantPriority.h
         Logging/LogEntries/PauseLogEntry.h
-        Logging/LogEntries/PauseLogEntry.cpp Logging/LogEntries/SenderFeedbackLogEntry.cpp Logging/LogEntries/SenderFeedbackLogEntry.h)
+        Logging/LogEntries/PauseLogEntry.cpp
+        Logging/LogEntries/SenderFeedbackLogEntry.cpp
+        Logging/LogEntries/SenderFeedbackLogEntry.h
+        Scheduling/PriorityDeterminer.cpp)
 
 add_executable(pendulum_receiver
         PendulumReceiverSide/PendulumReceiverMain.cpp
@@ -70,7 +74,10 @@ add_executable(pendulum_receiver
         Logging/LogEntries/ActuatorLogEntry.cpp
         Logging/LogEntries/ActuatorLogEntry.h
         Logging/LogEntries/PauseLogEntry.h
-        Logging/LogEntries/PauseLogEntry.cpp Logging/LogEntries/SenderFeedbackLogEntry.cpp Logging/LogEntries/SenderFeedbackLogEntry.h)
+        Logging/LogEntries/PauseLogEntry.cpp
+        Logging/LogEntries/SenderFeedbackLogEntry.cpp
+        Logging/LogEntries/SenderFeedbackLogEntry.h
+        Scheduling/PriorityDeterminer.cpp)
 
 
 target_link_libraries(cross_traffic sockpp)
