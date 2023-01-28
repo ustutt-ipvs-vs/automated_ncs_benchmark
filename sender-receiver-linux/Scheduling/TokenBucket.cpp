@@ -16,7 +16,8 @@ int TokenBucket::getPriority(){
 }
 
 void TokenBucket::reportPacketReadyToSend(int payloadSizeBytes){
-    currentBucketLevel -= getCostOfCurrentPriority() * payloadSizeBytes;
+    int frameSizeBytes = toEthernetFrameSizeBytes(payloadSizeBytes);
+    currentBucketLevel -= getCostOfCurrentPriority() * frameSizeBytes;
     fillBucket();
     updatePriority();
 

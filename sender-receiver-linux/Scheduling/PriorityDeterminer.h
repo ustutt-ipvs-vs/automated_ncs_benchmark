@@ -14,7 +14,11 @@ public:
     virtual void reportPacketReadyToSend(int payloadSizeBytes) = 0;
     virtual SchedulingInfoEntry* getSchedulingInfoEntry() = 0;
     virtual std::string getDebugInfoString() = 0;
+
+protected:
+    virtual int toEthernetFrameSizeBytes(int payloadSizeBytes);
 };
+
 
 
 #endif //SENDER_RECEIVER_LINUX_PRIORITYDETERMINER_H
