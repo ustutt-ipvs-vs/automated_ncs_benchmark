@@ -14,7 +14,7 @@ private:
 
 public:
     ConstantPriority(int priority);
-    int getPriority() override;
+    unsigned int getPriority() override;
     SchedulingInfoEntry * getSchedulingInfoEntry() override;
     void reportPacketReadyToSend(int payloadSizeBytes) override;
     std::string getDebugInfoString() override;

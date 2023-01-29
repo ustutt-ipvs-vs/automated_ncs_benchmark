@@ -9,7 +9,7 @@ ConstantPriority::ConstantPriority(int priority) {
     this->priority = priority;
 }
 
-int ConstantPriority::getPriority() {
+unsigned int ConstantPriority::getPriority() {
     return priority;
 }
 

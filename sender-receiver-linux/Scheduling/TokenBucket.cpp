@@ -2,7 +2,7 @@
 #include "TokenBucket.hpp"
 #include "../Logging/LogEntries/SchedulingInfoEntries/TokenBucketInfoEntry.h"
 
-TokenBucket::TokenBucket(double b, double r, int initialPriorityClass){
+TokenBucket::TokenBucket(double b, double r, unsigned int initialPriorityClass){
     this->b = b;
     this->r = r;
     this->currentPriorityClass = initialPriorityClass;
@@ -11,7 +11,7 @@ TokenBucket::TokenBucket(double b, double r, int initialPriorityClass){
     packetCount = 0;
 }
 
-int TokenBucket::getPriority(){
+unsigned int TokenBucket::getPriority(){
     return currentPriorityClass;
 }
 

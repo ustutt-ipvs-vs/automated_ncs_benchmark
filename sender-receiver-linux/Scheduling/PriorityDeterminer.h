@@ -10,7 +10,7 @@
 
 class PriorityDeterminer {
 public:
-    virtual int getPriority() = 0;
+    virtual unsigned int getPriority() = 0;
     virtual void reportPacketReadyToSend(int payloadSizeBytes) = 0;
     virtual SchedulingInfoEntry* getSchedulingInfoEntry() = 0;
     virtual std::string getDebugInfoString() = 0;

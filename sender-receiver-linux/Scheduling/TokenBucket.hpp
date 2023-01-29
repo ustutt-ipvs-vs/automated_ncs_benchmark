@@ -13,9 +13,9 @@ class TokenBucket : public PriorityDeterminer {
         double b;   // In bytes
         double r;   // in bytes per second
         double currentBucketLevel;
-        int currentPriorityClass;
+        unsigned int currentPriorityClass;
         high_resolution_clock::time_point lastBucketFillTime;
-        int packetCount;
+        unsigned int packetCount;
 
 public:
     double getB() const;
@@ -23,8 +23,8 @@ public:
     double getR() const;
 
 public:
-        TokenBucket(double b, double r, int initialPriorityClass);
-        int getPriority() override;
+        TokenBucket(double b, double r, unsigned int initialPriorityClass);
+        unsigned int getPriority() override;
         double getBucketLevel();
         void reportPacketReadyToSend(int payloadSizeBytes) override;
         SchedulingInfoEntry * getSchedulingInfoEntry() override;
