@@ -5,6 +5,7 @@
 TokenBucket::TokenBucket(double b, double r, unsigned int initialPriorityClass){
     this->b = b;
     this->r = r;
+    this->initialPriorityClass = initialPriorityClass;
     this->currentPriorityClass = initialPriorityClass;
     currentBucketLevel = b;
     lastBucketFillTime = high_resolution_clock::now();

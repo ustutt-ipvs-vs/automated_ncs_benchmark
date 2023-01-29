@@ -12,6 +12,7 @@ class TokenBucket : public PriorityDeterminer {
     protected:
         double b;   // In bytes
         double r;   // in bytes per second
+        unsigned int initialPriorityClass;
         double currentBucketLevel;
         unsigned int currentPriorityClass;
         high_resolution_clock::time_point lastBucketFillTime;
