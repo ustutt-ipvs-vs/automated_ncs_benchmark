@@ -9,7 +9,9 @@ add_executable(cross_traffic
         CrossTraffic/CrossTrafficSenderOrchestrator.cpp
         CrossTraffic/CrossTrafficSenderOrchestrator.h
         CrossTraffic/CrossTrafficMain.cpp
-        Scheduling/TokenBucket.cpp Scheduling/TokenBucketPrioTest.hpp
+        Scheduling/TokenBucket.hpp
+        Scheduling/TokenBucket.cpp
+        Scheduling/TokenBucketPrioTest.hpp
         Scheduling/TokenBucketPrioTest.cpp
         Logging/Logger.cpp
         Logging/Logger.h
@@ -21,11 +23,14 @@ add_executable(cross_traffic
         Logging/LogEntries/SchedulingInfoEntries/TokenBucketInfoEntry.cpp
         Logging/LogEntries/SchedulingInfoEntries/TokenBucketInfoEntry.h
         Scheduling/PriorityDeterminer.h
+        Scheduling/PriorityDeterminer.cpp
         Logging/LogEntries/SchedulingInfoEntries/ConstantPrioInfoEntry.cpp
         Logging/LogEntries/SchedulingInfoEntries/ConstantPrioInfoEntry.h
         Scheduling/ConstantPriority.cpp
         Scheduling/ConstantPriority.h
-        Scheduling/PriorityDeterminer.cpp)
+        Scheduling/MultiPriorityTokenBucket.cpp
+        Scheduling/MultiPriorityTokenBucket.h
+        )
 
 add_executable(pendulum_sender
         PendulumSenderSide/PendulumSender.cpp
@@ -39,6 +44,7 @@ add_executable(pendulum_sender
         Logging/LogEntries/LogEntry.cpp
         Logging/LogEntries/LogEntry.h
         nlohmann/json.hpp
+        Scheduling/TokenBucket.hpp
         Scheduling/TokenBucket.cpp
         Scheduling/TokenBucketPrioTest.hpp
         Scheduling/TokenBucketPrioTest.cpp
@@ -56,7 +62,11 @@ add_executable(pendulum_sender
         Logging/LogEntries/PauseLogEntry.cpp
         Logging/LogEntries/SenderFeedbackLogEntry.cpp
         Logging/LogEntries/SenderFeedbackLogEntry.h
-        Scheduling/PriorityDeterminer.cpp)
+        Scheduling/PriorityDeterminer.h
+        Scheduling/PriorityDeterminer.cpp
+        Scheduling/MultiPriorityTokenBucket.cpp
+        Scheduling/MultiPriorityTokenBucket.h
+        )
 
 add_executable(pendulum_receiver
         PendulumReceiverSide/PendulumReceiverMain.cpp
@@ -77,7 +87,15 @@ add_executable(pendulum_receiver
         Logging/LogEntries/PauseLogEntry.cpp
         Logging/LogEntries/SenderFeedbackLogEntry.cpp
         Logging/LogEntries/SenderFeedbackLogEntry.h
-        Scheduling/PriorityDeterminer.cpp)
+        Scheduling/PriorityDeterminer.h
+        Scheduling/PriorityDeterminer.cpp
+        Scheduling/MultiPriorityTokenBucket.cpp
+        Scheduling/MultiPriorityTokenBucket.h
+        Scheduling/TokenBucket.hpp
+        Scheduling/TokenBucket.cpp
+        Logging/LogEntries/SchedulingInfoEntries/TokenBucketInfoEntry.cpp
+        Logging/LogEntries/SchedulingInfoEntries/TokenBucketInfoEntry.h
+        )
 
 
 target_link_libraries(cross_traffic sockpp)
