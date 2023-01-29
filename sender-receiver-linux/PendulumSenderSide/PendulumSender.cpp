@@ -28,6 +28,10 @@ void PendulumSender::start() {
 
         if (serialInputBuffer.rfind("FB:", 0) == 0) {
             handleSenderFeedback();
+            if(!pendulumStarted){
+                pendulumStarted = true;
+                priorityDeterminer->resetState(); // Reset priority determiner when pendulum starts balancing
+            }
 
         } else if(serialInputBuffer.rfind("S:", 0) == 0){
             sendPacket(serialInputBuffer);

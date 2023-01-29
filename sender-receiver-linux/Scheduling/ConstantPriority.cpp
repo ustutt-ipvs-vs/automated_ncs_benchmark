@@ -26,3 +26,7 @@ std::string ConstantPriority::getDebugInfoString() {
     ss << "Priority: " << priority;
     return ss.str();
 }
+
+void ConstantPriority::resetState() {
+    // Nothing to do here
+}

@@ -30,6 +30,7 @@ private:
     SerialPort serialSensor;
     PendulumLogger logger;
     std::string serialInputBuffer;
+    bool pendulumStarted = false;
 
     unsigned long long packetCount = 0;
     unsigned long long bytesSentTotal = 0;

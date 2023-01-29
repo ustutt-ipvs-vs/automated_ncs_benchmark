@@ -65,3 +65,11 @@ std::string TokenBucket::getDebugInfoString() {
     ss << "Bucket Level: " << currentBucketLevel << " Priority: " << currentPriorityClass;
     return ss.str();
 }
+
+void TokenBucket::resetState() {
+    currentPriorityClass = initialPriorityClass;
+    currentBucketLevel = b;
+    lastBucketFillTime = high_resolution_clock::now();
+    packetCount = 0;
+}
+

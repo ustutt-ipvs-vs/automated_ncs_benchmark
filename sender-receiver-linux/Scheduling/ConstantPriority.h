@@ -18,6 +18,7 @@ public:
     SchedulingInfoEntry * getSchedulingInfoEntry() override;
     void reportPacketReadyToSend(int payloadSizeBytes) override;
     std::string getDebugInfoString() override;
+    void resetState() override;
 };
 
 

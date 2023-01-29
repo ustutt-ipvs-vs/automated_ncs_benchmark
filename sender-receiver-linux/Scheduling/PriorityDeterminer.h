@@ -14,6 +14,7 @@ public:
     virtual void reportPacketReadyToSend(int payloadSizeBytes) = 0;
     virtual SchedulingInfoEntry* getSchedulingInfoEntry() = 0;
     virtual std::string getDebugInfoString() = 0;
+    virtual void resetState() = 0;
 
 protected:
     virtual int toEthernetFrameSizeBytes(int payloadSizeBytes);
