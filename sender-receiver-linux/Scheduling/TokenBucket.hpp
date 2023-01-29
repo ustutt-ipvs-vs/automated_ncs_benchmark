@@ -10,8 +10,8 @@ using std::chrono::microseconds;
 
 class TokenBucket : public PriorityDeterminer {
     protected:
-        double b;
-        double r;
+        double b;   // In bytes
+        double r;   // in bytes per second
         double currentBucketLevel;
         int currentPriorityClass;
         high_resolution_clock::time_point lastBucketFillTime;

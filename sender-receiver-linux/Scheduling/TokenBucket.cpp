@@ -27,7 +27,7 @@ void TokenBucket::reportPacketReadyToSend(int payloadSizeBytes){
 void TokenBucket::fillBucket(){
     uint64_t microsSinceLastBucketRefill = getMicrosSinceLastBucketFill();
     if(microsSinceLastBucketRefill > 100){
-        currentBucketLevel += r * microsSinceLastBucketRefill;
+        currentBucketLevel += r * 1.0E-6 * microsSinceLastBucketRefill;
         if(currentBucketLevel > b){
             currentBucketLevel = b;
         }
