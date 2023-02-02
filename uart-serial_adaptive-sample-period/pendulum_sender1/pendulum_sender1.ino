@@ -4,17 +4,24 @@
 
 constexpr unsigned pinEncoderA = 2;
 constexpr unsigned pinEncoderB = 3;
-unsigned long samplingPeriodMillis = 50;
+unsigned long transmissionPeriodMillis = 50;
+unsigned long sensorPeekPeriodMillis = 10;
 constexpr int encoderNumSteps = 2400;
 
-int previousEncoderValue = 0;
+int previousEncoderValue;
 
 float compareValue = 0;
 
-unsigned long lastSampleTime = 0;
+unsigned long lastTransmissionTime = 0;
+unsigned long lastSensorPeekTime = 0;
+
 long sequenceNumber = 1;
 long lastReceivedSequenceNumber = 0;
 long packetsLostTotal = 0;
+
+#define HISTORY_SIZE 100
+int samplesHistory[HISTORY_SIZE];  // acts as a ring buffer
+int historyPosition = 0;
 
 
 Encoder encoder(pinEncoderA, pinEncoderB);
@@ -30,27 +37,60 @@ void setup() {
 }
 
 void loop() {
+  calculateTransmissionPeriod();
   sendSampleIfDelayOver();
+
   checkAndHandleFeedback();
+}
+
+void calculateTransmissionPeriod(){
+  unsigned long currentTime = millis();
+  if(lastSensorPeekTime + sensorPeekPeriodMillis <= currentTime){
+    int currentEncoderValue = encoder.read();
+    lastSensorPeekTime = currentTime;
+
+    compareValue = getHistoryMaxChange(currentEncoderValue);
+
+    samplesHistory[historyPosition] = currentEncoderValue;
+    historyPosition = (historyPosition + 1) % HISTORY_SIZE;
+
+    previousEncoderValue = currentEncoderValue;
+
+    if(compareValue <= 1){
+      transmissionPeriodMillis = 100;
+    } else if(compareValue <= 2){
+      transmissionPeriodMillis = 90;
+    } else if(compareValue <= 3){
+      transmissionPeriodMillis = 80;
+    } else if(compareValue <= 4){
+      transmissionPeriodMillis = 70;
+    } else if(compareValue <= 5){
+      transmissionPeriodMillis = 60;
+    } else if(compareValue <= 6){
+      transmissionPeriodMillis = 50;
+    } else if(compareValue <= 7){
+      transmissionPeriodMillis = 40;
+    } else if(compareValue <= 8){
+      transmissionPeriodMillis = 30;
+    } else if(compareValue <= 9){
+      transmissionPeriodMillis = 20;
+    } else if(compareValue <= 10){
+      transmissionPeriodMillis = 10;
+    }
+  }
 }
 
 void sendSampleIfDelayOver(){
   unsigned long currentTime = millis();
-  if(lastSampleTime + samplingPeriodMillis <= currentTime){
+  if(lastTransmissionTime + transmissionPeriodMillis <= currentTime){
     // The sample value string is of the following form:
     // S:encoderValue;samplingPeriodMillis;sequenceNumber;currentTime;\n
     // for example
     // S:-1204;50;1234;62345234;\n
-    int encoderValue = encoder.read();  
-    Serial.printf("S:%i;%u;%i;%u;\n", encoderValue, samplingPeriodMillis, sequenceNumber, currentTime);
+    Serial.printf("S:%i;%u;%i;%u;\n", encoder.read(), transmissionPeriodMillis, sequenceNumber, currentTime);
     Serial.send_now();
-    lastSampleTime = currentTime;
+    lastTransmissionTime = currentTime;
     sequenceNumber++;
-
-    // Must be updated AFTER transmission, as the value just sent still has the
-    // old sampling period:
-    samplingPeriodMillis = angleToSamplePeriod(encoderValue);
-    previousEncoderValue = encoderValue;
   }
 }
 
@@ -85,32 +125,15 @@ void checkAndHandleFeedback(){
 }
 
 
-int angleToSamplePeriod(int encoderValue){
-  // int changeFromPrevious = abs(previousEncoderValue - encoderValue);
-
-  // float alpha = 0.5 * ((float) samplingPeriodMillis / 100.0);
-  // compareValue = alpha * (float) changeFromPrevious + (1-alpha) * compareValue;
-
-  // if(compareValue <= 0.5){
-  //   return 100;
-  // } else if(compareValue <= 1.0){
-  //   return 50;
-  // } else if(compareValue <= 3.0){
-  //   return 20;
-  // } 
-  // return 10;
-  return 50;
+int getHistoryMaxChange(int currentValue){
+  int maxChange = abs(samplesHistory[0] - currentValue);
+  for(int i=1; i < HISTORY_SIZE; i++){
+    int change = abs(samplesHistory[i] - currentValue);
+    if(change > maxChange){
+      maxChange = change;
+    }
+  }
+  return maxChange;
 }
 
-int angleToSamplePeriod1(int encoderValue){
-  int derivFromUpwards = abs(encoderValue - encoderNumSteps/2) % encoderNumSteps; // takes values from 0 to encoderNumSteps
-  if(derivFromUpwards <= 1){
-    return 100;
-  } else if(derivFromUpwards <= 5){
-    return 50;
-  } else if(derivFromUpwards <= 10){
-    return 20;
-  } 
-  return 10;
-}
 
