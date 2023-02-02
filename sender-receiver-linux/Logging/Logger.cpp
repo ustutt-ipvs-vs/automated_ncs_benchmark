@@ -1,4 +1,5 @@
 #include <fstream>
+#include <iostream>
 #include "Logger.h"
 
 Logger::Logger(std::string name) {
@@ -11,6 +12,7 @@ void Logger::saveToFile(std::string filename) {
     logfile.open(filename, std::ios_base::out);
     logfile << this->toJsonString();
     logfile.close();
+    std::cout << "Log Saved log to " << filename << std::endl;
 }
 
 void Logger::saveToFile() {
