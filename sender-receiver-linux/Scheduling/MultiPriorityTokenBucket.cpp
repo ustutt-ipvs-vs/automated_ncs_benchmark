@@ -33,7 +33,7 @@ MultiPriorityTokenBucket::MultiPriorityTokenBucket(double b, double r, unsigned 
 void MultiPriorityTokenBucket::updatePriority() {
     for(unsigned int priority = 0; priority < numPriorities; priority++){
         if(currentBucketLevel >= thresholdOfPriorities[priority]){
-            currentPriorityClass = priority;
+            currentPriorityClass = std::max(priority, initialPriorityClass);
             return;
         }
     }
