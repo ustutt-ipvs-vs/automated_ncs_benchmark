@@ -6,15 +6,54 @@
 #include "../Scheduling/ConstantPriority.h"
 #include "../Scheduling/MultiPriorityTokenBucket.h"
 
+/**
+ * Usage from command line:
+ *
+ * Option 1: Constant Priority
+ * ./pendulum_sender c <priority>
+ *
+ * Option 2: Multi Priority Token Bucket with custom parameters
+ * ./pendulum_sender p <b (samples)> <r (sampling period)> <priority 0 sampling period (ms)> ... <priority 7 sampling period (ms)>
+ *
+ * Option 3: Multi Priority Token Bucket with selection of parameters:
+ * ./pendulum_sender m <priority mapping mode> <token bucket mode>
+ *
+ * where priority mapping mode is one of
+ * ps: strict priority sampling periods
+ * pm: medium priority sampling periods
+ * pg: generous priority sampling periods
+ *
+ * and token bucket mode is one of
+ * bs: strict bucket
+ * bm: medium bucket
+ * bg: generous bucket
+ */
+
 std::string device = "/dev/ttyACM0";
 
 std::string host = "10.0.1.2";
 int port = 3000;
 
-double frameSizeOfSample = 68.6; // 22.6B payload + 14B Ethernet header + 4B VLAN tag + 20B IP header + 8B UDP header
+// This value was empirically determined by calculating the average sample payload size from measurement data.
+// 68.6B = 22.6B payload + 14B Ethernet header + 4B VLAN tag + 20B IP header + 8B UDP header
+double frameSizeOfSample = 68.6;
+
+std::vector<double> strictPrioritySamplingPeriods = {80, 70, 60, 50, 40, 30, 20, 10};
+std::vector<double> mediumPrioritySamplingPeriods = {50, 37, 23, 10, 9, 8, 7, 6};
+std::vector<double> generousPrioritySamplingPeriods = {30, 10, 9, 8, 7, 6, 5, 4};
+
+double strictBucketB = 100; // Samples
+double mediumBucketB = 500;
+double generousBucketB = 1000;
+
+double strictBucketR = 80; // Sampling period in ms
+double mediumBucketR = 50;
+double generousBucketR = 30;
 
 PendulumSender *sender;
 
+
+PriorityDeterminer *generateDeterminerFromCommandLineArguments(int argc, char *const *argv);
 
 void sigIntHandler(int signal) {
     std::cout << "Received Signal: " << signal << std::endl;
@@ -43,6 +82,14 @@ double samplingPeriodToDataRate(double samplingPeriod) {
 int main(int argc, char *argv[]) {
     signal(SIGINT, sigIntHandler);
 
+    PriorityDeterminer *determiner;
+    determiner = generateDeterminerFromCommandLineArguments(argc, argv);
+
+    sender = new PendulumSender(determiner, device, host, port);
+    sender->start();
+}
+
+PriorityDeterminer *generateDeterminerFromCommandLineArguments(int argc, char *const *argv) {
     PriorityDeterminer *determiner;
 
     // If first argument ist 'c' then use constant priority. If it is 'p', use multi priority token bucket:
@@ -73,15 +120,77 @@ int main(int argc, char *argv[]) {
 
         std::cout << "Using multi priority token bucket with custom values:" << std::endl;
         std::cout << "b (Samples): " << b << " r (Sampling Period): " << r << std::endl;
-        std::cout << "sampling rates for priorities (ms): " << prio0SamplingPeriod << ", " << prio1SamplingPeriod << ", "
+        std::cout << "sampling rates for priorities (ms): " << prio0SamplingPeriod << ", " << prio1SamplingPeriod
+                  << ", "
                   << prio2SamplingPeriod << ", " << prio3SamplingPeriod << ", " << prio4SamplingPeriod << ", "
                   << prio5SamplingPeriod << ", " << prio6SamplingPeriod << ", " << prio7SamplingPeriod << std::endl;
+    } else if (argc >= 4 && argv[1][0] == 'm') {
+        double b, r;
+        std::vector<double> samplingPeriodsForPriorities;
+
+        // Second argument determines which sampling periods to use.
+        // If it is 'ps', use strict priority. If it is 'pm', use medium priority. If it is 'pg', use generous priority.
+        // Only 'pm', 'pg' and 'ps' are supported.
+        if (argv[2][0] == 'p') {
+            if (argv[2][1] == 's') {
+                samplingPeriodsForPriorities = strictPrioritySamplingPeriods;
+            } else if (argv[2][1] == 'm') {
+                samplingPeriodsForPriorities = mediumPrioritySamplingPeriods;
+            } else if (argv[2][1] == 'g') {
+                samplingPeriodsForPriorities = generousPrioritySamplingPeriods;
+            } else {
+                std::cout << "Invalid argument: " << argv[2] << std::endl;
+                exit(1);
+            }
+        } else {
+            std::cout << "Invalid argument: " << argv[2] << std::endl;
+            exit(1);
+        }
+
+        // Third argument determines the bucket size. If it is 'bs', use small bucket. If it is 'bm', use medium bucket.
+        // If it is 'bg', use generous bucket.
+        // Only 'bs', 'bm' and 'bg' are supported.
+        if (argv[3][0] == 'b') {
+            if (argv[3][1] == 's') {
+                b = strictBucketB;
+                r = strictBucketR;
+            } else if (argv[3][1] == 'm') {
+                b = mediumBucketB;
+                r = mediumBucketR;
+            } else if (argv[3][1] == 'g') {
+                b = generousBucketB;
+                r = generousBucketR;
+            } else {
+                std::cout << "Invalid argument: " << argv[3] << std::endl;
+                exit(1);
+            }
+        } else {
+            std::cout << "Invalid argument: " << argv[3] << std::endl;
+            exit(1);
+        }
+
+        std::vector<double> dataRates = samplingPeriodsToDataRates(samplingPeriodsForPriorities);
+        double bAsBytes = numberOfSamplesToBytes(b);
+        double rAsBytesPerSecond = samplingPeriodToDataRate(r);
+        determiner = new MultiPriorityTokenBucket(bAsBytes, rAsBytesPerSecond, 8, 0, dataRates);
+
+        std::cout << "Using multi priority token bucket with custom values:" << std::endl;
+        std::cout << "b (Samples): " << b << " r (Sampling Period): " << r << std::endl;
+        std::cout << "sampling rates for priorities (ms): "
+                  << samplingPeriodsForPriorities[0] << ", "
+                  << samplingPeriodsForPriorities[1] << ", "
+                  << samplingPeriodsForPriorities[2] << ", "
+                  << samplingPeriodsForPriorities[3] << ", "
+                  << samplingPeriodsForPriorities[4] << ", "
+                  << samplingPeriodsForPriorities[5] << ", "
+                  << samplingPeriodsForPriorities[6] << ", "
+                  << samplingPeriodsForPriorities[7] << std::endl;
     } else {
-        determiner = new MultiPriorityTokenBucket(7100, 710, 8, 0, {100, 84, 67, 50, 40, 30, 20, 10});
+        std::vector<double> dataRates = samplingPeriodsToDataRates(
+                {100, 84, 67, 50, 40, 30, 20, 10});
+        determiner = new MultiPriorityTokenBucket(7100, 710, 8, 0, dataRates);
 
         std::cout << "Warning: Using default parameters" << std::endl;
     }
-
-    sender = new PendulumSender(determiner, device, host, port);
-    sender->start();
+    return determiner;
 }
