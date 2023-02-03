@@ -26,13 +26,16 @@ void PendulumReceiver::start() {
 
         packetCount++;
         bytesReceivedTotal += networkInput.size();
+
+        // Remove the padding with '#' from the end of the string:
+        networkInput.erase(std::remove(networkInput.begin(), networkInput.end(), '#'), networkInput.end());
+
         logger.log(packetCount, bytesReceivedTotal, networkInput);
 
         if(doPauses && isTimeForPause()){
             sendPauseSignal();
-        } else {
-            serialActuator.Write(networkInput);
         }
+        serialActuator.Write(networkInput);
 
         while (serialActuator.Available() > 0) {
             serialActuator.Read(serialInput);

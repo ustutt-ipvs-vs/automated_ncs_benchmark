@@ -34,7 +34,14 @@ void PendulumSender::start() {
             }
 
         } else if(serialInputBuffer.rfind("S:", 0) == 0){
-            sendPacket(serialInputBuffer);
+            // Sometimes the serial interface sends multiple samples at once (separated by '\n').
+            // We need to split them up and send them individually over the network:
+            std::string singleSample;
+            std::istringstream sampleStream(serialInputBuffer);
+            while (std::getline(sampleStream, singleSample, '\n')) {
+                singleSample += '\n';
+                sendPacket(singleSample);
+            }
         }
     }
 }
@@ -55,12 +62,16 @@ void PendulumSender::stop() {
 }
 
 void PendulumSender::sendPacket(std::string payload) {
-    priorityDeterminer->reportPacketReadyToSend(payload.size());
+    // Pad payload width '#' to 32 bytes and store result in paddedPayload
+    std::string paddedPayload = payload;
+    paddedPayload.append(32 - payload.size(), '#');
+
+    priorityDeterminer->reportPacketReadyToSend(paddedPayload.size());
     int priority = priorityDeterminer->getPriority();
     senderSocket.set_option(SOL_SOCKET, SO_PRIORITY, priority);
-    senderSocket.send_to(payload, receiverAddress);
+    senderSocket.send_to(paddedPayload, receiverAddress);
     packetCount++;
-    bytesSentTotal += payload.size();
+    bytesSentTotal += paddedPayload.size();
 
     logger.log(packetCount, bytesSentTotal, payload, priorityDeterminer->getSchedulingInfoEntry());
 

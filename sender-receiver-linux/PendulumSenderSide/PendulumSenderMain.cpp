@@ -34,9 +34,8 @@ std::string device = "/dev/ttyACM0";
 std::string host = "10.0.1.2";
 int port = 3000;
 
-// This value was empirically determined by calculating the average sample payload size from measurement data.
-// 68.6B = 22.6B payload + 14B Ethernet header + 4B VLAN tag + 20B IP header + 8B UDP header
-double frameSizeOfSample = 68.6;
+// 78B = 32B payload + 14B Ethernet header + 4B VLAN tag + 20B IP header + 8B UDP header
+double frameSizeOfSample = 78;
 
 std::vector<double> strictPrioritySamplingPeriods = {80, 70, 60, 50, 40, 30, 20, 10};
 std::vector<double> mediumPrioritySamplingPeriods = {50, 37, 23, 10, 9, 8, 7, 6};
