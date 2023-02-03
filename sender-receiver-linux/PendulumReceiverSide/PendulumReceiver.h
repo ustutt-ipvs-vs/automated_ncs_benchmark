@@ -47,7 +47,7 @@ private:
 
     time_point<system_clock> lastPauseTime;
     bool startedBalancing = false;
-    const unsigned int timeBetweenPausesMillis = 10'000;
+    const unsigned int timeBetweenPausesMillis = 20'000;
     const unsigned int pauseDurationMillis = 800;
     bool doPauses = false;
 
