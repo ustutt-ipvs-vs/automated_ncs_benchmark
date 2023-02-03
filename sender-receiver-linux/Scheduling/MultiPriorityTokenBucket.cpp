@@ -55,11 +55,20 @@ double MultiPriorityTokenBucket::getCostOfCurrentPriority() {
  * @param dataRateOfPriorities data rates for each priority (best priority first) in bytes per second
  */
 void MultiPriorityTokenBucket::calculateThresholdsAndCosts(double r, std::vector<double> dataRateOfPriorities) {
-    double threshold = 0.0;
-    for (double dataRate: dataRateOfPriorities) {
-        thresholdOfPriorities.emplace_back(threshold);
-        double cost = (r - threshold) / dataRate;
+    for(double dataRate : dataRateOfPriorities){
+        double cost = r / dataRate;
         costOfPriorities.emplace_back(cost);
-        threshold -= 100.0;
     }
+
+    // Best priority has zero threshold (as by MPTB specification)
+    thresholdOfPriorities.emplace_back(0.0);
+
+    // Choose thresholds such that the 'bucket' of each priority can send a b bytes burst before empty.
+    for(int i = 1; i < numPriorities - 1; i++){
+        double threshold = thresholdOfPriorities[i-1] - costOfPriorities[i] * b;
+        thresholdOfPriorities.emplace_back(threshold);
+    }
+
+    // Worst priority has infinitely low threshold (best effort)
+    thresholdOfPriorities.emplace_back(-std::numeric_limits<double>::infinity());
 }
