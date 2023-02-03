@@ -74,7 +74,7 @@ void calculateTransmissionPeriod(){
       transmissionPeriodMillis = 30;
     } else if(compareValue <= 9){
       transmissionPeriodMillis = 20;
-    } else if(compareValue <= 10){
+    } else {
       transmissionPeriodMillis = 10;
     }
   }
