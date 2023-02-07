@@ -45,10 +45,6 @@ double strictBucketB = 100; // Samples
 double mediumBucketB = 500;
 double generousBucketB = 1000;
 
-double strictBucketR = 80; // Sampling period in ms
-double mediumBucketR = 50;
-double generousBucketR = 30;
-
 PendulumSender *sender;
 
 
@@ -133,10 +129,13 @@ PriorityDeterminer *generateDeterminerFromCommandLineArguments(int argc, char *c
         if (argv[2][0] == 'p') {
             if (argv[2][1] == 's') {
                 samplingPeriodsForPriorities = strictPrioritySamplingPeriods;
+                r = strictPrioritySamplingPeriods[0];  // data rate of the highest priority must be equal to r
             } else if (argv[2][1] == 'm') {
                 samplingPeriodsForPriorities = mediumPrioritySamplingPeriods;
+                r = mediumPrioritySamplingPeriods[0];
             } else if (argv[2][1] == 'g') {
                 samplingPeriodsForPriorities = generousPrioritySamplingPeriods;
+                r = generousPrioritySamplingPeriods[0];
             } else {
                 std::cout << "Invalid argument: " << argv[2] << std::endl;
                 exit(1);
@@ -152,13 +151,10 @@ PriorityDeterminer *generateDeterminerFromCommandLineArguments(int argc, char *c
         if (argv[3][0] == 'b') {
             if (argv[3][1] == 's') {
                 b = strictBucketB;
-                r = strictBucketR;
             } else if (argv[3][1] == 'm') {
                 b = mediumBucketB;
-                r = mediumBucketR;
             } else if (argv[3][1] == 'g') {
                 b = generousBucketB;
-                r = generousBucketR;
             } else {
                 std::cout << "Invalid argument: " << argv[3] << std::endl;
                 exit(1);
