@@ -37,13 +37,13 @@ int port = 3000;
 // 78B = 32B payload + 14B Ethernet header + 4B VLAN tag + 20B IP header + 8B UDP header
 double frameSizeOfSample = 78;
 
-std::vector<double> strictPrioritySamplingPeriods = {80, 70, 60, 50, 40, 30, 20, 10};
-std::vector<double> mediumPrioritySamplingPeriods = {50, 37, 23, 10, 9, 8, 7, 6};
-std::vector<double> generousPrioritySamplingPeriods = {30, 10, 9, 8, 7, 6, 5, 4};
+std::vector<double> strictPrioritySamplingPeriods = {90, 80, 70, 60, 50, 40, 30, 20};
+std::vector<double> mediumPrioritySamplingPeriods = {75, 59, 43, 26, 10, 9, 8, 7};
+std::vector<double> generousPrioritySamplingPeriods = {50, 30, 10, 9, 8, 7, 6, 5};
 
-double strictBucketB = 100; // Samples
-double mediumBucketB = 500;
-double generousBucketB = 1000;
+double strictBucketB = 75; // Samples
+double mediumBucketB = 300;
+double generousBucketB = 500;
 
 PendulumSender *sender;
 
