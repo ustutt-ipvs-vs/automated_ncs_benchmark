@@ -14,7 +14,7 @@ using sockpp::inet_address;
 class CrossTrafficSender {
 private:
     int bytesPerSecond;
-    int payloadSize = 1400;
+    int payloadSize = 1500 - 46; // 1500 is the MTU, 47 is the header size
     std::chrono::nanoseconds packetDelay;
     unsigned long long packetCount = 0;
     unsigned long long bytesSentTotal = 0;

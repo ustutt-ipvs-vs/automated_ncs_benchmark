@@ -13,8 +13,12 @@ private:
 
 public:
     void initializeSendersByDefault();
-    void initializeSendersWithParameters();
+
+    void initializeSendersWithParameters(std::string host, int port, std::vector<int> priorities,
+                                         std::vector<int> dataRatesBytesPerSecond);
+
     void start();
+
     void stop();
 };
 
