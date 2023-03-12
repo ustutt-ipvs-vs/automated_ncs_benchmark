@@ -1,5 +1,12 @@
 #include "CrossTrafficSenderOrchestrator.h"
 
+/*
+ * Running the program as sudo (required for priority 7 to work):
+ * $ sudo su
+ * $ export LD_LIBRARY_PATH=/usr/local/lib:$LD_LIBRARY_PATH
+ * $ ./cross_traffic [arguments]
+ */
+
 CrossTrafficSenderOrchestrator orchestrator;
 
 void sigIntHandler(int signal){

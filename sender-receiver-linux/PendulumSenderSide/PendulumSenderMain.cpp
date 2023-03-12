@@ -27,6 +27,11 @@
  * bs: strict bucket
  * bm: medium bucket
  * bg: generous bucket
+ *
+ * Running the program as sudo (required for priority 7 to work):
+ * $ sudo su
+ * $ export LD_LIBRARY_PATH=/usr/local/lib:$LD_LIBRARY_PATH
+ * $ ./pendulum_sender [arguments]
  */
 
 std::string device = "/dev/ttyACM0";
