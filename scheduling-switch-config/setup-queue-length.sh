@@ -15,11 +15,11 @@ interface=${1:-enp1s0f0} # default: enp1s0f0
 ringBufferSize=${2:-80}   # in packets (default: 80)
 queueLength=${3:-20}      # in packets (default: 20)
 
-# Set ring buffer size to 80 packets
+# Set ring buffer size to $ringBufferSize packets
 sudo ethtool -G $interface rx $ringBufferSize
 sudo ethtool -G $interface tx $ringBufferSize
 
-# Set linux queue length to 20 packets:
+# Set linux queue length to $queueLength packets:
 sudo ip link set dev $interface txqlen $queueLength
 sudo tc qdisc replace dev $interface root noqueue   # required to trigger reconfiguration of the queue
 
