@@ -5,7 +5,7 @@ using std::chrono::duration_cast;
 using std::chrono::microseconds;
 
 class TokenBucket {
-    private:
+    protected:
         double b;
         double r;
         double currentBucketLevel;
@@ -21,10 +21,10 @@ class TokenBucket {
         void reportPacketReadyToSend(int payloadSizeBytes);
 
 
-    private:
-        double getCostOfCurrentPriority();
+    protected:
+        virtual double getCostOfCurrentPriority();
         void fillBucket();
         int64_t getMicrosSinceLastBucketFill();
         void resetTimeSinceLastBucketRefill();
-        void updatePriority();
+        virtual void updatePriority();
 };

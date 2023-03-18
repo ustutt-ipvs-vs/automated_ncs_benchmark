@@ -25,7 +25,7 @@ int main(){
     while(true){
         serSensor.Read(input);
         serActuator.Write(input);
-        //std::cout << "input = " << input << std::endl;
+        std::cout << "input = " << input;
         while(serActuator.Available() > 0){
             serActuator.Read(input);
             std::cout << "Actuator: " << input << std::endl;
