@@ -20,11 +20,11 @@ cd sockpp
 mkdir build
 cd build
 cmake ..
-cmake --build . --target install
+sudo cmake --build . --target install
 ```
 
 ### Installing `CppLinuxSerial`:
-`'CppLinuxSerial` is a library to access the serial ports in C++.
+`CppLinuxSerial` is a library to access the serial ports in C++.
 
 ```
 git clone https://github.com/gbmhunter/CppLinuxSerial.git
