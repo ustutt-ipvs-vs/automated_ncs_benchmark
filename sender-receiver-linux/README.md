@@ -7,7 +7,10 @@ This CMake project contains the code for following programs:
 All the code is written in C++. The following libraries are used:
 - `sockpp` to open UDP sockets
 - `CppLinuxSerial` to interact with the USB serial interface
-- `nlohmann/json` to generate the JSON log files (This library is included in the source code - no need for installation)
+- `nlohmann/json` to generate the JSON log files
+
+`sockpp` and `CppLinuxSerial` are shared libraries: They must be installed on the system that is supposed to run the program. They are not included in the executable.
+`nlohmann/json` is included in the source code of this project. Thus, the library is included in the executable.
 
 ## Preparation
 ### Installing CMake
@@ -92,7 +95,6 @@ First connect the Teensy to the single-board microcontroller via USB. Then run
 export LD_LIBRARY_PATH=/usr/local/lib:$LD_LIBRARY_PATH
 ./pendulum_sender
 ```
-
 
 ## Note About Connecting Teensy via USB
 Sometimes, the serial socket doesn't work when the Teensy has been plugged in for a longer time.
