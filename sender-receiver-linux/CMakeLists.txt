@@ -11,8 +11,6 @@ add_executable(cross_traffic
         CrossTraffic/CrossTrafficMain.cpp
         Scheduling/TokenBucket.hpp
         Scheduling/TokenBucket.cpp
-        Scheduling/TokenBucketPrioTest.hpp
-        Scheduling/TokenBucketPrioTest.cpp
         Logging/Logger.cpp
         Logging/Logger.h
         Logging/LogEntries/LogEntry.cpp
@@ -46,8 +44,6 @@ add_executable(pendulum_sender
         nlohmann/json.hpp
         Scheduling/TokenBucket.hpp
         Scheduling/TokenBucket.cpp
-        Scheduling/TokenBucketPrioTest.hpp
-        Scheduling/TokenBucketPrioTest.cpp
         PendulumSenderSide/PendulumSenderMain.cpp
         Logging/LogEntries/SchedulingInfoEntries/SchedulingInfoEntry.h
         Logging/LogEntries/SchedulingInfoEntries/TokenBucketInfoEntry.cpp

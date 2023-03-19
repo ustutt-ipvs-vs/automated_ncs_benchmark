@@ -5,7 +5,6 @@
 #include <sockpp/inet_address.h>
 #include <atomic>
 #include "../Scheduling/TokenBucket.hpp"
-#include "../Scheduling/TokenBucketPrioTest.hpp"
 #include "../Logging/CrossTrafficLogger.h"
 
 using sockpp::udp_socket;

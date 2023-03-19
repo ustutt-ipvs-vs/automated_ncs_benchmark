@@ -6,7 +6,6 @@
 #include <sockpp/udp_socket.h>
 #include <CppLinuxSerial/SerialPort.hpp>
 #include <atomic>
-#include "../Scheduling/TokenBucketPrioTest.hpp"
 #include "../Logging/PendulumLogger.h"
 
 using sockpp::udp_socket;
