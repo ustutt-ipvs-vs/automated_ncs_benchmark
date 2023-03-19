@@ -743,7 +743,6 @@ void setup() {
   rotate.overrideSpeed(0);
   rotate.overrideAcceleration(1.0);
 
-  // Serial.begin(12000000);
   delay(5000);
   Serial.begin(460800);
   Serial.setTimeout(20);
@@ -818,14 +817,12 @@ void updateRotaryEncoderValue() {
       long sequenceNumber = Serial.readStringUntil(';').toInt();
       long timestamp = Serial.readStringUntil(';').toInt();
 
-      //if(sequenceNumber > lastSequenceNumber){ // ignore re-ordered packets
-        updateParametersForSamplingPeriod(delaySinceLastSample);
-        if(CartState == BALANCE){
-          sendFeedbackToSender(sequenceNumber, timestamp);     
-        } 
-        encoderInitialized = true;
-        newEncoderValueAvailable = true;
-      //}
+      updateParametersForSamplingPeriod(delaySinceLastSample);
+      if(CartState == BALANCE){
+        sendFeedbackToSender(sequenceNumber, timestamp);     
+      } 
+      encoderInitialized = true;
+      newEncoderValueAvailable = true;
     }
 
     Serial.read();  // read newline \n
