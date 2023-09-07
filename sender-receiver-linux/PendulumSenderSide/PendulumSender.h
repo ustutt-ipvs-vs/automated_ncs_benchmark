@@ -32,7 +32,7 @@ private:
     std::string serialInputBuffer;
     bool pendulumStarted = false;
 
-    std::time_t startTime;
+    uint64_t startTime;
 
     double currentRunAVG = 0;
     int currentRunValues = 0;
@@ -55,6 +55,7 @@ private:
     void sendPacket(std::string payload);
 
     void handleSenderFeedback();
+    uint64_t timeSinceEpochMillisec();
 };
 
 

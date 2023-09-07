@@ -79,7 +79,7 @@ float stepsPerMeter = trackLengthSteps / trackLengthMeters;  // initial guess
 constexpr int encoderPPRhalf = 600 * 2;
 constexpr int encoderPPR = encoderPPRhalf * 2;
 //constexpr int encoderOrigin = encoderPPRhalf - 2;
-constexpr int encoderOrigin = encoderPPRhalf - 4; // Correct error of sensor
+constexpr int encoderOrigin = encoderPPRhalf - 5; // Correct error of sensor
 constexpr int angleSign = 1;
 constexpr float RAD_PER_ESTEP = TWO_PI / encoderPPR;
 constexpr float ESTEP_PER_RAD = encoderPPR / TWO_PI;
@@ -101,11 +101,16 @@ int mod(int x, int y) {
 }
 
 int32_t angleSteps(int encoderPos) {
-  return angleSign * (mod(encoderPos - encoderOrigin - encoderPPRhalf, encoderPPR) - encoderPPRhalf);
+  return encoderPos-1200-10; // 10 for compensation
+  // Original:
+  //return angleSign * (mod(encoderPos - encoderOrigin - encoderPPRhalf, encoderPPR) - encoderPPRhalf);
 }
 
-float getPoleAngleRad() {  // get encoder angle in radians
-  return RAD_PER_ESTEP * angleSteps(currentEncoderValue);
+float getPoleAngleDeg() {  // get encoder angle in radians
+  float DEG_PER_ESTEP = 360.0 / 2400.0;
+  return DEG_PER_ESTEP * (currentEncoderValue-1200-10); // 10 for compensation
+  // Original:
+  //return RAD_PER_ESTEP * angleSteps(currentEncoderValue);
 }
 
 float getCartPosMeter() {
@@ -706,11 +711,15 @@ void updateParametersForSamplingPeriod(unsigned samplingPeriod){
 
 void pauseMotorBriefly(){
   Serial.printf("HALTING NOW for %i ms\n", pauseDurationMillis);
-  rotate.overrideSpeed(0);
+  //rotate.overrideSpeed(0);
+  rotate.overrideAcceleration(1.0);
+  rotate.stopAsync();
   uint32_t startTime = millis();
   while(millis() < startTime + pauseDurationMillis){   // wait for pauseDurationMillis
     updateRotaryEncoderValue(); // keep reading updates so that feedback to sender is not missing during pauses
   }
+  //rotate.overrideSpeed(0);
+  rotate.rotateAsync(motor); 
   newEncoderValueAvailable = false;  
 }
 
@@ -959,7 +968,7 @@ void loop() {
           Serial.send_now();
           CartState = BALANCE;
         } else
-          Serial.printf("Encoder: %d -> angle = %d steps = %f°\n", encoderAbs, encoderRel, RAD_TO_DEG * RAD_PER_ESTEP * encoderRel);
+          Serial.printf("Encoder_Test: %d -> angle = %d steps = %f°\n", encoderAbs, encoderRel, RAD_TO_DEG * RAD_PER_ESTEP * encoderRel);
         Serial.send_now();
       }
       break;
@@ -981,7 +990,7 @@ void loop() {
 
       if(hasPauseBeenSignaled){
           hasPauseBeenSignaled = false;
-          pauseMotorBriefly();
+          //pauseMotorBriefly();
       }
         
       if (newEncoderValueAvailable) {
@@ -1003,7 +1012,8 @@ void loop() {
 
         float cartPos = METER_PER_MSTEP * cartSteps;
         float cartSpeed = getCartSpeedMeter();
-        float poleAngle = getPoleAngleRad();
+        float poleAngleDeg = getPoleAngleDeg();
+        float poleAngle = poleAngleDeg / 360.0 * 2 * 3.14159;
 
         //        long T1 = profileTimer;////////////LED_BUILTIN/////////////////////////////////////////////////////////////////////////////
 
