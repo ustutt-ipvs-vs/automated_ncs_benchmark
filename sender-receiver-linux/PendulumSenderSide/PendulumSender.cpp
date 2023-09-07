@@ -4,6 +4,8 @@
 
 #include "PendulumSender.h"
 #include "../Logging/LogEntries/SchedulingInfoEntries/TokenBucketInfoEntry.h"
+#include <sstream>
+#include <iostream>
 
 PendulumSender::PendulumSender(PriorityDeterminer* priorityDeterminer, std::string serialDeviceName, std::string receiverHost, int receiverPort) : logger("pendulumsender") {
     this->serialDeviceName = serialDeviceName;
@@ -30,6 +32,7 @@ void PendulumSender::start() {
             handleSenderFeedback();
             if(!pendulumStarted){
                 pendulumStarted = true;
+                startTime = std::time(nullptr);
                 priorityDeterminer->resetState(); // Reset priority determiner when pendulum starts balancing
             }
 
@@ -68,6 +71,13 @@ void PendulumSender::sendPacket(std::string payload) {
 
     priorityDeterminer->reportPacketReadyToSend(paddedPayload.size());
     int priority = priorityDeterminer->getPriority();
+
+    // Drop packets if priority is BE.
+    if (priority == 7) {
+        std::cout << "PendulumSender: Packet dropped because of BE Priority" << std::endl;
+        return;
+    }
+
     senderSocket.set_option(SOL_SOCKET, SO_PRIORITY, priority);
     senderSocket.send_to(paddedPayload, receiverAddress);
     packetCount++;
@@ -75,11 +85,36 @@ void PendulumSender::sendPacket(std::string payload) {
 
     logger.log(packetCount, bytesSentTotal, payload, priorityDeterminer->getSchedulingInfoEntry());
 
+    // Payload: S:encoderValue;transmissionPeriodMillis;sequenceNumber;currentTime
+    std::istringstream is(payload);
+    std::string currentValue;
+    getline(is, currentValue, ';');
+    int encoderValue = std::stoi(currentValue);
+    const double RAD_PER_ESTEP = 2 * 3.14159 * 2400;
+    double poleAngle = RAD_PER_ESTEP * encoderValue; //(mod(encoderPos - encoderOrigin - encoderPPRhalf, encoderPPR) - encoderPPRhalf);
+
+    // Calculate squared poleAngle Error AVG
+    std::time_t passedTime = std::time(nullptr) - startTime;
+    // Ignore first 60s
+    if(passedTime > 60000){ 
+        int runNr = passedTime / 60000;
+        // Wrap up previous run if runNr changed
+        if(currentRunNr < runNr){
+            allRunsAVG = (allRunsAVG * allRuns + currentRunAVG) / (allRuns + 1);
+            allRuns++;
+            currentRunNr = runNr;
+        }
+        currentRunAVG = (currentRunAVG * currentRunValues + poleAngle * poleAngle) / (currentRunValues + 1);
+        currentRunValues++;
+    }
+
+
     if (packetCount % 10 == 0) {
-        std::cout << "PendulumSender: "
+        /*std::cout << "PendulumSender: "
                   << "Sent " << packetCount << " packets. "
                   << priorityDeterminer->getDebugInfoString()
                   << " Payload: " << payload
-                  << std::endl;
+                  << std::endl;*/
+        std::cout << priorityDeterminer->getDebugInfoString() << " CurrentAngle: " << poleAngle << ", currentAVG: " << currentRunAVG << ", allAVG: " << allRunsAVG << std::endl;
     }
 }

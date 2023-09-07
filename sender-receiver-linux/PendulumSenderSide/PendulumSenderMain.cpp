@@ -17,6 +17,9 @@
  *
  * Option 3: Multi Priority Token Bucket with selection of parameters:
  * ./pendulum_sender m <priority mapping mode> <token bucket mode>
+ * 
+ * Option 4: DPTB with thresholds (in samples) and prio mapping
+ * ./pendulum_sender t <b (samples)> <r (sampling period)> <amountOfThresholds> <threshold 0> ... <threshold t> p <prioMapping 0> ... <prioMapping t+1> c <costPrio 0> ... <costPrio t+1>
  *
  * where priority mapping mode is one of
  * ps: strict priority sampling periods
@@ -92,7 +95,7 @@ int main(int argc, char *argv[]) {
 PriorityDeterminer *generateDeterminerFromCommandLineArguments(int argc, char *const *argv) {
     PriorityDeterminer *determiner;
 
-    // If first argument ist 'c' then use constant priority. If it is 'p', use multi priority token bucket:
+    // If first argument is 'c' then use constant priority. If it is 'p', use multi priority token bucket:
     if (argc >= 3 && argv[1][0] == 'c') {
         int priority = std::stoi(argv[2]);
         determiner = new ConstantPriority(priority);
@@ -116,7 +119,7 @@ PriorityDeterminer *generateDeterminerFromCommandLineArguments(int argc, char *c
                 {prio0SamplingPeriod, prio1SamplingPeriod, prio2SamplingPeriod, prio3SamplingPeriod,
                  prio4SamplingPeriod,
                  prio5SamplingPeriod, prio6SamplingPeriod, prio7SamplingPeriod});
-        determiner = new MultiPriorityTokenBucket(bAsBytes, rAsBytesPerSecond, 8, 0, dataRates);
+        determiner = new MultiPriorityTokenBucket(bAsBytes, rAsBytesPerSecond, 8, dataRates);
 
         std::cout << "Using multi priority token bucket with custom values:" << std::endl;
         std::cout << "b (Samples): " << b << " r (Sampling Period): " << r << std::endl;
@@ -172,7 +175,7 @@ PriorityDeterminer *generateDeterminerFromCommandLineArguments(int argc, char *c
         std::vector<double> dataRates = samplingPeriodsToDataRates(samplingPeriodsForPriorities);
         double bAsBytes = numberOfSamplesToBytes(b);
         double rAsBytesPerSecond = samplingPeriodToDataRate(r);
-        determiner = new MultiPriorityTokenBucket(bAsBytes, rAsBytesPerSecond, 8, 0, dataRates);
+        determiner = new MultiPriorityTokenBucket(bAsBytes, rAsBytesPerSecond, 8, dataRates);
 
         std::cout << "Using multi priority token bucket with custom values:" << std::endl;
         std::cout << "b (Samples): " << b << " r (Sampling Period): " << r << std::endl;
@@ -185,10 +188,90 @@ PriorityDeterminer *generateDeterminerFromCommandLineArguments(int argc, char *c
                   << samplingPeriodsForPriorities[5] << ", "
                   << samplingPeriodsForPriorities[6] << ", "
                   << samplingPeriodsForPriorities[7] << std::endl;
+    }
+    else if (argv[1][0] == 't') {
+        double b = std::stod(argv[2]);
+        double r = std::stod(argv[3]);
+        int numThresholds = std::stoi(argv[4]);
+        if (numThresholds < 0 || numThresholds > 8) {
+            std::cout << "NumThresholds invalid! At least 1 threshold required and at most 8 thresholds are allowed." << std::endl;
+            exit(1);
+        }
+
+        std::vector<double> thresholds;
+        for (int i = 0; i < numThresholds; i++) {
+            thresholds.push_back(numberOfSamplesToBytes(std::stod(argv[i + 5])));
+        }
+        if (argv[5 + numThresholds][0] != 'p') {
+            std::cout << "Invalid argument after last threshold: " << argv[5 + numThresholds] << " - expected 'p'." << std::endl;
+            exit(1);
+        }
+
+        std::vector<int> prioMapping;
+        for (int i = 0; i < numThresholds+1; i++) {
+            prioMapping.push_back(std::stoi(argv[i + 6 + numThresholds]));
+        }
+        if (argv[6 + 2*numThresholds + 1][0] != 'c') {
+            std::cout << "Invalid argument after last prioMapping: " << argv[6 + 2*numThresholds + 1] << " - expected 'c'." << std::endl;
+            exit(1);
+        }
+
+        std::vector<double> costs;
+        for (int i = 0; i < numThresholds+1; i++) {
+            costs.push_back(std::stod(argv[i + 8 + 2*numThresholds]));         
+        }
+
+        std::cout << "Option 4, read these values: b=" << b << ", r=" << r << ", numThresholds=" << numThresholds << ", thresholds="; 
+        for (int i = 0; i < thresholds.size(); i++) {
+            std::cout << thresholds[i] << ",";
+        }
+        std::cout << " prioMappings=";
+        for (int i = 0; i < prioMapping.size(); i++) {
+            std::cout << prioMapping[i] << ",";
+        }
+        std::cout << " costs=";
+        for (int i = 0; i < costs.size(); i++) {
+            std::cout << costs[i] << ",";
+        }
+        std::cout << std::endl;
+
+        
+
+        double bAsBytes = numberOfSamplesToBytes(b);
+        double rAsBytesPerSecond = samplingPeriodToDataRate(r);
+        
+        determiner = new MultiPriorityTokenBucket(bAsBytes, rAsBytesPerSecond, numThresholds, thresholds, costs, prioMapping);
+
+        
+
     } else {
+        /*std::cout << "No parameters provided, using config file pendulum_sender_config.cfg" << std::endl;
+
+        std::istringstream config_file("pendulum_sender_config.cfg");
+
+        std::string line;
+        while (std::getline(config_file, line))
+        {
+            std::istringstream config_line(line);
+            std::string key;
+            if (line.starts_with('#')) {
+                continue;
+            }
+            else if (std::getline(config_line, key, '='))
+            {
+                std::string value;
+                if (std::getline(config_line, value))
+                    // TODO: store_config_values(key, value);
+                   
+            }
+            else {
+                std::cout << "Error! malformed config line, contains no '=': " << config_line << std::endl;
+            }
+        }*/
+
         std::vector<double> dataRates = samplingPeriodsToDataRates(
                 {100, 84, 67, 50, 40, 30, 20, 10});
-        determiner = new MultiPriorityTokenBucket(7100, 710, 8, 0, dataRates);
+        determiner = new MultiPriorityTokenBucket(7100, 710, 8, dataRates);
 
         std::cout << "Warning: Using default parameters" << std::endl;
     }

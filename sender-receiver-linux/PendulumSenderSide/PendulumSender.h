@@ -3,6 +3,7 @@
 
 
 #include <string>
+#include <ctime>
 #include <sockpp/udp_socket.h>
 #include <CppLinuxSerial/SerialPort.hpp>
 #include <atomic>
@@ -30,6 +31,15 @@ private:
     PendulumLogger logger;
     std::string serialInputBuffer;
     bool pendulumStarted = false;
+
+    std::time_t startTime;
+
+    double currentRunAVG = 0;
+    int currentRunValues = 0;
+    int currentRunNr = 1;
+
+    double allRunsAVG = 0;
+    int allRuns = 0; 
 
     unsigned long long packetCount = 0;
     unsigned long long bytesSentTotal = 0;
