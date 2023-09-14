@@ -9,6 +9,8 @@
 #include <iostream>
 #include <chrono>
 
+const int RESTRICT_LOGGING_TO_MS = 50;
+
 PendulumSender::PendulumSender(PriorityDeterminer* priorityDeterminer, std::string serialDeviceName, std::string receiverHost, int receiverPort) : logger("pendulumsender") {
     this->serialDeviceName = serialDeviceName;
     receiverAddress = inet_address(receiverHost, receiverPort);
@@ -28,6 +30,7 @@ void PendulumSender::start() {
     std::cout << serialInputBuffer << std::endl;
 
     startTime = timeSinceEpochMillisec();
+
     std::cout << "StartTime: " << startTime << std::endl;
     while (!stopSending) {
         serialSensor.Read(serialInputBuffer);
@@ -88,11 +91,19 @@ void PendulumSender::sendPacket(std::string payload) {
 
     senderSocket.set_option(SOL_SOCKET, SO_PRIORITY, priority);
     senderSocket.send_to(paddedPayload, receiverAddress);
+
     packetCount++;
     bytesSentTotal += paddedPayload.size();
 
-    logger.log(packetCount, bytesSentTotal, payload, priorityDeterminer->getSchedulingInfoEntry());
+    
+    // Limit logging rate
+    uint64_t currentTime = timeSinceEpochMillisec();
+    if(currentTime - lastLogTime >= RESTRICT_LOGGING_TO_MS){
+        lastLogTime = currentTime;
+        logger.log(packetCount, bytesSentTotal, payload, priorityDeterminer->getSchedulingInfoEntry());
+    }
 
+    // Calculate current pole angle
     // Payload: S:encoderValue;transmissionPeriodMillis;sequenceNumber;currentTime
     //std::cout << "Payload: " << payload;
     size_t delimPos = payload.find(';');
@@ -102,7 +113,7 @@ void PendulumSender::sendPacket(std::string payload) {
     double poleAngle = DEG_PER_ESTEP * (encoderValue-1200-10); //1200 is half, 10 is compensation. (mod(encoderPos - encoderOrigin - encoderPPRhalf, encoderPPR) - encoderPPRhalf);
 
     // Calculate squared poleAngle Error AVG
-    std::time_t passedTime = timeSinceEpochMillisec() - startTime;
+    uint64_t passedTime = currentTime - startTime;
     // Ignore first 60s
     if(passedTime > 60000){ 
         int runNr = passedTime / 60000;

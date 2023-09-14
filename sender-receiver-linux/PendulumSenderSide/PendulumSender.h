@@ -33,6 +33,7 @@ private:
     bool pendulumStarted = false;
 
     uint64_t startTime;
+    uint64_t lastLogTime = 0;
 
     double currentRunAVG = 0;
     int currentRunValues = 0;
