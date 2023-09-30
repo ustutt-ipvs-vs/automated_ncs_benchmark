@@ -119,7 +119,7 @@ PriorityDeterminer *generateDeterminerFromCommandLineArguments(int argc, char *c
                 {prio0SamplingPeriod, prio1SamplingPeriod, prio2SamplingPeriod, prio3SamplingPeriod,
                  prio4SamplingPeriod,
                  prio5SamplingPeriod, prio6SamplingPeriod, prio7SamplingPeriod});
-        determiner = new MultiPriorityTokenBucket(bAsBytes, rAsBytesPerSecond, 8, dataRates);
+        determiner = new MultiPriorityTokenBucket(bAsBytes, rAsBytesPerSecond, 8, 0, dataRates);
 
         std::cout << "Using multi priority token bucket with custom values:" << std::endl;
         std::cout << "b (Samples): " << b << " r (Sampling Period): " << r << std::endl;
@@ -175,7 +175,7 @@ PriorityDeterminer *generateDeterminerFromCommandLineArguments(int argc, char *c
         std::vector<double> dataRates = samplingPeriodsToDataRates(samplingPeriodsForPriorities);
         double bAsBytes = numberOfSamplesToBytes(b);
         double rAsBytesPerSecond = samplingPeriodToDataRate(r);
-        determiner = new MultiPriorityTokenBucket(bAsBytes, rAsBytesPerSecond, 8, dataRates);
+        determiner = new MultiPriorityTokenBucket(bAsBytes, rAsBytesPerSecond, 8, 0, dataRates);
 
         std::cout << "Using multi priority token bucket with custom values:" << std::endl;
         std::cout << "b (Samples): " << b << " r (Sampling Period): " << r << std::endl;
@@ -189,7 +189,7 @@ PriorityDeterminer *generateDeterminerFromCommandLineArguments(int argc, char *c
                   << samplingPeriodsForPriorities[6] << ", "
                   << samplingPeriodsForPriorities[7] << std::endl;
     }
-    else if (argv[1][0] == 't') {
+    else if (argc >= 5 && argv[1][0] == 't') {
         double b = std::stod(argv[2]);
         double r = std::stod(argv[3]);
         int numThresholds = std::stoi(argv[4]);
@@ -240,7 +240,7 @@ PriorityDeterminer *generateDeterminerFromCommandLineArguments(int argc, char *c
         double bAsBytes = numberOfSamplesToBytes(b);
         double rAsBytesPerSecond = samplingPeriodToDataRate(r);
         
-        determiner = new MultiPriorityTokenBucket(bAsBytes, rAsBytesPerSecond, numThresholds, thresholds, costs, prioMapping);
+        determiner = new MultiPriorityTokenBucket(bAsBytes, rAsBytesPerSecond, numThresholds, 0, thresholds, costs, prioMapping);
 
         
 
@@ -271,7 +271,7 @@ PriorityDeterminer *generateDeterminerFromCommandLineArguments(int argc, char *c
 
         std::vector<double> dataRates = samplingPeriodsToDataRates(
                 {100, 84, 67, 50, 40, 30, 20, 10});
-        determiner = new MultiPriorityTokenBucket(7100, 710, 8, dataRates);
+        determiner = new MultiPriorityTokenBucket(7100, 710, 8, 0, dataRates);
 
         std::cout << "Warning: Using default parameters" << std::endl;
     }
