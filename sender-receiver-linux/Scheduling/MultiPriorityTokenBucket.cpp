@@ -18,7 +18,7 @@ MultiPriorityTokenBucket::MultiPriorityTokenBucket(double b, double r, unsigned 
 
 MultiPriorityTokenBucket::MultiPriorityTokenBucket(double b, double r, unsigned int numPriorities,
                                                    unsigned int initialPriorityClass, std::vector<double> thresholds,
-                                                   std::vector<double> costs)
+                                                   std::vector<double> costs, std::vector<int> prioMapping)
         : TokenBucket(b, r, initialPriorityClass) {
 
     if (thresholds.size() != numPriorities || costs.size() != numPriorities) {
@@ -27,7 +27,12 @@ MultiPriorityTokenBucket::MultiPriorityTokenBucket(double b, double r, unsigned 
 
     this->thresholdOfPriorities = thresholds;
     this->costOfPriorities = costs;
+    this->prioMapping = prioMapping;
     this->numPriorities = numPriorities;
+}
+
+unsigned int MultiPriorityTokenBucket::getPriority() {
+    return prioMapping[currentPriorityClass];
 }
 
 void MultiPriorityTokenBucket::updatePriority() {

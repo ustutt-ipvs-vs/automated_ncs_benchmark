@@ -14,7 +14,9 @@ public:
                              std::vector<double> dataRateOfPriorities);
 
     MultiPriorityTokenBucket(double b, double r, unsigned int numPriorities, unsigned int initialPriorityClass,
-                             std::vector<double> thresholds, std::vector<double> costs);
+                             std::vector<double> thresholds, std::vector<double> costs, std::vector<int> prioMapping);
+
+    unsigned int getPriority() override;
 
 protected:
     void updatePriority() override;
@@ -26,6 +28,7 @@ private:
 
     std::vector<double> thresholdOfPriorities;
     std::vector<double> costOfPriorities;
+    std::vector<int> prioMapping;
     unsigned int numPriorities;
 };
 
