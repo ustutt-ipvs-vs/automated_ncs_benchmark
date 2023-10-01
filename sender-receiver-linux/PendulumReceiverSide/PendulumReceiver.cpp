@@ -38,6 +38,7 @@ void PendulumReceiver::start() {
         serialActuator.Write(networkInput);
 
         while (serialActuator.Available() > 0) {
+            serialInput.clear();
             serialActuator.Read(serialInput);
             std::cout << "Actuator: " << serialInput << std::endl;
 
