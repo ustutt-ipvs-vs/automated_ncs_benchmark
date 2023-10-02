@@ -64,7 +64,10 @@ add_executable(pendulum_sender
         Scheduling/PriorityDeterminer.cpp
         Scheduling/MultiPriorityTokenBucket.cpp
         Scheduling/MultiPriorityTokenBucket.h
-        )
+        PendulumSenderSide/SenderConfig.cpp
+        PendulumSenderSide/SenderConfig.h
+        SerialPortScan/TeensyPortDetector.cpp
+        SerialPortScan/TeensyPortDetector.h )
 
 add_executable(pendulum_receiver
         PendulumReceiverSide/PendulumReceiverMain.cpp
@@ -93,6 +96,8 @@ add_executable(pendulum_receiver
         Scheduling/TokenBucket.cpp
         Logging/LogEntries/SchedulingInfoEntries/TokenBucketInfoEntry.cpp
         Logging/LogEntries/SchedulingInfoEntries/TokenBucketInfoEntry.h
+        SerialPortScan/TeensyPortDetector.cpp
+        SerialPortScan/TeensyPortDetector.h
         )
 
 
