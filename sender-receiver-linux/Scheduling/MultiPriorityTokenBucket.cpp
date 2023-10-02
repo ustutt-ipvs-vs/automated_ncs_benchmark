@@ -12,6 +12,11 @@ MultiPriorityTokenBucket::MultiPriorityTokenBucket(double b, double r, unsigned 
         throw std::runtime_error("Number of data rates must match numPriorities");
     }
     this->numPriorities = numPriorities;
+    
+    // Init with identity mapping:
+    for(int i=0; i<numPriorities; i++){
+        this->prioMapping.push_back(i);
+    }
 
     calculateThresholdsAndCosts(r, dataRateOfPriorities);
 }
