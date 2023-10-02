@@ -5,6 +5,8 @@
 #include "PendulumSender.h"
 #include "../Scheduling/ConstantPriority.h"
 #include "../Scheduling/MultiPriorityTokenBucket.h"
+#include "SenderConfig.h"
+#include "../SerialPortScan/TeensyPortDetector.h"
 
 /**
  * Usage from command line:
@@ -17,9 +19,6 @@
  *
  * Option 3: Multi Priority Token Bucket with selection of parameters:
  * ./pendulum_sender m <priority mapping mode> <token bucket mode>
- * 
- * Option 4: DPTB with thresholds (in samples) and prio mapping
- * ./pendulum_sender t <b (samples)> <r (sampling period)> <amountOfThresholds> <threshold 0> ... <threshold t> p <prioMapping 0> ... <prioMapping t+1> c <costPrio 0> ... <costPrio t+1>
  *
  * where priority mapping mode is one of
  * ps: strict priority sampling periods
@@ -30,6 +29,12 @@
  * bs: strict bucket
  * bm: medium bucket
  * bg: generous bucket
+ * 
+ * Option 4: DPTB with thresholds (in samples) and prio mapping
+ * ./pendulum_sender t <b (samples)> <r (sampling period)> <amountOfThresholds> <threshold 0> ... <threshold t> p <prioMapping 0> ... <prioMapping t+1> c <costPrio 0> ... <costPrio t+1>
+ *
+ * Option 5: Use a JSON config file. An example config file can be found in "exampleSenderConfig.json"
+ * ./pendulum_sender f <filename>
  *
  * Running the program as sudo (required for priority 7 to work):
  * $ sudo su
@@ -44,6 +49,13 @@ int port = 3000;
 
 // 78B = 32B payload + 14B Ethernet header + 4B VLAN tag + 20B IP header + 8B UDP header
 double frameSizeOfSample = 78;
+
+// Number of samples that Teensy keeps in its history buffer to determine sampling period.
+// Gets transmitted to the sender Teensy at initialization.
+int teensyHistorySize = 100;
+
+// Different sampling periods used by the Teensy sender in milliseconds:
+std::vector<int> teensySamplingPeriods = {100, 90, 80, 70, 60, 50, 40, 30, 20, 10};
 
 std::vector<double> strictPrioritySamplingPeriods = {90, 80, 70, 60, 50, 40, 30, 20};
 std::vector<double> mediumPrioritySamplingPeriods = {75, 59, 43, 26, 10, 9, 8, 7};
@@ -88,7 +100,7 @@ int main(int argc, char *argv[]) {
     PriorityDeterminer *determiner;
     determiner = generateDeterminerFromCommandLineArguments(argc, argv);
 
-    sender = new PendulumSender(determiner, device, host, port);
+    sender = new PendulumSender(determiner, device, host, port, teensyHistorySize, teensySamplingPeriods);
     sender->start();
 }
 
@@ -221,7 +233,7 @@ PriorityDeterminer *generateDeterminerFromCommandLineArguments(int argc, char *c
             costs.push_back(std::stod(argv[i + 8 + 2*numThresholds]));         
         }
 
-        std::cout << "Option 4, read these values: b=" << b << ", r=" << r << ", numThresholds=" << numThresholds << ", thresholds="; 
+        std::cout << "Option 4, read these values: b=" << b << ", r=" << r << ", numPriorities=" << numThresholds << ", thresholds=";
         for (int i = 0; i < thresholds.size(); i++) {
             std::cout << thresholds[i] << ",";
         }
@@ -235,40 +247,45 @@ PriorityDeterminer *generateDeterminerFromCommandLineArguments(int argc, char *c
         }
         std::cout << std::endl;
 
-        
-
         double bAsBytes = numberOfSamplesToBytes(b);
         double rAsBytesPerSecond = samplingPeriodToDataRate(r);
         
         determiner = new MultiPriorityTokenBucket(bAsBytes, rAsBytesPerSecond, numThresholds, 0, thresholds, costs, prioMapping);
 
-        
+    } else if (argc >= 3 && argv[1][0] == 'f'){
+        // use config file
+        std::string filename = argv[2];
+        std::cout << "Using config file " << filename << std::endl;
+        SenderConfig config(filename);
+        double bAsBytes = numberOfSamplesToBytes(config.getB());
+        double rAsBytesPerSecond = samplingPeriodToDataRate(config.getR());
+        std::vector<double> thresholdsBytes;
+        for (double threshold : config.getThresholds()) {
+            thresholdsBytes.push_back(numberOfSamplesToBytes(threshold));
+        }
+        // negative infinite threshold for the last priority:
+        thresholdsBytes.push_back(-std::numeric_limits<double>::infinity());
 
-    } else {
-        /*std::cout << "No parameters provided, using config file pendulum_sender_config.cfg" << std::endl;
+        determiner = new MultiPriorityTokenBucket(bAsBytes, rAsBytesPerSecond, config.getNumPriorities(),
+                                                  config.getInitialPriorityClass(), thresholdsBytes,
+                                                  config.getCosts(), config.getPrioMapping());
 
-        std::istringstream config_file("pendulum_sender_config.cfg");
+        host = config.getReceiverAddress();
+        teensyHistorySize = config.getHistorySize();
+        teensySamplingPeriods = config.getSamplingPeriods();
 
-        std::string line;
-        while (std::getline(config_file, line))
-        {
-            std::istringstream config_line(line);
-            std::string key;
-            if (line.starts_with('#')) {
-                continue;
-            }
-            else if (std::getline(config_line, key, '='))
-            {
-                std::string value;
-                if (std::getline(config_line, value))
-                    // TODO: store_config_values(key, value);
-                   
-            }
-            else {
-                std::cout << "Error! malformed config line, contains no '=': " << config_line << std::endl;
-            }
-        }*/
+        if(config.isAutomaticallyFindSerialDevice()){
+            std::cout << "Automatically finding serial device..." << std::endl;
+            device = TeensyPortDetector::findTeensySerialDevice();
+        } else {
+            device = config.getSerialDeviceName();
+        }
+        std::cout << "Using serial device " << device << std::endl;
 
+        std::cout << config.toString() << std::endl;
+    }
+
+    else {
         std::vector<double> dataRates = samplingPeriodsToDataRates(
                 {100, 84, 67, 50, 40, 30, 20, 10});
         determiner = new MultiPriorityTokenBucket(7100, 710, 8, 0, dataRates);
