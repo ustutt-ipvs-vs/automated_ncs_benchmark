@@ -19,8 +19,10 @@ long sequenceNumber = 1;
 long lastReceivedSequenceNumber = 0;
 long packetsLostTotal = 0;
 
-#define HISTORY_SIZE 100
-int samplesHistory[HISTORY_SIZE];  // acts as a ring buffer
+int historySize = 0;
+int* samplesHistory; // Acts as ring buffer
+#define NUM_SAMPLING_PERIODS 10
+int samplingPeriodsMillis[NUM_SAMPLING_PERIODS];
 int historyPosition = 0;
 
 
@@ -34,6 +36,38 @@ void setup() {
 
   FeedbackSerial.begin(115200);
   FeedbackSerial.setTimeout(20);
+
+  readInitializationValues();
+}
+
+void readInitializationValues(){
+  // Expected Format: 
+  // H:historySize;period1;period2;period3;period4;period5;period6;period7;period8;period9;period10;\n
+  bool receivedHistorySize = false;
+  while(!receivedHistorySize){
+    Serial.println("READY");
+    delay(500);
+
+    if(Serial.available() > 0){
+      if(Serial.readStringUntil(':').startsWith("H")){
+        historySize = Serial.readStringUntil(';').toInt();
+        for(int i=0; i<NUM_SAMPLING_PERIODS; i++){
+          samplingPeriodsMillis[i] = Serial.readStringUntil(';').toInt();
+        }
+        receivedHistorySize = true;
+        samplesHistory = new int[historySize];
+
+        // Echo received values to computer for validation:
+        Serial.printf("Received history size: %i\n", historySize);
+        Serial.print("Received Sampling Periods: ");
+        for(int i=0; i<NUM_SAMPLING_PERIODS; i++){
+          Serial.printf("%i, ", samplingPeriodsMillis[i]);
+        }
+        Serial.println();
+      }
+      Serial.read(); // Remove \n
+    }
+  }
 }
 
 void loop() {
@@ -52,30 +86,30 @@ void calculateTransmissionPeriod(){
     compareValue = getHistoryMaxChange(currentEncoderValue);
 
     samplesHistory[historyPosition] = currentEncoderValue;
-    historyPosition = (historyPosition + 1) % HISTORY_SIZE;
+    historyPosition = (historyPosition + 1) % historySize;
 
     previousEncoderValue = currentEncoderValue;
 
     if(compareValue <= 1){
-      transmissionPeriodMillis = 100;
+      transmissionPeriodMillis = samplingPeriodsMillis[0];
     } else if(compareValue <= 2){
-      transmissionPeriodMillis = 90;
+      transmissionPeriodMillis = samplingPeriodsMillis[1];
     } else if(compareValue <= 3){
-      transmissionPeriodMillis = 80;
+      transmissionPeriodMillis = samplingPeriodsMillis[2];
     } else if(compareValue <= 4){
-      transmissionPeriodMillis = 70;
+      transmissionPeriodMillis = samplingPeriodsMillis[3];
     } else if(compareValue <= 5){
-      transmissionPeriodMillis = 60;
+      transmissionPeriodMillis = samplingPeriodsMillis[4];
     } else if(compareValue <= 6){
-      transmissionPeriodMillis = 50;
+      transmissionPeriodMillis = samplingPeriodsMillis[5];
     } else if(compareValue <= 7){
-      transmissionPeriodMillis = 40;
+      transmissionPeriodMillis = samplingPeriodsMillis[6];
     } else if(compareValue <= 8){
-      transmissionPeriodMillis = 30;
+      transmissionPeriodMillis = samplingPeriodsMillis[7];
     } else if(compareValue <= 9){
-      transmissionPeriodMillis = 20;
+      transmissionPeriodMillis = samplingPeriodsMillis[8];
     } else {
-      transmissionPeriodMillis = 10;
+      transmissionPeriodMillis = samplingPeriodsMillis[9];
     }
   }
 }
@@ -127,7 +161,7 @@ void checkAndHandleFeedback(){
 
 int getHistoryMaxChange(int currentValue){
   int maxChange = abs(samplesHistory[0] - currentValue);
-  for(int i=1; i < HISTORY_SIZE; i++){
+  for(int i=1; i < historySize; i++){
     int change = abs(samplesHistory[i] - currentValue);
     if(change > maxChange){
       maxChange = change;
