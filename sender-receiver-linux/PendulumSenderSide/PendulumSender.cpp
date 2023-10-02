@@ -33,6 +33,7 @@ void PendulumSender::start() {
 
     std::cout << "StartTime: " << startTime << std::endl;
     while (!stopSending) {
+        serialInputBuffer.clear();
         serialSensor.Read(serialInputBuffer);
 
         if (serialInputBuffer.rfind("FB:", 0) == 0) {
