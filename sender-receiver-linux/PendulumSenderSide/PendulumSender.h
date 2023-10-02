@@ -31,6 +31,8 @@ private:
     PendulumLogger logger;
     std::string serialInputBuffer;
     bool pendulumStarted = false;
+    int teensyHistorySize;
+    std::vector<int> teensySamplingPeriods;
 
     uint64_t startTime;
     uint64_t lastLogTime = 0;
@@ -47,7 +49,8 @@ private:
     unsigned long long feedbackPacketsCount = 0;
 
 public:
-    PendulumSender(PriorityDeterminer* priorityDeterminer, std::string serialDeviceName, std::string receiverHost, int receiverPort);
+    PendulumSender(PriorityDeterminer* priorityDeterminer, std::string serialDeviceName, std::string receiverHost,
+                   int receiverPort, int teensyHistorySize, std::vector<int> teensySamplingPeriods);
     void start();
     void stop();
 

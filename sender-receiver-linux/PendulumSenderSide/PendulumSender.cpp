@@ -11,7 +11,9 @@
 
 const int RESTRICT_LOGGING_TO_MS = 50;
 
-PendulumSender::PendulumSender(PriorityDeterminer* priorityDeterminer, std::string serialDeviceName, std::string receiverHost, int receiverPort) : logger("pendulumsender") {
+PendulumSender::PendulumSender(PriorityDeterminer* priorityDeterminer, std::string serialDeviceName,
+                               std::string receiverHost, int receiverPort, int teensyHistorySize,
+                               std::vector<int> teensySamplingPeriods) : logger("pendulumsender") {
     this->serialDeviceName = serialDeviceName;
     receiverAddress = inet_address(receiverHost, receiverPort);
 
@@ -19,10 +21,30 @@ PendulumSender::PendulumSender(PriorityDeterminer* priorityDeterminer, std::stri
     serialSensor.SetTimeout(-1);
 
     this->priorityDeterminer = priorityDeterminer;
+    this->teensyHistorySize = teensyHistorySize;
+    this->teensySamplingPeriods = teensySamplingPeriods;
 }
 
 void PendulumSender::start() {
     serialSensor.Open();
+
+    // Wait for sender to be ready:
+    std::cout << "Waiting for sender Teensy to send READY signal." << std::endl;
+    serialSensor.Read(serialInputBuffer);
+    while (serialInputBuffer.rfind("READY", 0) != 0) {
+        serialInputBuffer.clear();
+        serialSensor.Read(serialInputBuffer);
+    }
+
+    // Send Teensy history size:
+    std::cout << "Sending Teensy history size: " << teensyHistorySize << std::endl;
+    // Create string of form "H:historySize;period1;period2;period3;...\n"
+    std::string teensyInitParams = "H:" + std::to_string(teensyHistorySize) + ";";
+    for (int period : teensySamplingPeriods) {
+        teensyInitParams += std::to_string(period) + ";";
+    }
+    teensyInitParams += "\n";
+    serialSensor.Write(teensyInitParams);
 
     // Wait for first serial values to arrive, before going into main loop:
     std::cout << "Waiting for first sensor value" << std::endl;
