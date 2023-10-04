@@ -4,11 +4,17 @@
 
 #include "PendulumReceiver.h"
 
-PendulumReceiver::PendulumReceiver(std::string serialDeviceName, std::string receiverHost, int receiverPort, bool doPauses)
+PendulumReceiver::PendulumReceiver(std::string serialDeviceName, std::string receiverHost, int receiverPort,
+                                   bool doPauses, int timeBetweenPausesMillis, int pauseDurationMillis,
+                                   int motorMaxRPM, double revolutionsPerTrack)
         : logger("pendulumreceiver") {
     this->serialDeviceName = serialDeviceName;
     this->receiverAddress = inet_address(receiverHost, receiverPort);
     this->doPauses = doPauses;
+    this->timeBetweenPausesMillis = timeBetweenPausesMillis;
+    this->pauseDurationMillis = pauseDurationMillis;
+    this->motorMaxRPM = motorMaxRPM;
+    this->revolutionsPerTrack = revolutionsPerTrack;
 
     receiverSocket.bind(receiverAddress);
 
@@ -20,6 +26,28 @@ PendulumReceiver::PendulumReceiver(std::string serialDeviceName, std::string rec
 void PendulumReceiver::start() {
     serialActuator.Open();
 
+    // Wait for actuator to be ready:
+    std::cout << "Waiting for actuator Teensy to send READY signal." << std::endl;
+    serialActuator.Read(serialInput);
+    while (serialInput.rfind("READY", 0) != 0) {
+        serialInput.clear();
+        serialActuator.Read(serialInput);
+    }
+
+    // Send Teensy drive geometry parameters:
+    std::cout << "Sending drive geometry parameters: motor max RPM: " << motorMaxRPM << ", revolutions per track: "
+        << revolutionsPerTrack << std::endl;
+    // Create string of form "I:motorMaxRPM;revolutionsPerTrack;\n"
+    std::string teensyInitParams = "I:" + std::to_string(motorMaxRPM) + ";" + std::to_string(revolutionsPerTrack) + ";\n";
+    serialActuator.Write(teensyInitParams);
+
+    // Wait for first serial values to arrive, before going into main loop:
+    std::cout << "Waiting for actuator to start" << std::endl;
+    serialActuator.Read(serialInput);
+    serialInput.clear();
+    std::cout << serialInput << std::endl;
+
+    // Initialization complete. Main loop:
     while (!stopReceiving) {
         int receivedLength = receiverSocket.recv(receiveBuffer, sizeof(receiveBuffer));
         networkInput = std::string(receiveBuffer, receivedLength);
@@ -78,4 +106,6 @@ void PendulumReceiver::stop() {
     serialActuator.Close();
     logger.saveToFile();
 }
+
+
 

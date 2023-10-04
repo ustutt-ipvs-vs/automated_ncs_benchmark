@@ -1,9 +1,11 @@
-//
-// Created by david on 11.01.23.
-//
+/**
+ * Usage:
+ * ./pendulum_receiver config_file.json
+ */
 
 #include <string>
 #include "PendulumReceiver.h"
+#include "../SerialPortScan/TeensyPortDetector.h"
 
 std::string device = "/dev/ttyACM0";
 
@@ -19,8 +21,29 @@ void sigIntHandler(int signal){
     exit(0);
 }
 
-int main(){
+int main(int argc, char *argv[]){
     signal(SIGINT, sigIntHandler);
-    receiver = new PendulumReceiver(device, host, port, true);
+
+    if(argc >= 2) {
+        std::string configFile = argv[1];
+        ReceiverConfig config(configFile);
+        if(config.isAutomaticallyFindSerialDevice()){
+            device = TeensyPortDetector::findTeensySerialDevice();
+        } else{
+            device = config.getSerialDeviceName();
+        }
+
+        receiver = new PendulumReceiver(device, config.getReceiverAddress(), port,
+                                        config.isDoPauses(), config.getTimeBetweenPausesMillis(),
+                                        config.getPauseDurationMillis(), config.getMotorMaxRPM(),
+                                        config.getRevolutionsPerTrack());
+
+        std::cout << "Using config file: " << configFile << std::endl;
+        std::cout << config.toString() << std::endl;
+
+    } else {
+        std::cout << "No config file specified, using default values." << std::endl;
+        receiver = new PendulumReceiver(device, host, port, true, 20'000, 800, 20*60, 20.06);
+    }
     receiver->start();
 }

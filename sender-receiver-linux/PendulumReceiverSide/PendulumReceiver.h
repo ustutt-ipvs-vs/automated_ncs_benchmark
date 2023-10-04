@@ -9,6 +9,7 @@
 #include <CppLinuxSerial/SerialPort.hpp>
 #include <atomic>
 #include "../Logging/PendulumLogger.h"
+#include "ReceiverConfig.h"
 #include <chrono>
 
 using sockpp::udp_socket;
@@ -47,12 +48,16 @@ private:
 
     time_point<system_clock> lastPauseTime;
     bool startedBalancing = false;
-    const unsigned int timeBetweenPausesMillis = 20'000;
-    const unsigned int pauseDurationMillis = 800;
+    unsigned int timeBetweenPausesMillis;
+    unsigned int pauseDurationMillis;
     bool doPauses = false;
 
+    int motorMaxRPM;
+    double revolutionsPerTrack;
+
 public:
-    PendulumReceiver(std::string serialDeviceName, std::string receiverHost, int receiverPort, bool doPauses = false);
+    PendulumReceiver(std::string serialDeviceName, std::string receiverHost, int receiverPort, bool doPauses,
+                     int timeBetweenPausesMillis, int pauseDurationMillis, int motorMaxRPM, double revolutionsPerTrack);
     void start();
     void stop();
 
