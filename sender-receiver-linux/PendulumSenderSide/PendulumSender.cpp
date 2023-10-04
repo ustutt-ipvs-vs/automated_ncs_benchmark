@@ -49,6 +49,7 @@ void PendulumSender::start() {
     // Wait for first serial values to arrive, before going into main loop:
     std::cout << "Waiting for first sensor value" << std::endl;
     serialSensor.Read(serialInputBuffer);
+    serialInputBuffer.clear();
     std::cout << serialInputBuffer << std::endl;
 
     startTime = timeSinceEpochMillisec();
