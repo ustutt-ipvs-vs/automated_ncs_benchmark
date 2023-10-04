@@ -48,23 +48,23 @@ Bounce limitSwitchRight;
 // STEPPER PARAMETERS
 
 constexpr int motorPPR = 1600;
-constexpr int motorMaxRPM = 20 * 60;  // approx. 1s for track length
-constexpr int motorPPS = (motorMaxRPM * motorPPR) / 60;
-constexpr int motorACC = motorPPS * 15;
+int motorMaxRPM = 20 * 60;  // approx. 1s for track length
+int motorPPS = (motorMaxRPM * motorPPR) / 60;
+int motorACC = motorPPS * 15;
 
-constexpr int homingRPM = 120;  // approx. 10s for track length
-constexpr float homingFactor = (float)homingRPM / motorMaxRPM;
+int homingRPM = motorMaxRPM / 10;  // approx. 10s for track length
+float homingFactor = (float)homingRPM / motorMaxRPM;
 
 
 // DRIVE GEOMETRY
 
-constexpr float REV_PER_TRACK = 20.06;
+float REV_PER_TRACK = 20.06;
 constexpr float trackLengthMeters = 1.2;
-constexpr float MSTEP_PER_METER = REV_PER_TRACK * motorPPR / trackLengthMeters;
-constexpr float METER_PER_MSTEP = trackLengthMeters / (REV_PER_TRACK * motorPPR);
+float MSTEP_PER_METER = REV_PER_TRACK * motorPPR / trackLengthMeters;
+float METER_PER_MSTEP = trackLengthMeters / (REV_PER_TRACK * motorPPR);
 
-constexpr float vMaxMeters = METER_PER_MSTEP * motorPPS;
-constexpr float aMaxMeters = METER_PER_MSTEP * motorACC;
+float vMaxMeters = METER_PER_MSTEP * motorPPS;
+float aMaxMeters = METER_PER_MSTEP * motorACC;
 
 constexpr float safeRangeMeters = 1.0;
 constexpr float safePosMeters = safeRangeMeters / 2;
@@ -730,6 +730,55 @@ void initializeCartState() {
   initTimer = 0;
 }
 
+void readInitializationValues(){
+  int newMotorMaxRPM;
+  float newRevolutionsPerTrack;
+  
+  // Expected Format: 
+  // I:motorMaxRPM;revolutionsPerTrack;\n
+  bool receivedInitValues = false;
+  while(!receivedInitValues){
+    Serial.println("READY");
+    delay(500);
+
+    if(Serial.available() > 0){
+      if(Serial.readStringUntil(':').startsWith("I")){
+        newMotorMaxRPM = Serial.readStringUntil(';').toInt();
+        newRevolutionsPerTrack = Serial.readStringUntil(';').toFloat();
+        receivedInitValues = true;
+
+        // Echo received values to computer for validation:
+        Serial.printf("Received init values: motor max RPM: %i, revolutions per track: %f\n", newMotorMaxRPM, newRevolutionsPerTrack);
+      }
+      Serial.read(); // Remove \n
+    }
+  }
+
+  updateDriveGeometryParameters(newMotorMaxRPM, newRevolutionsPerTrack);
+}
+
+void updateDriveGeometryParameters(int newMotorMaxRPM, float newRevolutionsPerTrack){
+  // STEPPER PARAMETERS
+  motorMaxRPM = newMotorMaxRPM;  // approx. 1s for track length
+  motorPPS = (motorMaxRPM * motorPPR) / 60;
+  motorACC = motorPPS * 15;
+
+  homingRPM = motorMaxRPM / 10;  // approx. 10s for track length
+  homingFactor = (float)homingRPM / motorMaxRPM;
+
+
+  // DRIVE GEOMETRY
+  REV_PER_TRACK = newRevolutionsPerTrack;
+  MSTEP_PER_METER = REV_PER_TRACK * motorPPR / trackLengthMeters;
+  METER_PER_MSTEP = trackLengthMeters / (REV_PER_TRACK * motorPPR);
+
+  vMaxMeters = METER_PER_MSTEP * motorPPS;
+  aMaxMeters = METER_PER_MSTEP * motorACC;
+
+  trackLengthSteps = REV_PER_TRACK * motorPPR;             // initial guess before homing
+  safePosSteps = safePosPercentage * trackLengthSteps;     // initial guess
+  stepsPerMeter = trackLengthSteps / trackLengthMeters;  // initial guess
+}
 
 void setup() {
   // set up pins
@@ -747,16 +796,19 @@ void setup() {
   pinMode(pinLimitRight, INPUT_PULLUP);
 #endif
 
-  motor.setMaxSpeed(motorPPS).setAcceleration(motorACC);
-  rotate.rotateAsync(motor);
-  rotate.overrideSpeed(0);
-  rotate.overrideAcceleration(1.0);
 
   delay(5000);
   Serial.begin(460800);
   Serial.setTimeout(20);
   FeedbackSerial.begin(115200);
   FeedbackSerial.setTimeout(20);
+
+  readInitializationValues();
+
+  motor.setMaxSpeed(motorPPS).setAcceleration(motorACC);
+  rotate.rotateAsync(motor);
+  rotate.overrideSpeed(0);
+  rotate.overrideAcceleration(1.0);
 
   delay(500);
   Serial.println("Homing and balancing test...");
@@ -950,7 +1002,7 @@ void loop() {
         int encoderAbs = currentEncoderValue;
         int encoderRel = angleSteps(encoderAbs);
         bool wasUpright = isUpright;
-        isUpright = (std::abs(encoderRel) < 20);
+        isUpright = (abs(encoderRel) < 20);
         if (isUpright && wasUpright) {
           isUpright = false;
           k = 0;
@@ -1003,7 +1055,7 @@ void loop() {
 
         int32_t cartSteps = motor.getPosition();
 
-        if (std::abs(cartSteps) >= safePosSteps) {
+        if (abs(cartSteps) >= safePosSteps) {
           rotate.overrideAcceleration(1);
           rotate.stop();
           initializeCartState();
@@ -1060,7 +1112,7 @@ void loop() {
 
         u_accel = (target_speed - cartSpeed) * fs;  // correct acceleration for speed clamping
 
-        float accel_factor = std::abs(u_accel) / aMaxMeters;  // (factor must be positive, target_speed determines sign)
+        float accel_factor = abs(u_accel) / aMaxMeters;  // (factor must be positive, target_speed determines sign)
         float speed_factor = target_speed / vMaxMeters;
 
         //        long T3 = profileTimer;/////////////////////////////////////////////////////////////////////////////////////////
