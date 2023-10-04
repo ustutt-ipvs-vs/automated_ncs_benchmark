@@ -24,6 +24,9 @@
  *  samplingPeriods = [100, 90, 80, 70, 60, 50, 40, 30, 20, 10]
  *  initialPriorityClass = 0
  *  serialDeviceName = "auto"   // automatically find the device by scanning /dev/ttyACM*
+ *
+ * The serialDeviceName can be set to "auto" to automatically find the a Teensy device.
+ * It is also possible to specify the device name manually, e.g. "/dev/ttyACM0".
  * */
 
 #ifndef SENDER_RECEIVER_LINUX_SENDERCONFIG_H
@@ -47,10 +50,6 @@ private:
 
     // Teensy parameters:
     int historySize;
-public:
-    const std::vector<int> &getSamplingPeriods() const;
-
-private:
     std::vector<int> samplingPeriods;
     std::string serialDeviceName;
     bool automaticallyFindSerialDevice;
@@ -58,8 +57,9 @@ private:
     // Network parameters:
     std::string receiverAddress;
 
-
 public:
+    const std::vector<int> &getSamplingPeriods() const;
+
     int getHistorySize() const;
 
     const std::string &getSerialDeviceName() const;
