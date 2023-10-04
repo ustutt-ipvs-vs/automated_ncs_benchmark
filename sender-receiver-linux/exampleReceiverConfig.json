@@ -1,0 +1,8 @@
+{
+  "receiverAddress": "10.0.0.3",
+  "pendulumType": "oldPendulum",
+  "serialDeviceName": "auto",
+  "doPauses": true,
+  "timeBetweenPausesMillis": 20000,
+  "pauseDurationMillis": 800
+}
