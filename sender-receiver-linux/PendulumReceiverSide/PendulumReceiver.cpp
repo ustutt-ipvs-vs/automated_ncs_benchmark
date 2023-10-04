@@ -43,9 +43,9 @@ void PendulumReceiver::start() {
 
     // Wait for first serial values to arrive, before going into main loop:
     std::cout << "Waiting for actuator to start" << std::endl;
-    serialActuator.Read(serialInput);
     serialInput.clear();
-    std::cout << serialInput << std::endl;
+    serialActuator.Read(serialInput);
+    std::cout << "Actuator: " << serialInput << std::endl;
 
     // Initialization complete. Main loop:
     while (!stopReceiving) {
