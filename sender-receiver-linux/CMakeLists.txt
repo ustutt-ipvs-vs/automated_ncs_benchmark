@@ -98,6 +98,8 @@ add_executable(pendulum_receiver
         Logging/LogEntries/SchedulingInfoEntries/TokenBucketInfoEntry.h
         SerialPortScan/TeensyPortDetector.cpp
         SerialPortScan/TeensyPortDetector.h
+        PendulumReceiverSide/ReceiverConfig.cpp
+        PendulumReceiverSide/ReceiverConfig.h
         )
 
 
