@@ -263,8 +263,6 @@ PriorityDeterminer *generateDeterminerFromCommandLineArguments(int argc, char *c
         for (double threshold : config.getThresholds()) {
             thresholdsBytes.push_back(numberOfSamplesToBytes(threshold));
         }
-        // negative infinite threshold for the last priority:
-        thresholdsBytes.push_back(-std::numeric_limits<double>::infinity());
 
         determiner = new MultiPriorityTokenBucket(bAsBytes, rAsBytesPerSecond, config.getNumPriorities(),
                                                   thresholdsBytes,
