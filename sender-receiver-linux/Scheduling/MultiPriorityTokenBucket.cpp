@@ -15,7 +15,7 @@ MultiPriorityTokenBucket::MultiPriorityTokenBucket(double b, double r, unsigned 
     packetCount = 0;
 
     if (dataRateOfPriorities.size() != numPriorities) {
-        throw std::runtime_error("Number of data rates must match numPriorities");
+        throw std::runtime_error("Number of data rates must match numThresholds");
     }
     this->numPriorities = numPriorities;
 

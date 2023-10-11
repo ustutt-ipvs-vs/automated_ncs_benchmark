@@ -10,8 +10,8 @@ double SenderConfig::getR() const {
     return r;
 }
 
-int SenderConfig::getNumPriorities() const {
-    return numPriorities;
+int SenderConfig::getNumThresholds() const {
+    return numThresholds;
 }
 
 const std::vector<double> &SenderConfig::getThresholds() const {
@@ -36,7 +36,7 @@ SenderConfig::SenderConfig(std::string filename) {
 
     b = configJson["b"];
     r = configJson["r"];
-    numPriorities = configJson["numPriorities"];
+    numThresholds = configJson["numThresholds"];
 
     thresholds = configJson["thresholds"].get<std::vector<double>>();
     prioMapping = configJson["prioMapping"].get<std::vector<int>>();
@@ -67,22 +67,22 @@ SenderConfig::SenderConfig(std::string filename) {
 
     configFile.close();
 
-    if(numPriorities < 1) {
-        throw std::runtime_error("numPriorities must be at least 1");
+    if(numThresholds < 1) {
+        throw std::runtime_error("numThresholds must be at least 1");
     }
 
     if(historySize < 0){
         throw std::runtime_error("historySize must be at least 0");
     }
 
-    if (thresholds.size() != numPriorities - 1) {
-        throw std::runtime_error("Number of thresholds is not numPriorities - 1");
+    if (thresholds.size() != numThresholds) {
+        throw std::runtime_error("Number of thresholds is not numThresholds");
     }
-    if (prioMapping.size() != numPriorities) {
-        throw std::runtime_error("Number of priorities does not match numPriorities");
+    if (prioMapping.size() != numThresholds + 1) {
+        throw std::runtime_error("Number of priorities does not match numThresholds + 1");
     }
-    if (costs.size() != numPriorities) {
-        throw std::runtime_error("Number of costs does not match numPriorities");
+    if (costs.size() != numThresholds + 1) {
+        throw std::runtime_error("Number of costs does not match numThresholds + 1");
     }
 }
 
@@ -114,7 +114,7 @@ std::string SenderConfig::toString() const {
     std::string result = "SenderConfig:\n";
     result += "b: " + std::to_string(b) + "\n";
     result += "r: " + std::to_string(r) + "\n";
-    result += "numPriorities: " + std::to_string(numPriorities) + "\n";
+    result += "numThresholds: " + std::to_string(numThresholds) + "\n";
     result += "thresholds: ";
     for(double threshold : thresholds){
         result += std::to_string(threshold) + " ";

@@ -8,7 +8,7 @@
  *  {
  *   "b": 200.0,
  *   "r": 30.0,
- *   "numPriorities": 4,
+ *   "numThresholds": 4,
  *   "thresholds": [0, -200, -400],
  *   "prioMapping": [0, 1, 2, 7],
  *   "costs": [1, 1, 1, 0],
@@ -42,7 +42,7 @@ private:
     // MPTB parameters:
     double b;
     double r;
-    int numPriorities;
+    int numThresholds;
     int initialPriorityClass;
     std::vector<double> thresholds;
     std::vector<int> prioMapping;
@@ -74,7 +74,7 @@ public:
 
     double getR() const;
 
-    int getNumPriorities() const;
+    int getNumThresholds() const;
 
     const std::vector<double> &getThresholds() const;
 

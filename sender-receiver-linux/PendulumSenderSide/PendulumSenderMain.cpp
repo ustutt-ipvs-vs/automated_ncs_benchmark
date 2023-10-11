@@ -233,7 +233,7 @@ PriorityDeterminer *generateDeterminerFromCommandLineArguments(int argc, char *c
             costs.push_back(std::stod(argv[i + 8 + 2*numThresholds]));         
         }
 
-        std::cout << "Option 4, read these values: b=" << b << ", r=" << r << ", numPriorities=" << numThresholds << ", thresholds=";
+        std::cout << "Option 4, read these values: b=" << b << ", r=" << r << ", numThresholds=" << numThresholds << ", thresholds=";
         for (int i = 0; i < thresholds.size(); i++) {
             std::cout << thresholds[i] << ",";
         }
@@ -264,7 +264,7 @@ PriorityDeterminer *generateDeterminerFromCommandLineArguments(int argc, char *c
             thresholdsBytes.push_back(numberOfSamplesToBytes(threshold));
         }
 
-        determiner = new MultiPriorityTokenBucket(bAsBytes, rAsBytesPerSecond, config.getNumPriorities(),
+        determiner = new MultiPriorityTokenBucket(bAsBytes, rAsBytesPerSecond, config.getNumThresholds(),
                                                   thresholdsBytes,
                                                   config.getCosts(), config.getPrioMapping());
 
