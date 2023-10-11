@@ -19,6 +19,10 @@ MultiPriorityTokenBucket::MultiPriorityTokenBucket(double b, double r, unsigned 
     }
     this->numPriorities = numPriorities;
 
+    for(int i=0; i<numPriorities;i++){
+        this->prioMapping.push_back(i);
+    }
+
     calculateThresholdsAndCosts(r, dataRateOfPriorities);
 }
 
