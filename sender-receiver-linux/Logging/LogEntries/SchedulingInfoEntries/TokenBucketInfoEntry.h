@@ -8,6 +8,7 @@
 
 #include "SchedulingInfoEntry.h"
 #include "../../../Scheduling/TokenBucket.hpp"
+#include "../../../Scheduling/MultiPriorityTokenBucket.h"
 
 class TokenBucketInfoEntry : public SchedulingInfoEntry{
 private:
@@ -17,6 +18,7 @@ private:
 
 public:
     TokenBucketInfoEntry(TokenBucket* tokenBucket);
+    TokenBucketInfoEntry(MultiPriorityTokenBucket* tokenBucket);
 
     double getB() const;
 

@@ -36,3 +36,10 @@ TokenBucketInfoEntry::TokenBucketInfoEntry(TokenBucket *tokenBucket) {
     priority = tokenBucket->getPriority();
     bucketLevel = tokenBucket->getBucketLevel();
 }
+
+TokenBucketInfoEntry::TokenBucketInfoEntry(MultiPriorityTokenBucket* tokenBucket) {
+    b = tokenBucket->getB();
+    r = tokenBucket->getR();
+    priority = tokenBucket->getPriority();
+    bucketLevel = tokenBucket->getBucketLevel();
+}
