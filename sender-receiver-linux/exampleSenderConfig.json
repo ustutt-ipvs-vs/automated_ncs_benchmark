@@ -1,8 +1,8 @@
 {
   "b": 200.0,
-  "r": 30.0,
-  "numPriorities": 4,
-  "thresholds": [0, -200, -400],
+  "r": 100.0,
+  "numThresholds": 3,
+  "thresholds": [0, -20000, -40000],
   "prioMapping": [0, 1, 2, 7],
   "costs": [1, 1, 1, 0],
   "historySize": 100,
