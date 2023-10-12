@@ -79,7 +79,7 @@ float stepsPerMeter = trackLengthSteps / trackLengthMeters;  // initial guess
 constexpr int encoderPPRhalf = 600 * 2;
 constexpr int encoderPPR = encoderPPRhalf * 2;
 //constexpr int encoderOrigin = encoderPPRhalf - 2;
-constexpr int encoderOrigin = encoderPPRhalf - 5; // Correct error of sensor
+constexpr int encoderOrigin = encoderPPRhalf - 10; // Correct error of sensor
 constexpr int angleSign = 1;
 constexpr float RAD_PER_ESTEP = TWO_PI / encoderPPR;
 constexpr float ESTEP_PER_RAD = encoderPPR / TWO_PI;
@@ -101,16 +101,11 @@ int mod(int x, int y) {
 }
 
 int32_t angleSteps(int encoderPos) {
-  return encoderPos-1200-10; // 10 for compensation
-  // Original:
-  //return angleSign * (mod(encoderPos - encoderOrigin - encoderPPRhalf, encoderPPR) - encoderPPRhalf);
+  return angleSign * (mod(encoderPos - encoderOrigin - encoderPPRhalf, encoderPPR) - encoderPPRhalf);
 }
 
-float getPoleAngleDeg() {  // get encoder angle in radians
-  float DEG_PER_ESTEP = 360.0 / 2400.0;
-  return DEG_PER_ESTEP * (currentEncoderValue-1200-10); // 10 for compensation
-  // Original:
-  //return RAD_PER_ESTEP * angleSteps(currentEncoderValue);
+float getPoleAngleRad() {  // get encoder angle in radians
+  return RAD_PER_ESTEP * angleSteps(currentEncoderValue);
 }
 
 float getCartPosMeter() {
@@ -1064,8 +1059,7 @@ void loop() {
 
         float cartPos = METER_PER_MSTEP * cartSteps;
         float cartSpeed = getCartSpeedMeter();
-        float poleAngleDeg = getPoleAngleDeg();
-        float poleAngle = poleAngleDeg / 360.0 * 2 * 3.14159;
+        float poleAngle = getPoleAngleRad();
 
         //        long T1 = profileTimer;////////////LED_BUILTIN/////////////////////////////////////////////////////////////////////////////
 
