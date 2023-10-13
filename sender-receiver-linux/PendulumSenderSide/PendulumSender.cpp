@@ -134,7 +134,7 @@ void PendulumSender::sendPacket(std::string payload) {
     std::string currentValue = payload.substr(2,delimPos);
     int encoderValue = std::stoi(currentValue);
     const double DEG_PER_ESTEP = 360.0 / 2400.0;
-    double poleAngle = DEG_PER_ESTEP * (encoderValue-1200-10); //1200 is half, 10 is compensation. (mod(encoderPos - encoderOrigin - encoderPPRhalf, encoderPPR) - encoderPPRhalf);
+    double poleAngle = DEG_PER_ESTEP * (encoderValue-1200+10); //1200 is half, 10 is compensation. (mod(encoderPos - encoderOrigin - encoderPPRhalf, encoderPPR) - encoderPPRhalf);
 
     // Calculate squared poleAngle Error AVG
     uint64_t passedTime = currentTime - startTime;

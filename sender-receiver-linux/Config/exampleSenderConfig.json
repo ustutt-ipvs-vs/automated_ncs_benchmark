@@ -1,0 +1,13 @@
+{
+  "b": 200.0,
+  "r": 35.0,
+  "numThresholds": 3,
+  "thresholds": [0, -200, -400],
+  "prioMapping": [0, 1, 2, 7],
+  "costs": [1, 1, 1, 0],
+  "historySize": 100,
+  "samplingPeriods": [100, 90, 80, 70, 60, 50, 40, 30, 20, 10],
+  "initialPriorityClass": 0,
+  "serialDeviceName": "auto",
+  "receiverAddress": "10.0.1.3"
+}
