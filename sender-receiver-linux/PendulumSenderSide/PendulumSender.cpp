@@ -13,7 +13,8 @@ const int RESTRICT_LOGGING_TO_MS = 50;
 
 PendulumSender::PendulumSender(PriorityDeterminer* priorityDeterminer, std::string serialDeviceName,
                                std::string receiverHost, int receiverPort, int teensyHistorySize,
-                               std::vector<int> teensySamplingPeriods) : logger("pendulumsender") {
+                               std::vector<int> teensySamplingPeriods, std::function<void()> regularCallback, std::string logFilePrefix)
+                               : logger(logFilePrefix), regularCallback(regularCallback) {
     this->serialDeviceName = serialDeviceName;
     receiverAddress = inet_address(receiverHost, receiverPort);
 
@@ -76,6 +77,10 @@ void PendulumSender::start() {
                 singleSample += '\n';
                 sendPacket(singleSample);
             }
+        }
+
+        if(regularCallback != nullptr){
+            regularCallback();
         }
     }
 }
@@ -165,4 +170,26 @@ void PendulumSender::sendPacket(std::string payload) {
 uint64_t PendulumSender::timeSinceEpochMillisec(){
     using namespace std::chrono;
     return duration_cast<milliseconds>(system_clock::now().time_since_epoch()).count();
+}
+
+void PendulumSender::swapPriorityDeterminer(PriorityDeterminer *newPriorityDeterminer, std::string logFilePrefix) {
+    // Save logs of old priorityDeterminer to file:
+    logger.saveToFile();
+
+    // Swap priorityDeterminer
+    *priorityDeterminer = *newPriorityDeterminer;
+
+    // Reset statistics
+    startTime = timeSinceEpochMillisec();
+    packetCount = 0;
+    bytesSentTotal = 0;
+    feedbackPacketsCount = 0;
+    currentRunAVG = 0;
+    currentRunValues = 0;
+    currentRunNr = 1;
+    allRunsAVG = 0;
+    allRuns = 0;
+
+    // new logger for new priorityDeterminer
+    logger = PendulumLogger(logFilePrefix);
 }

@@ -48,11 +48,15 @@ private:
     unsigned long long bytesSentTotal = 0;
     unsigned long long feedbackPacketsCount = 0;
 
+    std::function<void()> regularCallback;
+
 public:
     PendulumSender(PriorityDeterminer* priorityDeterminer, std::string serialDeviceName, std::string receiverHost,
-                   int receiverPort, int teensyHistorySize, std::vector<int> teensySamplingPeriods);
+                   int receiverPort, int teensyHistorySize, std::vector<int> teensySamplingPeriods,
+                   std::function<void()> regularCallback = nullptr, std::string logFilePrefix = "pendulumsender");
     void start();
     void stop();
+    void swapPriorityDeterminer(PriorityDeterminer* newPriorityDeterminer, std::string logFilePrefix);
 
 
 private:
