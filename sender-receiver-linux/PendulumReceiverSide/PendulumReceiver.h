@@ -64,6 +64,8 @@ public:
     bool isTimeForPause() const;
 
     void sendPauseSignal();
+
+    void startNewLogfile(int number);
 };
 
 

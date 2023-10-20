@@ -52,6 +52,14 @@ void PendulumReceiver::start() {
         int receivedLength = receiverSocket.recv(receiveBuffer, sizeof(receiveBuffer));
         networkInput = std::string(receiveBuffer, receivedLength);
 
+        // Detect new config signal of the form "NewConfig:number\n":
+        if (networkInput.rfind("NewConfig:", 0) == 0) {
+            int newConfigNumber = std::stoi(networkInput.substr(10));
+            std::cout << "New MPTB config signal received: " << newConfigNumber << std::endl;
+            startNewLogfile(newConfigNumber);
+            continue;
+        }
+
         packetCount++;
         bytesReceivedTotal += networkInput.size();
 
@@ -105,6 +113,11 @@ void PendulumReceiver::stop() {
     receiverSocket.close();
     serialActuator.Close();
     logger.saveToFile();
+}
+
+void PendulumReceiver::startNewLogfile(int number) {
+    logger.saveToFile();
+    logger = PendulumLogger("pendulumreceiver_config_" + std::to_string(number));
 }
 
 
