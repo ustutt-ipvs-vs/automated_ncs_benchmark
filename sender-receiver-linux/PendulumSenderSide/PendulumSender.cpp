@@ -193,3 +193,23 @@ void PendulumSender::swapPriorityDeterminer(PriorityDeterminer *newPriorityDeter
     // new logger for new priorityDeterminer
     logger = PendulumLogger(logFilePrefix);
 }
+
+/**
+ * Sends a signal to the receiver to change the MPTB config to the given number.
+ *
+ * The payload of the signal is "NewConfig:number\n" where number is the parameter of this function encoded as a string.
+ *
+ * @throws std::runtime_error if senderSocket is not open
+ * @param number
+ */
+void PendulumSender::sendNewMptbConfigSignal(int number) {
+    // Send a packet with the payload "C:number\n" to the receiver. The highest priority (0) is used.
+
+    if(!senderSocket.is_open()){
+        throw std::runtime_error("PendulumSender: Cannot send new MPTB config signal because senderSocket is not open.");
+    }
+
+    std::string payload = "NewConfig:" + std::to_string(number) + "\n";
+    senderSocket.set_option(SOL_SOCKET, SO_PRIORITY, 0);
+    senderSocket.send_to(payload, receiverAddress);
+}
