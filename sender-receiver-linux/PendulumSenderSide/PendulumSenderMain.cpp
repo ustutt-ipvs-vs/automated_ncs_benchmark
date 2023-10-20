@@ -2,11 +2,14 @@
 // Created by david on 10.01.23.
 //
 
+#include <thread>
 #include "PendulumSender.h"
 #include "../Scheduling/ConstantPriority.h"
 #include "../Scheduling/MultiPriorityTokenBucket.h"
 #include "SenderConfig.h"
 #include "../SerialPortScan/TeensyPortDetector.h"
+#include "SenderMultiConfig.h"
+#include "MPTBSubConfig.h"
 
 /**
  * Usage from command line:
@@ -35,6 +38,10 @@
  *
  * Option 5: Use a JSON config file. An example config file can be found in "exampleSenderConfig.json"
  * ./pendulum_sender f <filename>
+ *
+ * Option 6: Run a sequence of MPTB sub-configs from a JSON config file. An example config file can be found in
+ * "exampleSenderSequenceConfig.json".
+ * ./pendulum_sender s <filename>
  *
  * Running the program as sudo (required for priority 7 to work):
  * $ sudo su
@@ -69,6 +76,7 @@ PendulumSender *sender;
 
 
 PriorityDeterminer *generateDeterminerFromCommandLineArguments(int argc, char *const *argv);
+void runMptbSequence(int argc, char *const *argv);
 
 void sigIntHandler(int signal) {
     std::cout << "Received Signal: " << signal << std::endl;
@@ -97,10 +105,85 @@ double samplingPeriodToDataRate(double samplingPeriod) {
 int main(int argc, char *argv[]) {
     signal(SIGINT, sigIntHandler);
 
-    PriorityDeterminer *determiner;
-    determiner = generateDeterminerFromCommandLineArguments(argc, argv);
+    if(argc >= 2 && argv[1][0] == 's'){
+        runMptbSequence(argc, argv);
+    } else {
+        PriorityDeterminer *determiner;
+        determiner = generateDeterminerFromCommandLineArguments(argc, argv);
 
-    sender = new PendulumSender(determiner, device, host, port, teensyHistorySize, teensySamplingPeriods);
+        sender = new PendulumSender(determiner, device, host, port, teensyHistorySize, teensySamplingPeriods);
+        sender->start();
+    }
+
+}
+
+PriorityDeterminer *getIthSubconfigMptbDeterminer(int i, SenderMultiConfig config){
+    MPTBSubConfig subConfig = config.getMptbSubConfigs()[i];
+    double bAsBytes = numberOfSamplesToBytes(subConfig.getB());
+    double rAsBytesPerSecond = samplingPeriodToDataRate(subConfig.getR());
+    std::vector<double> thresholdsBytes;
+    for (double threshold : subConfig.getThresholds()) {
+        thresholdsBytes.push_back(numberOfSamplesToBytes(threshold));
+    }
+
+    return new MultiPriorityTokenBucket(bAsBytes, rAsBytesPerSecond, subConfig.getNumThresholds(),
+                                              thresholdsBytes,
+                                              subConfig.getCosts(), subConfig.getPrioMapping());}
+
+uint64_t timeSinceEpochMillisec(){
+    using namespace std::chrono;
+    return duration_cast<milliseconds>(system_clock::now().time_since_epoch()).count();
+}
+
+void runMptbSequence(int argc, char *const *argv){
+    if(argc <3){
+        std::cout << "Usage: ./pendulum_sender s <multi_mptb_sequence_config_file>" << std::endl;
+        exit(1);
+    }
+
+    std::string filename = argv[2];
+    std::cout << "Using multi-MPTB config file " << filename << std::endl;
+    SenderMultiConfig config(filename);
+
+    host = config.getReceiverAddress();
+    teensyHistorySize = config.getHistorySize();
+    teensySamplingPeriods = config.getSamplingPeriods();
+
+    if(config.isAutomaticallyFindSerialDevice()){
+        std::cout << "Automatically finding serial device..." << std::endl;
+        device = TeensyPortDetector::findTeensySerialDevice();
+    } else {
+        device = config.getSerialDeviceName();
+    }
+    std::cout << "Using serial device " << device << std::endl;
+
+    std::cout << std::endl;
+    std::cout << config.toString() << std::endl;
+
+    int currentConfigurationIndex = 0;
+    uint64_t currentConfigurationStartTime = timeSinceEpochMillisec();
+
+    auto regularCallback = [&currentConfigurationStartTime, &currentConfigurationIndex, &config]() {
+        double currentConfigRuntimeMinutes = config.getMptbSubConfigs()[currentConfigurationIndex].getDurationMinutes();
+        if(timeSinceEpochMillisec() - currentConfigurationStartTime > currentConfigRuntimeMinutes * 60.0 * 1000.0){
+            currentConfigurationIndex++;
+            if(currentConfigurationIndex >= config.getMptbSubConfigs().size()){
+                sender->stop();
+                std::cout << "Finished all MPTB sub-configs" << std::endl;
+                exit(0);
+            }
+
+            std::cout << "Starting MPTB sub-config with duration " << currentConfigRuntimeMinutes << " minutes" << std::endl;
+            PriorityDeterminer *priorityDeterminer = getIthSubconfigMptbDeterminer(currentConfigurationIndex, config);
+            sender->swapPriorityDeterminer(priorityDeterminer,
+                                           "pendulumsender_config_" + std::to_string(currentConfigurationIndex + 1));
+            currentConfigurationStartTime = timeSinceEpochMillisec();
+        }
+    };
+
+    PriorityDeterminer *determiner = getIthSubconfigMptbDeterminer(0, config);
+    sender = new PendulumSender(determiner, device, host, port,
+                                teensyHistorySize, teensySamplingPeriods, regularCallback, "pendulumsender_config_1");
     sender->start();
 }
 
