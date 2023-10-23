@@ -168,6 +168,7 @@ void runMptbSequence(int argc, char *const *argv){
         if(timeSinceEpochMillisec() - currentConfigurationStartTime > currentConfigRuntimeMinutes * 60.0 * 1000.0){
             currentConfigurationIndex++;
             if(currentConfigurationIndex >= config.getMptbSubConfigs().size()){
+                sender->sendEndSignal();
                 sender->stop();
                 std::cout << "Finished all MPTB sub-configs" << std::endl;
                 exit(0);
@@ -177,6 +178,7 @@ void runMptbSequence(int argc, char *const *argv){
             PriorityDeterminer *priorityDeterminer = getIthSubconfigMptbDeterminer(currentConfigurationIndex, config);
             sender->swapPriorityDeterminer(priorityDeterminer,
                                            "pendulumsender_config_" + std::to_string(currentConfigurationIndex + 1));
+            sender->sendNewMptbConfigSignal(currentConfigurationIndex + 1);
             currentConfigurationStartTime = timeSinceEpochMillisec();
         }
     };
