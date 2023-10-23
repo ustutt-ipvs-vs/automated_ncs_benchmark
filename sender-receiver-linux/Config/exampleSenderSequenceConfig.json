@@ -1,7 +1,7 @@
 {
   "mptbSequence": [
     {
-      "durationMinutes": 0.2,
+      "durationMinutes": 1.0,
       "b": 200.0,
       "r": 35.0,
       "numThresholds": 3,
@@ -10,7 +10,7 @@
       "costs": [1, 1, 1, 0]
     },
     {
-      "durationMinutes": 0.2,
+      "durationMinutes": 0.5,
       "b": 5000.0,
       "r": 350.0,
       "numThresholds": 2,
@@ -19,7 +19,7 @@
       "costs": [2, 1, 0]
     },
     {
-      "durationMinutes": 0.2,
+      "durationMinutes": 0.5,
       "b": 5000.0,
       "r": 350.0,
       "numThresholds": 2,
