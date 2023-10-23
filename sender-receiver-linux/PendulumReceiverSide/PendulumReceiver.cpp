@@ -7,7 +7,7 @@
 PendulumReceiver::PendulumReceiver(std::string serialDeviceName, std::string receiverHost, int receiverPort,
                                    bool doPauses, int timeBetweenPausesMillis, int pauseDurationMillis,
                                    int motorMaxRPM, double revolutionsPerTrack)
-        : logger("pendulumreceiver") {
+        : logger("pendulumreceiver_config_1"){
     this->serialDeviceName = serialDeviceName;
     this->receiverAddress = inet_address(receiverHost, receiverPort);
     this->doPauses = doPauses;
