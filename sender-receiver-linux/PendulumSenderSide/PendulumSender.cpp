@@ -198,13 +198,12 @@ void PendulumSender::swapPriorityDeterminer(PriorityDeterminer *newPriorityDeter
  * Sends a signal to the receiver to change the MPTB config to the given number.
  *
  * The payload of the signal is "NewConfig:number\n" where number is the parameter of this function encoded as a string.
+ * The signal is sent with the highest priority (0).
  *
  * @throws std::runtime_error if senderSocket is not open
  * @param number
  */
 void PendulumSender::sendNewMptbConfigSignal(int number) {
-    // Send a packet with the payload "C:number\n" to the receiver. The highest priority (0) is used.
-
     if(!senderSocket.is_open()){
         throw std::runtime_error("PendulumSender: Cannot send new MPTB config signal because senderSocket is not open.");
     }
@@ -212,4 +211,26 @@ void PendulumSender::sendNewMptbConfigSignal(int number) {
     std::string payload = "NewConfig:" + std::to_string(number) + "\n";
     senderSocket.set_option(SOL_SOCKET, SO_PRIORITY, 0);
     senderSocket.send_to(payload, receiverAddress);
+    std::cout << "PendulumSender: Sent new MPTB config signal: " << payload << std::endl;
 }
+
+/**
+ * Sends a signal to the receiver to end the current run.
+ *
+ * The payload of the signal is "EndSignal\n".
+ * The signal is sent with the highest priority (0).
+ *
+ * @throws std::runtime_error if senderSocket is not open
+ */
+void PendulumSender::sendEndSignal() {
+    if(!senderSocket.is_open()){
+        throw std::runtime_error("PendulumSender: Cannot send End signal because senderSocket is not open.");
+    }
+
+    std::string payload = "EndSignal\n";
+    senderSocket.set_option(SOL_SOCKET, SO_PRIORITY, 0);
+    senderSocket.send_to(payload, receiverAddress);
+
+    std::cout << "PendulumSender: Sent End signal: " << payload << std::endl;
+}
+
