@@ -60,6 +60,13 @@ void PendulumReceiver::start() {
             continue;
         }
 
+        // Detect end signal of the form "EndSignal\n":
+        if (networkInput.rfind("EndSignal", 0) == 0) {
+            std::cout << "End signal received." << std::endl;
+            stop();
+            continue;
+        }
+
         packetCount++;
         bytesReceivedTotal += networkInput.size();
 
