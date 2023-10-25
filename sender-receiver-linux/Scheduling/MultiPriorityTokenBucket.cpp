@@ -13,6 +13,7 @@ MultiPriorityTokenBucket::MultiPriorityTokenBucket(double b, double r, unsigned 
     currentBucketLevel = b;
     lastBucketFillTime = high_resolution_clock::now();
     packetCount = 0;
+    currentSeverityLevel = 0;
 
     if (dataRateOfPriorities.size() != numPriorities) {
         throw std::runtime_error("Number of data rates must match numThresholds");
@@ -33,6 +34,7 @@ MultiPriorityTokenBucket::MultiPriorityTokenBucket(double b, double r, unsigned 
     currentBucketLevel = b;
     lastBucketFillTime = high_resolution_clock::now();
     packetCount = 0;
+    currentSeverityLevel = 0;
 
     if (thresholds.size() != numThresholds || prioMapping.size() != numThresholds+1 || costs.size() != numThresholds+1) {
         throw std::runtime_error("numThresholds must match thresholds.size and prioMapping.size+1 and costs.size+1 (one extra prioMapping and cost value for BE)");
@@ -95,11 +97,10 @@ void MultiPriorityTokenBucket::updateSeverityLevel() {
         }
     }
     currentSeverityLevel = numPriorities-1;
-    return;
 }
 
 double MultiPriorityTokenBucket::getCostOfCurrentPriority() {
-    return costOfPriorities[currentSeverityLevel];
+    return costOfPriorities.at(currentSeverityLevel);
 }
 
 /**
