@@ -86,12 +86,12 @@ double MultiPriorityTokenBucket::getBucketLevel() {
 }
 
 unsigned int MultiPriorityTokenBucket::getPriority() {
-    return prioMapping[currentSeverityLevel];
+    return prioMapping.at(currentSeverityLevel);
 }
 
 void MultiPriorityTokenBucket::updateSeverityLevel() {
     for(unsigned int severityLevel = 0; severityLevel < numPriorities-1; severityLevel++){
-        if(currentBucketLevel >= thresholdOfPriorities[severityLevel]){
+        if(currentBucketLevel >= thresholdOfPriorities.at(severityLevel)){
             currentSeverityLevel = severityLevel;
             return;
         }
@@ -125,7 +125,7 @@ void MultiPriorityTokenBucket::calculateThresholdsAndCosts(double r, std::vector
 
     // Choose thresholds such that the 'bucket' of each priority can send a b bytes burst before empty.
     for(int i = 1; i < numPriorities - 1; i++){
-        double threshold = thresholdOfPriorities[i-1] - costOfPriorities[i] * b;
+        double threshold = thresholdOfPriorities.at(i-1) - costOfPriorities.at(i) * b;
         thresholdOfPriorities.emplace_back(threshold);
     }
 

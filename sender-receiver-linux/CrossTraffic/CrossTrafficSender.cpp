@@ -32,7 +32,7 @@ void CrossTrafficSender::stop() {
 void CrossTrafficSender::setupPayload() {
     payload = std::vector<char>(payloadSize);
     for (int i = 0; i < payloadSize; i++) {
-        payload[i] = 'A';
+        payload.at(i) = 'A';
     }
 }
 
