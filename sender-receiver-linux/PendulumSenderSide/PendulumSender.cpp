@@ -177,7 +177,7 @@ void PendulumSender::swapPriorityDeterminer(PriorityDeterminer *newPriorityDeter
     logger.saveToFile();
 
     // Swap priorityDeterminer
-    *priorityDeterminer = *newPriorityDeterminer;
+    priorityDeterminer = newPriorityDeterminer;
 
     // Reset statistics
     startTime = timeSinceEpochMillisec();
