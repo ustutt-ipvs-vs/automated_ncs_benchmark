@@ -104,7 +104,7 @@ void PendulumReceiver::sendPauseSignal() {
     std::stringstream ss;
     ss << "PAUSE:" << pauseDurationMillis << ";\n";
     serialActuator.Write(ss.str());
-    logger.logPause(pauseDurationMillis);
+    logger->logPause(pauseDurationMillis);
 }
 
 bool PendulumReceiver::isTimeForPause() const {
