@@ -1,5 +1,6 @@
 #include <fstream>
 #include <iostream>
+#include <thread>
 #include "Logger.h"
 
 Logger::Logger(std::string name) {
@@ -13,6 +14,7 @@ void Logger::saveToFile(std::string filename) {
     logfile << this->toJsonString();
     logfile.close();
     std::cout << "Log Saved log to " << filename << std::endl;
+    delete this;
 }
 
 void Logger::saveToFile() {
@@ -21,6 +23,25 @@ void Logger::saveToFile() {
     std::string dateString(dateStringBuffer);
     std::string filename = name + "_" + dateString + ".json";
     saveToFile(filename);
+    delete this;
+}
+
+void Logger::saveTofileAsync(std::string filename) {
+    // Save to file in a separate thread
+    std::thread saveThread([this, filename](){
+        saveToFile(filename);
+        delete this;
+    });
+    saveThread.detach();
+}
+
+void Logger::saveToFileAsync() {
+    // Save to file in a separate thread
+    std::thread saveThread([this](){
+        saveToFile();
+        delete this;
+    });
+    saveThread.detach();
 }
 
 std::string Logger::toJsonString() {
