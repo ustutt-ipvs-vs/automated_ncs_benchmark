@@ -118,7 +118,7 @@ int main(int argc, char *argv[]) {
 }
 
 PriorityDeterminer *getIthSubconfigMptbDeterminer(int i, SenderMultiConfig config){
-    MPTBSubConfig subConfig = config.getMptbSubConfigs()[i];
+    MPTBSubConfig subConfig = config.getMptbSubConfigs().at(i);
     double bAsBytes = numberOfSamplesToBytes(subConfig.getB());
     double rAsBytesPerSecond = samplingPeriodToDataRate(subConfig.getR());
     std::vector<double> thresholdsBytes;
