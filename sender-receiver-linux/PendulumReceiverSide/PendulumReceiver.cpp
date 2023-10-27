@@ -123,7 +123,7 @@ void PendulumReceiver::stop() {
 }
 
 void PendulumReceiver::startNewLogfile(int number) {
-    logger.saveToFile();
+    logger->saveToFileAsync(); // Save asynchronously to avoid blocking the main thread
     logger = new PendulumLogger("pendulumreceiver_config_" + std::to_string(number));
 }
 

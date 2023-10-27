@@ -174,8 +174,9 @@ uint64_t PendulumSender::timeSinceEpochMillisec(){
 }
 
 void PendulumSender::swapPriorityDeterminer(PriorityDeterminer *newPriorityDeterminer, std::string logFilePrefix) {
-    // Save logs of old priorityDeterminer to file:
-    logger.saveToFile();
+    // Save logs of old priorityDeterminer to file.
+    // Save to file asynchronous so that main thread does not get blocked.
+    logger->saveToFileAsync();
 
     // Swap priorityDeterminer
     priorityDeterminer = newPriorityDeterminer;
