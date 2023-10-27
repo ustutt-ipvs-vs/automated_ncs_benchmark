@@ -28,7 +28,7 @@ private:
     PriorityDeterminer* priorityDeterminer;
     std::atomic<bool> stopSending{false};
     SerialPort serialSensor;
-    PendulumLogger logger;
+    PendulumLogger* logger;
     std::string serialInputBuffer;
     bool pendulumStarted = false;
     int teensyHistorySize;

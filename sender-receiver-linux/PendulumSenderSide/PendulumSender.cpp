@@ -14,7 +14,7 @@ const int RESTRICT_LOGGING_TO_MS = 50;
 PendulumSender::PendulumSender(PriorityDeterminer* priorityDeterminer, std::string serialDeviceName,
                                std::string receiverHost, int receiverPort, int teensyHistorySize,
                                std::vector<int> teensySamplingPeriods, std::function<void()> regularCallback, std::string logFilePrefix)
-                               : logger(logFilePrefix), regularCallback(regularCallback) {
+                               : regularCallback(regularCallback) {
     this->serialDeviceName = serialDeviceName;
     receiverAddress = inet_address(receiverHost, receiverPort);
 
@@ -24,6 +24,7 @@ PendulumSender::PendulumSender(PriorityDeterminer* priorityDeterminer, std::stri
     this->priorityDeterminer = priorityDeterminer;
     this->teensyHistorySize = teensyHistorySize;
     this->teensySamplingPeriods = teensySamplingPeriods;
+    this->logger = new PendulumLogger(logFilePrefix);
 }
 
 void PendulumSender::start() {
@@ -86,7 +87,7 @@ void PendulumSender::start() {
 }
 
 void PendulumSender::handleSenderFeedback() {
-    logger.logSenderFeedback(serialInputBuffer);
+    logger->logSenderFeedback(serialInputBuffer);
     feedbackPacketsCount++;
 
     if(feedbackPacketsCount % 10 == 0){
@@ -97,7 +98,7 @@ void PendulumSender::handleSenderFeedback() {
 void PendulumSender::stop() {
     stopSending = true;
     serialSensor.Close();
-    logger.saveToFile();
+    logger->saveToFile();
 }
 
 void PendulumSender::sendPacket(std::string payload) {
@@ -129,7 +130,7 @@ void PendulumSender::sendPacket(std::string payload) {
     uint64_t currentTime = timeSinceEpochMillisec();
     if(currentTime - lastLogTime >= RESTRICT_LOGGING_TO_MS){
         lastLogTime = currentTime;
-        logger.log(packetCount, bytesSentTotal, payload, priorityDeterminer->getSchedulingInfoEntry());
+        logger->log(packetCount, bytesSentTotal, payload, priorityDeterminer->getSchedulingInfoEntry());
     }
 
     // Calculate current pole angle
@@ -191,7 +192,7 @@ void PendulumSender::swapPriorityDeterminer(PriorityDeterminer *newPriorityDeter
     allRuns = 0;
 
     // new logger for new priorityDeterminer
-    logger = PendulumLogger(logFilePrefix);
+    logger = new PendulumLogger(logFilePrefix);
 }
 
 /**

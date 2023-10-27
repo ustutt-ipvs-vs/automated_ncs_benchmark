@@ -6,8 +6,7 @@
 
 PendulumReceiver::PendulumReceiver(std::string serialDeviceName, std::string receiverHost, int receiverPort,
                                    bool doPauses, int timeBetweenPausesMillis, int pauseDurationMillis,
-                                   int motorMaxRPM, double revolutionsPerTrack)
-        : logger("pendulumreceiver_config_1"){
+                                   int motorMaxRPM, double revolutionsPerTrack){
     this->serialDeviceName = serialDeviceName;
     this->receiverAddress = inet_address(receiverHost, receiverPort);
     this->doPauses = doPauses;
@@ -15,6 +14,7 @@ PendulumReceiver::PendulumReceiver(std::string serialDeviceName, std::string rec
     this->pauseDurationMillis = pauseDurationMillis;
     this->motorMaxRPM = motorMaxRPM;
     this->revolutionsPerTrack = revolutionsPerTrack;
+    this->logger = new PendulumLogger("pendulumreceiver_config_1");
 
     receiverSocket.bind(receiverAddress);
 
@@ -73,7 +73,7 @@ void PendulumReceiver::start() {
         // Remove the padding with '#' from the end of the string:
         networkInput.erase(std::remove(networkInput.begin(), networkInput.end(), '#'), networkInput.end());
 
-        logger.log(packetCount, bytesReceivedTotal, networkInput);
+        logger->log(packetCount, bytesReceivedTotal, networkInput);
 
         if(doPauses && isTimeForPause()){
             sendPauseSignal();
@@ -86,7 +86,7 @@ void PendulumReceiver::start() {
             std::cout << "Actuator: " << serialInput << std::endl;
 
             if (serialInput.rfind("log:", 0) == 0) {
-                logger.logActuator(serialInput);
+                logger->logActuator(serialInput);
 
                 if(!startedBalancing) {
                     startedBalancing = true;
@@ -119,12 +119,12 @@ void PendulumReceiver::stop() {
     stopReceiving = true;
     receiverSocket.close();
     serialActuator.Close();
-    logger.saveToFile();
+    logger->saveToFile();
 }
 
 void PendulumReceiver::startNewLogfile(int number) {
     logger.saveToFile();
-    logger = PendulumLogger("pendulumreceiver_config_" + std::to_string(number));
+    logger = new PendulumLogger("pendulumreceiver_config_" + std::to_string(number));
 }
 
 
