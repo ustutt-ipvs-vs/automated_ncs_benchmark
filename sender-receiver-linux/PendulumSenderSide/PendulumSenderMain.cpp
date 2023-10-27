@@ -173,8 +173,8 @@ void runMptbSequence(int argc, char *const *argv){
                 std::cout << "Finished all MPTB sub-configs" << std::endl;
                 exit(0);
             }
-
-            std::cout << "Starting MPTB sub-config with duration " << currentConfigRuntimeMinutes << " minutes" << std::endl;
+            double nextConfigRuntimeMinutes = config.getMptbSubConfigs().at(currentConfigurationIndex).getDurationMinutes();
+            std::cout << "Starting MPTB sub-config with duration " << nextConfigRuntimeMinutes << " minutes" << std::endl;
             PriorityDeterminer *priorityDeterminer = getIthSubconfigMptbDeterminer(currentConfigurationIndex, config);
             sender->swapPriorityDeterminer(priorityDeterminer,
                                            "pendulumsender_config_" + std::to_string(currentConfigurationIndex + 1));
