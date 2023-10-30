@@ -61,6 +61,10 @@ double frameSizeOfSample = 78;
 // Gets transmitted to the sender Teensy at initialization.
 int teensyHistorySize = 100;
 
+// Teensy angle bias of the raw sensor value (2400 steps per revolution)
+// this value gets added to the raw sensor value before it is sent to the receiver
+int teensyAngleBias = 0;
+
 // Different sampling periods used by the Teensy sender in milliseconds:
 std::vector<int> teensySamplingPeriods = {100, 90, 80, 70, 60, 50, 40, 30, 20, 10};
 
@@ -111,7 +115,8 @@ int main(int argc, char *argv[]) {
         PriorityDeterminer *determiner;
         determiner = generateDeterminerFromCommandLineArguments(argc, argv);
 
-        sender = new PendulumSender(determiner, device, host, port, teensyHistorySize, teensySamplingPeriods);
+        sender = new PendulumSender(determiner, device, host, port, teensyHistorySize, teensySamplingPeriods,
+                                    nullptr, "pendulumsender", teensyAngleBias);
         sender->start();
     }
 
@@ -147,6 +152,7 @@ void runMptbSequence(int argc, char *const *argv){
 
     host = config.getReceiverAddress();
     teensyHistorySize = config.getHistorySize();
+    teensyAngleBias = config.getBias();
     teensySamplingPeriods = config.getSamplingPeriods();
 
     if(config.isAutomaticallyFindSerialDevice()){
@@ -185,7 +191,8 @@ void runMptbSequence(int argc, char *const *argv){
 
     PriorityDeterminer *determiner = getIthSubconfigMptbDeterminer(0, config);
     sender = new PendulumSender(determiner, device, host, port,
-                                teensyHistorySize, teensySamplingPeriods, regularCallback, "pendulumsender_config_1");
+                                teensyHistorySize, teensySamplingPeriods, regularCallback, "pendulumsender_config_1",
+                                teensyAngleBias);
     sender->start();
 }
 
@@ -355,6 +362,7 @@ PriorityDeterminer *generateDeterminerFromCommandLineArguments(int argc, char *c
 
         host = config.getReceiverAddress();
         teensyHistorySize = config.getHistorySize();
+        teensyAngleBias = config.getBias();
         teensySamplingPeriods = config.getSamplingPeriods();
 
         if(config.isAutomaticallyFindSerialDevice()){
