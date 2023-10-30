@@ -47,6 +47,11 @@ SenderConfig::SenderConfig(std::string filename) {
     } else {
         historySize = 100; // default value
     }
+    if (configJson.contains("bias")) {
+        bias = configJson["bias"];
+    } else {
+        bias = 0; // default value
+    }
     if (configJson.contains("samplingPeriods")) {
         samplingPeriods = configJson["samplingPeriods"].get<std::vector<int>>();
     } else {
@@ -131,6 +136,7 @@ std::string SenderConfig::toString() const {
     }
     result += "\n";
     result += "historySize: " + std::to_string(historySize) + "\n";
+    result += "bias: " + std::to_string(bias) + "\n";
     result += "samplingPeriods: ";
     for(int period : samplingPeriods){
         result += std::to_string(period) + " ";
@@ -140,4 +146,8 @@ std::string SenderConfig::toString() const {
     result += "automaticallyFindSerialDevice: " + std::to_string(automaticallyFindSerialDevice) + "\n";
     result += "receiverAddress: " + receiverAddress + "\n";
     return result;
+}
+
+int SenderConfig::getBias() const {
+    return bias;
 }

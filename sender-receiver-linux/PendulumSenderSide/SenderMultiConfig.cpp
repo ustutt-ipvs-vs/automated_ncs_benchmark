@@ -27,6 +27,11 @@ SenderMultiConfig::SenderMultiConfig(std::string filename) {
     } else {
         historySize = 100; // default value
     }
+    if (configJson.contains("bias")) {
+        bias = configJson["bias"];
+    } else {
+        bias = 0; // default value
+    }
     if (configJson.contains("samplingPeriods")) {
         samplingPeriods = configJson["samplingPeriods"].get<std::vector<int>>();
     } else {
@@ -73,6 +78,7 @@ const std::vector<MPTBSubConfig> &SenderMultiConfig::getMptbSubConfigs() const {
 std::string SenderMultiConfig::toString() const {
     std::string result = "SenderMultiConfig:\n";
     result += "historySize: " + std::to_string(historySize) + "\n";
+    result += "bias: " + std::to_string(bias) + "\n";
     result += "samplingPeriods: ";
     for(int samplingPeriod : samplingPeriods){
         result += std::to_string(samplingPeriod) + " ";
@@ -85,6 +91,10 @@ std::string SenderMultiConfig::toString() const {
         result += subConfig.toString() + "\n";
     }
     return result;
+}
+
+int SenderMultiConfig::getBias() const {
+    return bias;
 }
 
 

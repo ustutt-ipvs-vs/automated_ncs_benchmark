@@ -28,6 +28,7 @@
  *      }
  *   ],
  *   "historySize": 100,
+ *   "bias": 0,
  *   "samplingPeriods": [100, 90, 80, 70, 60, 50, 40, 30, 20, 10],
  *   "initialPriorityClass": 0,
  *   "serialDeviceName": "/dev/ttyACM0",
@@ -36,6 +37,7 @@
  *
  *  The default values are, if not specified otherwise:
  *  historySize = 100
+ *  bias = 0
  *  samplingPeriods = [100, 90, 80, 70, 60, 50, 40, 30, 20, 10]
  *  initialPriorityClass = 0
  *  serialDeviceName = "auto"   // automatically find the device by scanning /dev/ttyACM*
@@ -58,6 +60,7 @@ private:
 
     // Teensy parameters:
     int historySize;
+    int bias;
     std::vector<int> samplingPeriods;
     std::string serialDeviceName;
     bool automaticallyFindSerialDevice;
@@ -69,6 +72,8 @@ public:
     const std::vector<int> &getSamplingPeriods() const;
 
     int getHistorySize() const;
+
+    int getBias() const;
 
     const std::string &getSerialDeviceName() const;
 
