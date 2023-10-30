@@ -32,6 +32,7 @@ private:
     std::string serialInputBuffer;
     bool pendulumStarted = false;
     int teensyHistorySize;
+    int angleBias;
     std::vector<int> teensySamplingPeriods;
 
     uint64_t startTime;
@@ -53,7 +54,8 @@ private:
 public:
     PendulumSender(PriorityDeterminer* priorityDeterminer, std::string serialDeviceName, std::string receiverHost,
                    int receiverPort, int teensyHistorySize, std::vector<int> teensySamplingPeriods,
-                   std::function<void()> regularCallback = nullptr, std::string logFilePrefix = "pendulumsender");
+                   std::function<void()> regularCallback = nullptr, std::string logFilePrefix = "pendulumsender",
+                   int angleBias = 0);
     void start();
     void stop();
     void swapPriorityDeterminer(PriorityDeterminer* newPriorityDeterminer, std::string logFilePrefix);
@@ -66,6 +68,7 @@ private:
 
     void handleSenderFeedback();
     uint64_t timeSinceEpochMillisec();
+    std::string applyAngleBias(std::string payload);
 };
 
 

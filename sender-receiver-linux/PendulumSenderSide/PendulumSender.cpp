@@ -13,7 +13,8 @@ const int RESTRICT_LOGGING_TO_MS = 50;
 
 PendulumSender::PendulumSender(PriorityDeterminer* priorityDeterminer, std::string serialDeviceName,
                                std::string receiverHost, int receiverPort, int teensyHistorySize,
-                               std::vector<int> teensySamplingPeriods, std::function<void()> regularCallback, std::string logFilePrefix)
+                               std::vector<int> teensySamplingPeriods, std::function<void()> regularCallback,
+                               std::string logFilePrefix, int angleBias)
                                : regularCallback(regularCallback) {
     this->serialDeviceName = serialDeviceName;
     receiverAddress = inet_address(receiverHost, receiverPort);
@@ -25,6 +26,7 @@ PendulumSender::PendulumSender(PriorityDeterminer* priorityDeterminer, std::stri
     this->teensyHistorySize = teensyHistorySize;
     this->teensySamplingPeriods = teensySamplingPeriods;
     this->logger = new PendulumLogger(logFilePrefix);
+    this->angleBias = angleBias;
 }
 
 void PendulumSender::start() {
@@ -76,6 +78,7 @@ void PendulumSender::start() {
             std::istringstream sampleStream(serialInputBuffer);
             while (std::getline(sampleStream, singleSample, '\n')) {
                 singleSample += '\n';
+                singleSample = applyAngleBias(singleSample);
                 sendPacket(singleSample);
             }
         }
@@ -140,7 +143,7 @@ void PendulumSender::sendPacket(std::string payload) {
     std::string currentValue = payload.substr(2,delimPos);
     int encoderValue = std::stoi(currentValue);
     const double DEG_PER_ESTEP = 360.0 / 2400.0;
-    double poleAngle = DEG_PER_ESTEP * (encoderValue-1200+10); //1200 is half, 10 is compensation. (mod(encoderPos - encoderOrigin - encoderPPRhalf, encoderPPR) - encoderPPRhalf);
+    double poleAngle = DEG_PER_ESTEP * (encoderValue-1200);
 
     // Calculate squared poleAngle Error AVG
     uint64_t passedTime = currentTime - startTime;
@@ -234,5 +237,37 @@ void PendulumSender::sendEndSignal() {
     senderSocket.send_to(payload, receiverAddress);
 
     std::cout << "PendulumSender: Sent End signal: " << payload << std::endl;
+}
+
+/**
+ * Adds the given angle bias to the encoder value in the given payload.
+ *
+ * The payload has the following form:
+ * S:encoderValue;samplingPeriodMillis;sequenceNumber;currentTime;\n
+ *
+ * the returned payload has the following form:
+ * S:encoderValue+angleBias;samplingPeriodMillis;sequenceNumber;currentTime;\n
+ */
+std::string PendulumSender::applyAngleBias(std::string payload) {
+    if(angleBias == 0){
+        return payload;
+    }
+
+    // Extract encoder value from payload:
+    int pendulumSensorValue;
+    std::stringstream stringStream(payload);
+    stringStream.ignore(2); // skip 'S:'
+    stringStream >> pendulumSensorValue;
+
+    // Add angle bias to encoder value:
+    pendulumSensorValue += angleBias;
+
+    // Reconstruct payload with new encoder value:
+    std::string result = "S:" + std::to_string(pendulumSensorValue);
+    std::string restOfPayload;
+    std::getline(stringStream, restOfPayload, '\n');
+    result += restOfPayload;
+    result += '\n';
+    return result;
 }
 
