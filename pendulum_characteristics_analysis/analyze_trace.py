@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 import scipy.signal as signal
 import numpy as np
 
-filename = 'log2.csv'
+filename = 'pendulum1_sail10_2.csv'
 
 def calculate_damping_coefficient(df, peaks):
     """

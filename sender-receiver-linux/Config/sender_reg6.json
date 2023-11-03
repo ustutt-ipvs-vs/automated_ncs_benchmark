@@ -1,9 +1,9 @@
 {
   "b": 600.0,
-  "r": 35.0,
+  "r": 10.0,
   "numThresholds": 1,
   "thresholds": [0],
-  "prioMapping": [0, 7],
+  "prioMapping": [6, 7],
   "costs": [1, 0],
   "historySize": 100,
   "samplingPeriods": [50, 50, 50, 50, 40, 40, 30, 30, 20, 10],

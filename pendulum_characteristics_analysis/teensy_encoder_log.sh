@@ -26,4 +26,4 @@ echo "timeMicros;encoderValue" > $filename
 echo "Logging to $filename. Press Ctrl+C to stop."
 
 # Read from serial device and append to file
-cat /dev/ttyACM0 >> $filename
+cat $serialDevice >> $filename
