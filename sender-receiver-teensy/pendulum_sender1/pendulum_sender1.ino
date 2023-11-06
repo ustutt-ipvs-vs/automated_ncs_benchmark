@@ -129,7 +129,8 @@ void sendSampleIfDelayOver(){
 }
 
 void checkAndHandleFeedback(){
-    if(FeedbackSerial.available() > 0){
+    const int prefixLength = 3; // Length of string "FB:"
+    if(FeedbackSerial.available() >= prefixLength){
     // The Feedback is of the following form:
     // sequenceNumber;Timestamp;
     // for example
@@ -140,7 +141,7 @@ void checkAndHandleFeedback(){
     // packetsLostTotal;latencyMillis;\n
     // for example
     // FB:55;13;\n
-    if(FeedbackSerial.readStringUntil(':').startsWith("FB")){
+    if(FeedbackSerial.read() == 'F' && FeedbackSerial.read() == 'B' && FeedbackSerial.read() == ':'){
       long receivedSequenceNumber = FeedbackSerial.readStringUntil(';').toInt();
       long timestamp = FeedbackSerial.readStringUntil(';').toInt();
       FeedbackSerial.read(); // read '\n'
