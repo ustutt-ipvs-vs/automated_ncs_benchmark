@@ -94,7 +94,7 @@ void PendulumSender::handleSenderFeedback() {
     feedbackPacketsCount++;
 
     if(feedbackPacketsCount % 10 == 0){
-        std::cout << serialInputBuffer << std::endl;
+        std::cout << serialInputBuffer;
     }
 }
 
