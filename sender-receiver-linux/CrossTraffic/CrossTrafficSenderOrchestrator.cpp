@@ -31,7 +31,7 @@ CrossTrafficSenderOrchestrator::initializeSendersWithParameters(std::string host
 
     for (int i = 0; i < priorities.size(); i++) {
         senders.emplace_back(
-                std::make_shared<CrossTrafficSender>(new ConstantPriority(priorities[i]), dataRatesBytesPerSecond[i],
+                std::make_shared<CrossTrafficSender>(new ConstantPriority(priorities.at(i)), dataRatesBytesPerSecond.at(i),
                                                      host, port, "Sender " + std::to_string(i)));
     }
 }

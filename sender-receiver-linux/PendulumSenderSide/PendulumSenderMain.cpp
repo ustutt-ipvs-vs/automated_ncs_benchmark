@@ -2,11 +2,14 @@
 // Created by david on 10.01.23.
 //
 
+#include <thread>
 #include "PendulumSender.h"
 #include "../Scheduling/ConstantPriority.h"
 #include "../Scheduling/MultiPriorityTokenBucket.h"
 #include "SenderConfig.h"
 #include "../SerialPortScan/TeensyPortDetector.h"
+#include "SenderMultiConfig.h"
+#include "MPTBSubConfig.h"
 
 /**
  * Usage from command line:
@@ -36,6 +39,10 @@
  * Option 5: Use a JSON config file. An example config file can be found in "exampleSenderConfig.json"
  * ./pendulum_sender f <filename>
  *
+ * Option 6: Run a sequence of MPTB sub-configs from a JSON config file. An example config file can be found in
+ * "exampleSenderSequenceConfig.json".
+ * ./pendulum_sender s <filename>
+ *
  * Running the program as sudo (required for priority 7 to work):
  * $ sudo su
  * $ export LD_LIBRARY_PATH=/usr/local/lib:$LD_LIBRARY_PATH
@@ -54,6 +61,10 @@ double frameSizeOfSample = 78;
 // Gets transmitted to the sender Teensy at initialization.
 int teensyHistorySize = 100;
 
+// Teensy angle bias of the raw sensor value (2400 steps per revolution)
+// this value gets added to the raw sensor value before it is sent to the receiver
+int teensyAngleBias = 0;
+
 // Different sampling periods used by the Teensy sender in milliseconds:
 std::vector<int> teensySamplingPeriods = {100, 90, 80, 70, 60, 50, 40, 30, 20, 10};
 
@@ -69,6 +80,7 @@ PendulumSender *sender;
 
 
 PriorityDeterminer *generateDeterminerFromCommandLineArguments(int argc, char *const *argv);
+void runMptbSequence(int argc, char *const *argv);
 
 void sigIntHandler(int signal) {
     std::cout << "Received Signal: " << signal << std::endl;
@@ -97,10 +109,90 @@ double samplingPeriodToDataRate(double samplingPeriod) {
 int main(int argc, char *argv[]) {
     signal(SIGINT, sigIntHandler);
 
-    PriorityDeterminer *determiner;
-    determiner = generateDeterminerFromCommandLineArguments(argc, argv);
+    if(argc >= 2 && argv[1][0] == 's'){
+        runMptbSequence(argc, argv);
+    } else {
+        PriorityDeterminer *determiner;
+        determiner = generateDeterminerFromCommandLineArguments(argc, argv);
 
-    sender = new PendulumSender(determiner, device, host, port, teensyHistorySize, teensySamplingPeriods);
+        sender = new PendulumSender(determiner, device, host, port, teensyHistorySize, teensySamplingPeriods,
+                                    nullptr, "pendulumsender", teensyAngleBias);
+        sender->start();
+    }
+
+}
+
+PriorityDeterminer *getIthSubconfigMptbDeterminer(int i, SenderMultiConfig config){
+    MPTBSubConfig subConfig = config.getMptbSubConfigs().at(i);
+    double bAsBytes = numberOfSamplesToBytes(subConfig.getB());
+    double rAsBytesPerSecond = samplingPeriodToDataRate(subConfig.getR());
+    std::vector<double> thresholdsBytes;
+    for (double threshold : subConfig.getThresholds()) {
+        thresholdsBytes.push_back(numberOfSamplesToBytes(threshold));
+    }
+
+    return new MultiPriorityTokenBucket(bAsBytes, rAsBytesPerSecond, subConfig.getNumThresholds(),
+                                              thresholdsBytes,
+                                              subConfig.getCosts(), subConfig.getPrioMapping());}
+
+uint64_t timeSinceEpochMillisec(){
+    using namespace std::chrono;
+    return duration_cast<milliseconds>(system_clock::now().time_since_epoch()).count();
+}
+
+void runMptbSequence(int argc, char *const *argv){
+    if(argc <3){
+        std::cout << "Usage: ./pendulum_sender s <multi_mptb_sequence_config_file>" << std::endl;
+        exit(1);
+    }
+
+    std::string filename = argv[2];
+    std::cout << "Using multi-MPTB config file " << filename << std::endl;
+    SenderMultiConfig config(filename);
+
+    host = config.getReceiverAddress();
+    teensyHistorySize = config.getHistorySize();
+    teensyAngleBias = config.getBias();
+    teensySamplingPeriods = config.getSamplingPeriods();
+
+    if(config.isAutomaticallyFindSerialDevice()){
+        std::cout << "Automatically finding serial device..." << std::endl;
+        device = TeensyPortDetector::findTeensySerialDevice();
+    } else {
+        device = config.getSerialDeviceName();
+    }
+    std::cout << "Using serial device " << device << std::endl;
+
+    std::cout << std::endl;
+    std::cout << config.toString() << std::endl;
+
+    int currentConfigurationIndex = 0;
+    uint64_t currentConfigurationStartTime = timeSinceEpochMillisec();
+
+    auto regularCallback = [&currentConfigurationStartTime, &currentConfigurationIndex, &config]() {
+        double currentConfigRuntimeMinutes = config.getMptbSubConfigs().at(currentConfigurationIndex).getDurationMinutes();
+        if(timeSinceEpochMillisec() - currentConfigurationStartTime > currentConfigRuntimeMinutes * 60.0 * 1000.0){
+            currentConfigurationIndex++;
+            if(currentConfigurationIndex >= config.getMptbSubConfigs().size()){
+                sender->sendEndSignal();
+                sender->stop();
+                std::cout << "Finished all MPTB sub-configs" << std::endl;
+                exit(0);
+            }
+            double nextConfigRuntimeMinutes = config.getMptbSubConfigs().at(currentConfigurationIndex).getDurationMinutes();
+            std::cout << "Starting MPTB sub-config with duration " << nextConfigRuntimeMinutes << " minutes" << std::endl;
+            PriorityDeterminer *priorityDeterminer = getIthSubconfigMptbDeterminer(currentConfigurationIndex, config);
+            sender->swapPriorityDeterminer(priorityDeterminer,
+                                           "pendulumsender_config_" + std::to_string(currentConfigurationIndex + 1));
+            sender->sendNewMptbConfigSignal(currentConfigurationIndex + 1);
+            currentConfigurationStartTime = timeSinceEpochMillisec();
+        }
+    };
+
+    PriorityDeterminer *determiner = getIthSubconfigMptbDeterminer(0, config);
+    sender = new PendulumSender(determiner, device, host, port,
+                                teensyHistorySize, teensySamplingPeriods, regularCallback, "pendulumsender_config_1",
+                                teensyAngleBias);
     sender->start();
 }
 
@@ -149,13 +241,13 @@ PriorityDeterminer *generateDeterminerFromCommandLineArguments(int argc, char *c
         if (argv[2][0] == 'p') {
             if (argv[2][1] == 's') {
                 samplingPeriodsForPriorities = strictPrioritySamplingPeriods;
-                r = strictPrioritySamplingPeriods[0];  // data rate of the highest priority must be equal to r
+                r = strictPrioritySamplingPeriods.at(0);  // data rate of the highest priority must be equal to r
             } else if (argv[2][1] == 'm') {
                 samplingPeriodsForPriorities = mediumPrioritySamplingPeriods;
-                r = mediumPrioritySamplingPeriods[0];
+                r = mediumPrioritySamplingPeriods.at(0);
             } else if (argv[2][1] == 'g') {
                 samplingPeriodsForPriorities = generousPrioritySamplingPeriods;
-                r = generousPrioritySamplingPeriods[0];
+                r = generousPrioritySamplingPeriods.at(0);
             } else {
                 std::cout << "Invalid argument: " << argv[2] << std::endl;
                 exit(1);
@@ -192,14 +284,14 @@ PriorityDeterminer *generateDeterminerFromCommandLineArguments(int argc, char *c
         std::cout << "Using multi priority token bucket with custom values:" << std::endl;
         std::cout << "b (Samples): " << b << " r (Sampling Period): " << r << std::endl;
         std::cout << "sampling rates for priorities (ms): "
-                  << samplingPeriodsForPriorities[0] << ", "
-                  << samplingPeriodsForPriorities[1] << ", "
-                  << samplingPeriodsForPriorities[2] << ", "
-                  << samplingPeriodsForPriorities[3] << ", "
-                  << samplingPeriodsForPriorities[4] << ", "
-                  << samplingPeriodsForPriorities[5] << ", "
-                  << samplingPeriodsForPriorities[6] << ", "
-                  << samplingPeriodsForPriorities[7] << std::endl;
+                  << samplingPeriodsForPriorities.at(0) << ", "
+                  << samplingPeriodsForPriorities.at(1) << ", "
+                  << samplingPeriodsForPriorities.at(2) << ", "
+                  << samplingPeriodsForPriorities.at(3) << ", "
+                  << samplingPeriodsForPriorities.at(4) << ", "
+                  << samplingPeriodsForPriorities.at(5) << ", "
+                  << samplingPeriodsForPriorities.at(6) << ", "
+                  << samplingPeriodsForPriorities.at(7) << std::endl;
     }
     else if (argc >= 5 && argv[1][0] == 't') {
         double b = std::stod(argv[2]);
@@ -235,15 +327,15 @@ PriorityDeterminer *generateDeterminerFromCommandLineArguments(int argc, char *c
 
         std::cout << "Option 4, read these values: b=" << b << ", r=" << r << ", numThresholds=" << numThresholds << ", thresholds=";
         for (int i = 0; i < thresholds.size(); i++) {
-            std::cout << thresholds[i] << ",";
+            std::cout << thresholds.at(i) << ",";
         }
         std::cout << " prioMappings=";
         for (int i = 0; i < prioMapping.size(); i++) {
-            std::cout << prioMapping[i] << ",";
+            std::cout << prioMapping.at(i) << ",";
         }
         std::cout << " costs=";
         for (int i = 0; i < costs.size(); i++) {
-            std::cout << costs[i] << ",";
+            std::cout << costs.at(i) << ",";
         }
         std::cout << std::endl;
 
@@ -270,6 +362,7 @@ PriorityDeterminer *generateDeterminerFromCommandLineArguments(int argc, char *c
 
         host = config.getReceiverAddress();
         teensyHistorySize = config.getHistorySize();
+        teensyAngleBias = config.getBias();
         teensySamplingPeriods = config.getSamplingPeriods();
 
         if(config.isAutomaticallyFindSerialDevice()){

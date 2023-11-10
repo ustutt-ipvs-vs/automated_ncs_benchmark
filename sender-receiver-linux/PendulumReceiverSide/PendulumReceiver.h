@@ -37,7 +37,7 @@ private:
     udp_socket receiverSocket;
     std::atomic<bool> stopReceiving{false};
     SerialPort serialActuator;
-    PendulumLogger logger;
+    PendulumLogger* logger;
 
     char receiveBuffer[1500];
     std::string networkInput;
@@ -64,6 +64,8 @@ public:
     bool isTimeForPause() const;
 
     void sendPauseSignal();
+
+    void startNewLogfile(int number);
 };
 
 

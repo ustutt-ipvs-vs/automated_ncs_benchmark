@@ -67,7 +67,11 @@ add_executable(pendulum_sender
         PendulumSenderSide/SenderConfig.cpp
         PendulumSenderSide/SenderConfig.h
         SerialPortScan/TeensyPortDetector.cpp
-        SerialPortScan/TeensyPortDetector.h )
+        SerialPortScan/TeensyPortDetector.h
+        PendulumSenderSide/MPTBSubConfig.cpp
+        PendulumSenderSide/MPTBSubConfig.h
+        PendulumSenderSide/SenderMultiConfig.h
+        PendulumSenderSide/SenderMultiConfig.cpp)
 
 add_executable(pendulum_receiver
         PendulumReceiverSide/PendulumReceiverMain.cpp

@@ -79,7 +79,7 @@ float stepsPerMeter = trackLengthSteps / trackLengthMeters;  // initial guess
 constexpr int encoderPPRhalf = 600 * 2;
 constexpr int encoderPPR = encoderPPRhalf * 2;
 //constexpr int encoderOrigin = encoderPPRhalf - 2;
-constexpr int encoderOrigin = encoderPPRhalf; // Correct error of sensor
+constexpr int encoderOrigin = encoderPPRhalf;
 constexpr int angleSign = 1;
 constexpr float RAD_PER_ESTEP = TWO_PI / encoderPPR;
 constexpr float ESTEP_PER_RAD = encoderPPR / TWO_PI;
@@ -1257,16 +1257,16 @@ void updateRotaryEncoderValue() {
           //        long T4 = profileTimer;/////////////////////////////////////////////////////////////////////////////////////////
           //        Serial.printf("%d + %d + %d + %d = %d\n", T1, T2-T1, T3-T2, T4-T3, T4);
 
-          if (k % 10 == 0) {
-            Serial.printf("log:%u;%f;%f;%f;%f;%f;%f;%f;%f;%f\n", k,
-                          cartPos, cartSpeed, poleAngle,
-                          x_cart, v_cart, x_pole, v_pole,
-                          u_accel, target_speed);
-            Serial.send_now();
-          }
-        }
-        break;
-
+        //if (k % 10 == 0) {
+          Serial.printf("log:%u;%f;%f;%f;%f;%f;%f;%f;%f;%f\n", k,
+                        cartPos, cartSpeed, poleAngle,
+                        x_cart, v_cart, x_pole, v_pole,
+                        u_accel, target_speed);
+          Serial.send_now();
+        //}
+      }
+      break;
+      
       case UNDEFINED:  // don't know which direction to take
         break;
 

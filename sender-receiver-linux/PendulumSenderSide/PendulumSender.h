@@ -28,10 +28,11 @@ private:
     PriorityDeterminer* priorityDeterminer;
     std::atomic<bool> stopSending{false};
     SerialPort serialSensor;
-    PendulumLogger logger;
+    PendulumLogger* logger;
     std::string serialInputBuffer;
     bool pendulumStarted = false;
     int teensyHistorySize;
+    int angleBias;
     std::vector<int> teensySamplingPeriods;
 
     uint64_t startTime;
@@ -48,11 +49,18 @@ private:
     unsigned long long bytesSentTotal = 0;
     unsigned long long feedbackPacketsCount = 0;
 
+    std::function<void()> regularCallback;
+
 public:
     PendulumSender(PriorityDeterminer* priorityDeterminer, std::string serialDeviceName, std::string receiverHost,
-                   int receiverPort, int teensyHistorySize, std::vector<int> teensySamplingPeriods);
+                   int receiverPort, int teensyHistorySize, std::vector<int> teensySamplingPeriods,
+                   std::function<void()> regularCallback = nullptr, std::string logFilePrefix = "pendulumsender",
+                   int angleBias = 0);
     void start();
     void stop();
+    void swapPriorityDeterminer(PriorityDeterminer* newPriorityDeterminer, std::string logFilePrefix);
+    void sendNewMptbConfigSignal(int number);
+    void sendEndSignal();
 
 
 private:
@@ -60,6 +68,7 @@ private:
 
     void handleSenderFeedback();
     uint64_t timeSinceEpochMillisec();
+    std::string applyAngleBias(std::string payload);
 };
 
 

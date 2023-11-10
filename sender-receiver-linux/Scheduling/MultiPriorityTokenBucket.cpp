@@ -13,6 +13,7 @@ MultiPriorityTokenBucket::MultiPriorityTokenBucket(double b, double r, unsigned 
     currentBucketLevel = b;
     lastBucketFillTime = high_resolution_clock::now();
     packetCount = 0;
+    currentSeverityLevel = 0;
 
     if (dataRateOfPriorities.size() != numPriorities) {
         throw std::runtime_error("Number of data rates must match numThresholds");
@@ -33,6 +34,7 @@ MultiPriorityTokenBucket::MultiPriorityTokenBucket(double b, double r, unsigned 
     currentBucketLevel = b;
     lastBucketFillTime = high_resolution_clock::now();
     packetCount = 0;
+    currentSeverityLevel = 0;
 
     if (thresholds.size() != numThresholds || prioMapping.size() != numThresholds+1 || costs.size() != numThresholds+1) {
         throw std::runtime_error("numThresholds must match thresholds.size and prioMapping.size+1 and costs.size+1 (one extra prioMapping and cost value for BE)");
@@ -84,22 +86,21 @@ double MultiPriorityTokenBucket::getBucketLevel() {
 }
 
 unsigned int MultiPriorityTokenBucket::getPriority() {
-    return prioMapping[currentSeverityLevel];
+    return prioMapping.at(currentSeverityLevel);
 }
 
 void MultiPriorityTokenBucket::updateSeverityLevel() {
     for(unsigned int severityLevel = 0; severityLevel < numPriorities-1; severityLevel++){
-        if(currentBucketLevel >= thresholdOfPriorities[severityLevel]){
+        if(currentBucketLevel >= thresholdOfPriorities.at(severityLevel)){
             currentSeverityLevel = severityLevel;
             return;
         }
     }
     currentSeverityLevel = numPriorities-1;
-    return;
 }
 
 double MultiPriorityTokenBucket::getCostOfCurrentPriority() {
-    return costOfPriorities[currentSeverityLevel];
+    return costOfPriorities.at(currentSeverityLevel);
 }
 
 /**
@@ -124,7 +125,7 @@ void MultiPriorityTokenBucket::calculateThresholdsAndCosts(double r, std::vector
 
     // Choose thresholds such that the 'bucket' of each priority can send a b bytes burst before empty.
     for(int i = 1; i < numPriorities - 1; i++){
-        double threshold = thresholdOfPriorities[i-1] - costOfPriorities[i] * b;
+        double threshold = thresholdOfPriorities.at(i-1) - costOfPriorities.at(i) * b;
         thresholdOfPriorities.emplace_back(threshold);
     }
 

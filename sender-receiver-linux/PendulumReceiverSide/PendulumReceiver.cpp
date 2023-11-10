@@ -6,8 +6,7 @@
 
 PendulumReceiver::PendulumReceiver(std::string serialDeviceName, std::string receiverHost, int receiverPort,
                                    bool doPauses, int timeBetweenPausesMillis, int pauseDurationMillis,
-                                   int motorMaxRPM, double revolutionsPerTrack)
-        : logger("pendulumreceiver") {
+                                   int motorMaxRPM, double revolutionsPerTrack){
     this->serialDeviceName = serialDeviceName;
     this->receiverAddress = inet_address(receiverHost, receiverPort);
     this->doPauses = doPauses;
@@ -15,6 +14,7 @@ PendulumReceiver::PendulumReceiver(std::string serialDeviceName, std::string rec
     this->pauseDurationMillis = pauseDurationMillis;
     this->motorMaxRPM = motorMaxRPM;
     this->revolutionsPerTrack = revolutionsPerTrack;
+    this->logger = new PendulumLogger("pendulumreceiver_config_1");
 
     receiverSocket.bind(receiverAddress);
 
@@ -52,13 +52,28 @@ void PendulumReceiver::start() {
         int receivedLength = receiverSocket.recv(receiveBuffer, sizeof(receiveBuffer));
         networkInput = std::string(receiveBuffer, receivedLength);
 
+        // Detect new config signal of the form "NewConfig:number\n":
+        if (networkInput.rfind("NewConfig:", 0) == 0) {
+            int newConfigNumber = std::stoi(networkInput.substr(10));
+            std::cout << "New MPTB config signal received: " << newConfigNumber << std::endl;
+            startNewLogfile(newConfigNumber);
+            continue;
+        }
+
+        // Detect end signal of the form "EndSignal\n":
+        if (networkInput.rfind("EndSignal", 0) == 0) {
+            std::cout << "End signal received." << std::endl;
+            stop();
+            continue;
+        }
+
         packetCount++;
         bytesReceivedTotal += networkInput.size();
 
         // Remove the padding with '#' from the end of the string:
         networkInput.erase(std::remove(networkInput.begin(), networkInput.end(), '#'), networkInput.end());
 
-        logger.log(packetCount, bytesReceivedTotal, networkInput);
+        logger->log(packetCount, bytesReceivedTotal, networkInput);
 
         if(doPauses && isTimeForPause()){
             sendPauseSignal();
@@ -71,7 +86,7 @@ void PendulumReceiver::start() {
             std::cout << "Actuator: " << serialInput << std::endl;
 
             if (serialInput.rfind("log:", 0) == 0) {
-                logger.logActuator(serialInput);
+                logger->logActuator(serialInput);
 
                 if(!startedBalancing) {
                     startedBalancing = true;
@@ -89,7 +104,7 @@ void PendulumReceiver::sendPauseSignal() {
     std::stringstream ss;
     ss << "PAUSE:" << pauseDurationMillis << ";\n";
     serialActuator.Write(ss.str());
-    logger.logPause(pauseDurationMillis);
+    logger->logPause(pauseDurationMillis);
 }
 
 bool PendulumReceiver::isTimeForPause() const {
@@ -104,7 +119,12 @@ void PendulumReceiver::stop() {
     stopReceiving = true;
     receiverSocket.close();
     serialActuator.Close();
-    logger.saveToFile();
+    logger->saveToFile();
+}
+
+void PendulumReceiver::startNewLogfile(int number) {
+    logger->saveToFileAsync(); // Save asynchronously to avoid blocking the main thread
+    logger = new PendulumLogger("pendulumreceiver_config_" + std::to_string(number));
 }
 
 

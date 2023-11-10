@@ -16,6 +16,7 @@
 class PendulumLogger : public Logger {
 public:
     explicit PendulumLogger(std::string name);
+    ~PendulumLogger() override = default;
 
     void log(unsigned long long packetCount, unsigned long long bytesSentTotal, std::string payload,
              SchedulingInfoEntry *schedulingInfo);
