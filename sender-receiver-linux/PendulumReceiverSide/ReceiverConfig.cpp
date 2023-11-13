@@ -39,6 +39,7 @@ std::string ReceiverConfig::toString() const {
     result += "doPauses: " + std::to_string(doPauses) + "\n";
     result += "timeBetweenPausesMillis: " + std::to_string(timeBetweenPausesMillis) + "\n";
     result += "pauseDurationMillis: " + std::to_string(pauseDurationMillis) + "\n";
+    result += "swingUpBehavior: " + std::to_string(swingUpBehavior) + "\n";
     return result;
 }
 
@@ -76,6 +77,23 @@ ReceiverConfig::ReceiverConfig(std::string filename) {
     } else {
         pauseDurationMillis = 800;
     }
+
+    if(configJson.contains("swingUpBehavior")) {
+        std::string swingUpBehaviorString = configJson["swingUpBehavior"];
+        if(swingUpBehaviorString == "swingUpAtStart"){
+            swingUpBehavior = SWING_UP_AT_START;
+        } else if(swingUpBehaviorString == "swingUpAtNewConfigIfCrashed"){
+            swingUpBehavior = SWING_UP_AT_NEW_CONFIG_IF_CRASHED;
+        } else if(swingUpBehaviorString == "crashAndSwingUpAtNewConfig"){
+            swingUpBehavior = CRASH_AND_SWING_UP_AT_NEW_CONFIG;
+        } else if(swingUpBehaviorString == "noSwingUp"){
+            swingUpBehavior = NO_SWING_UP;
+        } else{
+            throw std::runtime_error("Unknown swingUpBehavior: " + swingUpBehaviorString);
+        }
+    } else {
+        swingUpBehavior = NO_SWING_UP;
+    }
 }
 
 int ReceiverConfig::getMotorMaxRPM() const {
@@ -96,6 +114,10 @@ double ReceiverConfig::getRevolutionsPerTrack() const {
     } else{
         throw std::runtime_error("Unknown pendulum type: " + pendulumType);
     }
+}
+
+ReceiverConfig::SwingUpBehavior ReceiverConfig::getSwingUpBehavior() const {
+    return swingUpBehavior;
 }
 
 
