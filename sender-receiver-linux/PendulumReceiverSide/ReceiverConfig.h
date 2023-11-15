@@ -12,17 +12,32 @@
  *   "serialDeviceName": "auto",
  *   "doPauses": true,
  *   "timeBetweenPausesMillis": 20000,
- *   "pauseDurationMillis": 800
+ *   "pauseDurationMillis": 800,
+ *   "swingUpBehavior": "swingUpAtStart"
  * }
  *
  * The pendulum types available are:
  * - oldPendulum: max RPM = 20 * 60, revolutionsPerTrack = 20.06
  * - newPendulum: max RPM = 15 * 60, revolutionsPerTrack = 15.00
  *
+ * The swingUpBehavior options are:
+ * - swingUpAtStart: swing up the pendulum at the start of the program
+ * - swingUpAtNewConfigIfCrashed: swing up the pendulum at every new config if the pendulum crashed
+ * - crashAndSwingUpAtNewConfig: intentionally crash the pendulum at every new config and swing it up again
+ * - noSwingUp: don't swing up the pendulum
+ *
  * The serialDeviceName can be set to "auto" to automatically find the a Teensy device.
  * It is also possible to specify the device name manually, e.g. "/dev/ttyACM0".
  */
 class ReceiverConfig {
+public:
+    enum SwingUpBehavior {
+        SWING_UP_AT_START,
+        SWING_UP_AT_NEW_CONFIG_IF_CRASHED,
+        CRASH_AND_SWING_UP_AT_NEW_CONFIG,
+        NO_SWING_UP
+    };
+
 private:
     std::string receiverAddress;
     std::string pendulumType;
@@ -31,6 +46,7 @@ private:
     bool doPauses;
     int timeBetweenPausesMillis;
     int pauseDurationMillis;
+    enum SwingUpBehavior swingUpBehavior;
 
 public:
     const std::string &getReceiverAddress() const;
@@ -55,7 +71,7 @@ public:
 
     double getRevolutionsPerTrack() const;
 
-
+    SwingUpBehavior getSwingUpBehavior() const;
 };
 
 

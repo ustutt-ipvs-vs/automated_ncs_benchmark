@@ -54,10 +54,12 @@ private:
 
     int motorMaxRPM;
     double revolutionsPerTrack;
+    ReceiverConfig::SwingUpBehavior swingUpBehavior;
 
 public:
     PendulumReceiver(std::string serialDeviceName, std::string receiverHost, int receiverPort, bool doPauses,
-                     int timeBetweenPausesMillis, int pauseDurationMillis, int motorMaxRPM, double revolutionsPerTrack);
+                     int timeBetweenPausesMillis, int pauseDurationMillis, int motorMaxRPM, double revolutionsPerTrack,
+                     ReceiverConfig::SwingUpBehavior swingUpBehavior = ReceiverConfig::SwingUpBehavior::NO_SWING_UP);
     void start();
     void stop();
 
@@ -66,6 +68,8 @@ public:
     void sendPauseSignal();
 
     void startNewLogfile(int number);
+
+    void handleNewConfigSignal();
 };
 
 
