@@ -193,6 +193,7 @@ This config allows to run multiple MPTB configurations one after another without
 ```
 
 with
+- `mptbSequence`: Array with an arbitrary number of MPTB configuration objects. These configurations are executed sequentially in the order given by the array.
 - `durationMinutes`: Number of minutes (floating point number) that this configuration should be executed.
 - All other parameters like in the single-run config.
 
