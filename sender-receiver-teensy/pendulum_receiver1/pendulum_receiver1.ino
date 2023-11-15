@@ -126,6 +126,7 @@ enum state { INIT,
              REACH_HOME,
              HOME,
              PERFORM_SWING_UP,
+             WAIT_FOR_SWING_UP_SIGNAL,
              BALANCE,
              UNDEFINED } CartState = INIT;
 int returnPosition = 0;
@@ -227,6 +228,8 @@ uint32_t swingUpTimeLastPause = 0;
 uint32_t timeBalancingStarted = 0;
 const uint32_t balancingGracePeriodMillis = 30000;
 bool sendEncoderValuesThroughFeedbackLink = false;
+bool doSwingUpAtStart = false;
+bool swingUpSignalReceived = false;
 
 /**
 * The coefficients were calculated with the demonstrator.jl Julia script.
@@ -740,7 +743,8 @@ void readInitializationValues(){
   float newRevolutionsPerTrack;
 
   // Expected Format:
-  // I:motorMaxRPM;revolutionsPerTrack;\n
+  // I:motorMaxRPM;revolutionsPerTrack;doSwingUpAtStart\n
+  // where doSwingUpAtStart in {0, 1}
   bool receivedInitValues = false;
   while(!receivedInitValues){
     Serial.println("READY");
@@ -750,10 +754,11 @@ void readInitializationValues(){
       if(Serial.readStringUntil(':').startsWith("I")){
         newMotorMaxRPM = Serial.readStringUntil(';').toInt();
         newRevolutionsPerTrack = Serial.readStringUntil(';').toFloat();
+        doSwingUpAtStart = Serial.readStringUntil(';').toInt();
         receivedInitValues = true;
 
         // Echo received values to computer for validation:
-        Serial.printf("Received init values: motor max RPM: %i, revolutions per track: %f\n", newMotorMaxRPM, newRevolutionsPerTrack);
+        Serial.printf("Received init values: motor max RPM: %i, revolutions per track: %f, swing up at start: %i\n", newMotorMaxRPM, newRevolutionsPerTrack, doSwingUpAtStart);
       }
       Serial.read(); // Remove \n
     }
@@ -867,7 +872,7 @@ void updateRotaryEncoderValue() {
   // Additionally, pause signals of the following form can be transmitted (for pause with 800ms duration):
   // PAUSE:800;\n
 
-  if(!(CartState == HOME || CartState == PERFORM_SWING_UP || CartState == BALANCE)){
+  if(!(CartState == HOME || CartState == PERFORM_SWING_UP || CartState == BALANCE || CartState == WAIT_FOR_SWING_UP_SIGNAL)){
     return;
   }
 
@@ -876,6 +881,12 @@ void updateRotaryEncoderValue() {
   Stream* serialDevice;
   if(sendEncoderValuesThroughFeedbackLink){
     serialDevice = &FeedbackSerial;
+
+    // Regularly read from USB serial buffer to avoid packets bloating the 
+    // buffer, which causes blockage at the Linux receiver:
+    while(Serial.available() > 0){
+      Serial.read();
+    }
   } else {
     serialDevice = &Serial;
   }
@@ -885,6 +896,16 @@ void updateRotaryEncoderValue() {
       if(input1.startsWith("PAUSE")){
         pauseDurationMillis = serialDevice->readStringUntil(';').toInt();
         hasPauseBeenSignaled = true;
+      } else if(input1.startsWith("DOSWINGUP")){
+        // Format: DOSWINGUP:1;
+        serialDevice->readStringUntil(';');
+        if(CartState == WAIT_FOR_SWING_UP_SIGNAL){
+          swingUpSignalReceived = true;
+        }
+      } else if(input1.startsWith("DOCRASHANDSWINGUP")){
+        // Format: DOCRASHANDSWINGUP:1;
+        serialDevice->readStringUntil(';');
+        CartState = HOME;
       } else if(input1.startsWith("S")){
         // normal sampling value:
         currentEncoderValue = serialDevice->readStringUntil(';').toInt();
@@ -1021,47 +1042,48 @@ void updateRotaryEncoderValue() {
         CartState = HOME;
         break;
       case HOME:  // at home
-        // if (encoderInitialized && encoderTimer >= encoderPeriod) {
-        //   encoderTimer -= encoderPeriod;
-        //   int encoderAbs = currentEncoderValue;
-        //   int encoderRel = angleSteps(encoderAbs);
-        //   bool wasUpright = isUpright;
-        //   isUpright = (abs(encoderRel) < 20);
-        //   if (isUpright && wasUpright) {
-        //     isUpright = false;
-        //     k = 0;
-        //     xi_cart = 0.0;
-        //     x_cart = getCartPosMeter();
-        //     v_cart = 0.0;
-        //     x_pole = (float)RAD_PER_ESTEP * encoderRel;
-        //     v_pole = 0.0;
-        //     u_accel = 0.0;
-        //     poleAngle_p = x_pole;
-        //     rotate.rotateAsync(motor);
-        //     rotate.overrideAcceleration(0);
-        //     rotate.overrideSpeed(0);
-        //     Serial.println("<<< BALANCE >>>");
-        //     Serial.send_now();
-        //     CartState = BALANCE;
-        //   } else
-        //     Serial.printf("Encoder_Test: %d -> angle = %d steps = %f°\n", encoderAbs, encoderRel, RAD_TO_DEG * RAD_PER_ESTEP * encoderRel);
-        //   Serial.send_now();
-        // }
-        // break;
+        if(!doSwingUpAtStart){
+          if (encoderInitialized && encoderTimer >= encoderPeriod) {
+            encoderTimer -= encoderPeriod;
+            int encoderAbs = currentEncoderValue;
+            int encoderRel = angleSteps(encoderAbs);
+            bool wasUpright = isUpright;
+            isUpright = (abs(encoderRel) < 20);
+            if (isUpright && wasUpright) {
+              isUpright = false;
+              k = 0;
+              xi_cart = 0.0;
+              x_cart = getCartPosMeter();
+              v_cart = 0.0;
+              x_pole = (float)RAD_PER_ESTEP * encoderRel;
+              v_pole = 0.0;
+              u_accel = 0.0;
+              poleAngle_p = x_pole;
+              rotate.rotateAsync(motor);
+              rotate.overrideAcceleration(0);
+              rotate.overrideSpeed(0);
+              Serial.println("<<< BALANCE >>>");
+              Serial.send_now();
+              CartState = BALANCE;
+            } else
+              Serial.printf("Encoder_Test: %d -> angle = %d steps = %f°\n", encoderAbs, encoderRel, RAD_TO_DEG * RAD_PER_ESTEP * encoderRel);
+            Serial.send_now();
+          }
+        } else {
+          delay(4000);
+          xi_cart = 0.0;
+          x_cart = getCartPosMeter();
+          v_cart = 0.0;
+          x_pole = (float)RAD_PER_ESTEP * angleSteps(currentEncoderValue);
+          v_pole = 0.0;
+          u_accel = 0.0;
+          poleAngle_p = x_pole;
 
-        delay(6000);
-        xi_cart = 0.0;
-        x_cart = getCartPosMeter();
-        v_cart = 0.0;
-        x_pole = (float)RAD_PER_ESTEP * angleSteps(currentEncoderValue);
-        v_pole = 0.0;
-        u_accel = 0.0;
-        poleAngle_p = x_pole;
-
-        // motor.setMaxSpeed((double)motorPPS * 0.4).setAcceleration((double) motorACC * 0.4);
-        sendEncoderValuesThroughFeedbackLink = true;
-        sendSwingUpStartSignalToSender();
-        CartState = PERFORM_SWING_UP;
+          // motor.setMaxSpeed((double)motorPPS * 0.4).setAcceleration((double) motorACC * 0.4);
+          sendEncoderValuesThroughFeedbackLink = true;
+          sendSwingUpStartSignalToSender();
+          CartState = PERFORM_SWING_UP;
+        }
         break;
 
       case PERFORM_SWING_UP:
@@ -1104,6 +1126,7 @@ void updateRotaryEncoderValue() {
 
             // Initialize parameters and motor for balancing:
             int encoderRel = angleSteps(swingUpSampleN);
+            k = 0;
             xi_cart = 0.0;
             x_cart = getCartPosMeter();
             v_cart = 0.0;
@@ -1187,7 +1210,8 @@ void updateRotaryEncoderValue() {
               delay(4000); // Wait for pendulum to loose some energy (overshoots otherwise).
               CartState = HOME;
             } else{
-              initializeCartState();
+              CartState = WAIT_FOR_SWING_UP_SIGNAL;
+              Serial.println("Crashed. Waiting for swing-up signal.");
             }
             break;
           }
@@ -1266,6 +1290,15 @@ void updateRotaryEncoderValue() {
         //}
       }
       break;
+
+      case WAIT_FOR_SWING_UP_SIGNAL:
+        // This state is entered after a crash. The controller can send a swing-up signal via serial to make
+        // the pendulum swing up again.
+        if(swingUpSignalReceived){
+          Serial.println("Do-Swing-up signal received.");
+          CartState = HOME;
+          swingUpSignalReceived = false;
+        }
       
       case UNDEFINED:  // don't know which direction to take
         break;
