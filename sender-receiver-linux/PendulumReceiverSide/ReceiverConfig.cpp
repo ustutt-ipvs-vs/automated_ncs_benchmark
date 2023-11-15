@@ -39,7 +39,7 @@ std::string ReceiverConfig::toString() const {
     result += "doPauses: " + std::to_string(doPauses) + "\n";
     result += "timeBetweenPausesMillis: " + std::to_string(timeBetweenPausesMillis) + "\n";
     result += "pauseDurationMillis: " + std::to_string(pauseDurationMillis) + "\n";
-    result += "swingUpBehavior: " + std::to_string(swingUpBehavior) + "\n";
+    result += "swingUpBehavior: " + getSwingUpBehaviorString() + "\n";
     return result;
 }
 
@@ -118,6 +118,10 @@ double ReceiverConfig::getRevolutionsPerTrack() const {
 
 ReceiverConfig::SwingUpBehavior ReceiverConfig::getSwingUpBehavior() const {
     return swingUpBehavior;
+}
+
+std::string ReceiverConfig::getSwingUpBehaviorString() const {
+    return swingUpBehaviorStrings[swingUpBehavior];
 }
 
 

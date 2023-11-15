@@ -39,6 +39,13 @@ public:
     };
 
 private:
+    const std::string swingUpBehaviorStrings[4] {
+            "swingUpAtStart",
+            "swingUpAtNewConfigIfCrashed",
+            "crashAndSwingUpAtNewConfig",
+            "noSwingUp"
+    };
+
     std::string receiverAddress;
     std::string pendulumType;
     std::string serialDeviceName;
@@ -72,6 +79,8 @@ public:
     double getRevolutionsPerTrack() const;
 
     SwingUpBehavior getSwingUpBehavior() const;
+
+    std::string getSwingUpBehaviorString() const;
 };
 
 
