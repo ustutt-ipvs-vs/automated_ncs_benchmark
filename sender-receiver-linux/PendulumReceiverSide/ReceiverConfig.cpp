@@ -89,7 +89,15 @@ ReceiverConfig::ReceiverConfig(std::string filename) {
         } else if(swingUpBehaviorString == "noSwingUp"){
             swingUpBehavior = NO_SWING_UP;
         } else{
-            throw std::runtime_error("Unknown swingUpBehavior: " + swingUpBehaviorString);
+            std::string optionsString;
+            for(const std::string& option : swingUpBehaviorStrings){
+                optionsString += option;
+                if (option != swingUpBehaviorStrings.back()){
+                    optionsString += ", ";
+                }
+            }
+            throw std::runtime_error("Unknown swingUpBehavior: " + swingUpBehaviorString
+             + " The following options are available: " + optionsString);
         }
     } else {
         swingUpBehavior = NO_SWING_UP;
@@ -121,7 +129,7 @@ ReceiverConfig::SwingUpBehavior ReceiverConfig::getSwingUpBehavior() const {
 }
 
 std::string ReceiverConfig::getSwingUpBehaviorString() const {
-    return swingUpBehaviorStrings[swingUpBehavior];
+    return swingUpBehaviorStrings.at(swingUpBehavior);
 }
 
 

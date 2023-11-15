@@ -2,6 +2,7 @@
 #define SENDER_RECEIVER_LINUX_RECEIVERCONFIG_H
 
 #include <string>
+#include <vector>
 
 /**
  * This class is used to read the configuration JSON file for the receiver.
@@ -39,7 +40,7 @@ public:
     };
 
 private:
-    const std::string swingUpBehaviorStrings[4] {
+    const std::vector<std::string> swingUpBehaviorStrings = {
             "swingUpAtStart",
             "swingUpAtNewConfigIfCrashed",
             "crashAndSwingUpAtNewConfig",
