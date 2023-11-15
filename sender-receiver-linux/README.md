@@ -161,7 +161,7 @@ with
 
 ### Sender Config (multiple MPTB configurations)
 This config allows to run multiple MPTB configurations one after another without manual interaction.
-```
+```json
 {
   "mptbSequence": [
     {
@@ -197,7 +197,7 @@ with
 - All other parameters like in the single-run config.
 
 ### Receiver Config
-```
+```json
 {
   "receiverAddress": "10.0.1.3",
   "pendulumType": "oldPendulum",
