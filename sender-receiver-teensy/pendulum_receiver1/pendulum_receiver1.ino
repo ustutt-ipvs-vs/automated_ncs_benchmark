@@ -1143,15 +1143,7 @@ void updateRotaryEncoderValue() {
             // sendSwingUpEndSignalToSender();
 
             // Initialize parameters and motor for balancing:
-            int encoderRel = angleSteps(swingUpSampleN);
-            k = 0;
-            xi_cart = 0.0;
-            x_cart = getCartPosMeter();
-            v_cart = 0.0;
-            x_pole = (float)RAD_PER_ESTEP * encoderRel;
-            v_pole = 0.0;
-            u_accel = 0.0;
-            poleAngle_p = x_pole;
+            resetControlParameters();
             rotate.rotateAsync(motor);
             rotate.overrideAcceleration(0);
             rotate.overrideSpeed(0);
