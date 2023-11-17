@@ -1163,7 +1163,6 @@ void updateRotaryEncoderValue() {
             driveto.move(motor);
 
             swingUpTimeLastDirSwitch = millis();
-            Serial.println("Dir Switch");
           }
           swingUpSampleNMinusTwo = swingUpSampleNMinusOne;
           swingUpSampleNMinusOne = swingUpSampleN;
