@@ -1295,11 +1295,13 @@ void updateRotaryEncoderValue() {
           //        Serial.printf("%d + %d + %d + %d = %d\n", T1, T2-T1, T3-T2, T4-T3, T4);
 
         //if (k % 10 == 0) {
+        if(!sendEncoderValuesThroughFeedbackLink){
           Serial.printf("log:%u;%f;%f;%f;%f;%f;%f;%f;%f;%f\n", k,
                         cartPos, cartSpeed, poleAngle,
                         x_cart, v_cart, x_pole, v_pole,
                         u_accel, target_speed);
           Serial.send_now();
+        }
         //}
       }
       break;
