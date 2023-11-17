@@ -174,7 +174,10 @@ void checkAndHandleFeedback(){
       FeedbackSerial.readStringUntil('\n'); // read '\n'
       sensorValueSerial = &Serial; // USB serial
       Serial.println("Swing-up complete. Sending sensor values through USB serial again.");
-    }
+    } else if (firstChar == 'C' && secondChar == 'T' && thirdChar == ':'){
+      // Forward control message (prefix 'CT:') to linux  sender:
+      Serial.printf("CT:%s\n", FeedbackSerial.readStringUntil('\n').c_str()); // read '\n'
+    } 
   }
 }
 

@@ -231,6 +231,8 @@ bool sendEncoderValuesThroughFeedbackLink = false;
 bool doSwingUpAtStart = false;
 bool swingUpSignalReceived = false;
 
+bool gracePeriodEnded = false;
+
 /**
 * The coefficients were calculated with the demonstrator.jl Julia script.
 */
@@ -905,11 +907,14 @@ void updateRotaryEncoderValue() {
         }
         // Also reset control parameters as this is the beginning of a new config:
         resetControlParameters();
+        gracePeriodEnded = false;
+        timeBalancingStarted = millis();
       } else if(input1.startsWith("DOCRASHANDSWINGUP")){
         // Format: DOCRASHANDSWINGUP:1;
         serialDevice->readStringUntil(';');
         // Also reset control parameters as this is the beginning of a new config:
         resetControlParameters();
+        gracePeriodEnded = false;
         CartState = HOME;
       } else if(input1.startsWith("S")){
         // normal sampling value:
@@ -959,6 +964,14 @@ void updateRotaryEncoderValue() {
     v_pole = 0.0;
     u_accel = 0.0;
     poleAngle_p = x_pole;
+  }
+
+  void sendGracePeriodEndedSignals(){
+    delay(1); // delay to separate from other Serial messages
+    String signal = "CT:GracePeriodEnded;";
+    Serial.println(signal);
+    Serial.send_now();
+    FeedbackSerial.println(signal);
   }
 
   void loop() {
@@ -1075,6 +1088,7 @@ void updateRotaryEncoderValue() {
               Serial.println("<<< BALANCE >>>");
               Serial.send_now();
               CartState = BALANCE;
+              timeBalancingStarted = millis();
             } else
               Serial.printf("Encoder_Test: %d -> angle = %d steps = %f°\n", encoderAbs, encoderRel, RAD_TO_DEG * RAD_PER_ESTEP * encoderRel);
             Serial.send_now();
@@ -1220,9 +1234,13 @@ void updateRotaryEncoderValue() {
             break;
           }
 
-          if(sendEncoderValuesThroughFeedbackLink && millis() - timeBalancingStarted > balancingGracePeriodMillis){
-            sendEncoderValuesThroughFeedbackLink = false;
-            sendSwingUpEndSignalToSender();
+          if(!gracePeriodEnded && millis() - timeBalancingStarted > balancingGracePeriodMillis){
+            if(sendEncoderValuesThroughFeedbackLink){
+              sendEncoderValuesThroughFeedbackLink = false;
+              sendSwingUpEndSignalToSender();
+            }
+            gracePeriodEnded = true;
+            sendGracePeriodEndedSignals();
           }
 
           float cartPos = METER_PER_MSTEP * cartSteps;
