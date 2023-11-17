@@ -902,9 +902,13 @@ void updateRotaryEncoderValue() {
         if(CartState == WAIT_FOR_SWING_UP_SIGNAL){
           swingUpSignalReceived = true;
         }
+        // Also reset control parameters as this is the beginning of a new config:
+        resetControlParameters();
       } else if(input1.startsWith("DOCRASHANDSWINGUP")){
         // Format: DOCRASHANDSWINGUP:1;
         serialDevice->readStringUntil(';');
+        // Also reset control parameters as this is the beginning of a new config:
+        resetControlParameters();
         CartState = HOME;
       } else if(input1.startsWith("S")){
         // normal sampling value:
@@ -942,6 +946,18 @@ void updateRotaryEncoderValue() {
   void sendSwingUpEndSignalToSender() {
     FeedbackSerial.print("SE;\n");
     Serial.println("Sending swing-up end signal to sender.");
+  }
+
+  void resetControlParameters(){
+    Serial.write("Resetting control parameters");
+    k = 0;
+    xi_cart = 0.0;
+    x_cart = getCartPosMeter();
+    v_cart = 0.0;
+    x_pole = (float)RAD_PER_ESTEP * angleSteps(currentEncoderValue);
+    v_pole = 0.0;
+    u_accel = 0.0;
+    poleAngle_p = x_pole;
   }
 
   void loop() {
@@ -1051,14 +1067,7 @@ void updateRotaryEncoderValue() {
             isUpright = (abs(encoderRel) < 20);
             if (isUpright && wasUpright) {
               isUpright = false;
-              k = 0;
-              xi_cart = 0.0;
-              x_cart = getCartPosMeter();
-              v_cart = 0.0;
-              x_pole = (float)RAD_PER_ESTEP * encoderRel;
-              v_pole = 0.0;
-              u_accel = 0.0;
-              poleAngle_p = x_pole;
+              resetControlParameters();
               rotate.rotateAsync(motor);
               rotate.overrideAcceleration(0);
               rotate.overrideSpeed(0);
@@ -1071,13 +1080,7 @@ void updateRotaryEncoderValue() {
           }
         } else {
           delay(4000);
-          xi_cart = 0.0;
-          x_cart = getCartPosMeter();
-          v_cart = 0.0;
-          x_pole = (float)RAD_PER_ESTEP * angleSteps(currentEncoderValue);
-          v_pole = 0.0;
-          u_accel = 0.0;
-          poleAngle_p = x_pole;
+          resetControlParameters();
 
           // motor.setMaxSpeed((double)motorPPS * 0.4).setAcceleration((double) motorACC * 0.4);
           sendEncoderValuesThroughFeedbackLink = true;
