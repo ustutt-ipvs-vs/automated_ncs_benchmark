@@ -810,10 +810,11 @@ void setup() {
   delay(5000);
   Serial.begin(460800);
   Serial.setTimeout(20);
-  FeedbackSerial.begin(115200);
-  FeedbackSerial.setTimeout(20);
 
   readInitializationValues();
+
+  FeedbackSerial.begin(115200);
+  FeedbackSerial.setTimeout(20);
 
   motor.setMaxSpeed(motorPPS).setAcceleration(motorACC);
   rotate.rotateAsync(motor);

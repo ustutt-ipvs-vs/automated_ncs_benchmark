@@ -35,12 +35,12 @@ void setup() {
 
   Serial.setTimeout(20);
 
-  FeedbackSerial.begin(115200);
-  FeedbackSerial.setTimeout(20);
-
   sensorValueSerial = &Serial;
 
   readInitializationValues();
+
+  FeedbackSerial.begin(115200);
+  FeedbackSerial.setTimeout(20);
 }
 
 void readInitializationValues(){
