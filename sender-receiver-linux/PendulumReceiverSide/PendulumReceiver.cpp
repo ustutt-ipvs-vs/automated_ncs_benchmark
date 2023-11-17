@@ -100,7 +100,7 @@ void PendulumReceiver::start() {
                     startedBalancing = true;
                     lastPauseTime = high_resolution_clock::now();
                 }
-            } else if(serialInput.rfind("CT:GracePeriodEnded;", 0) == 0){
+            } else if(serialInput.rfind("CT:GracePeriodEnded;") < serialInput.size()){
                 std::cout << "Grace period has ended. Resetting logger now." << std::endl;
                 logger->reset();
             }
