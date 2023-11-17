@@ -24,6 +24,7 @@ public:
     void logActuator(std::string logString);
     void logPause(unsigned int durationMillis);
     void logSenderFeedback(std::string senderFeedbackString);
+    void reset() override;
 
     nlohmann::json toJsonObject() override;
 

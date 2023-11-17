@@ -107,4 +107,12 @@ void PendulumLogger::logSenderFeedback(std::string senderFeedbackString) {
     senderFeedbackLogs.emplace_back(entry);
 }
 
+void PendulumLogger::reset() {
+    Logger::reset();
+    timepointLogs.clear();
+    actuatorLogs.clear();
+    pauseLogs.clear();
+    senderFeedbackLogs.clear();
+}
+
 

@@ -47,3 +47,7 @@ std::string Logger::toJsonString() {
     return toJsonObject().dump(4);
 }
 
+void Logger::reset() {
+    this->startTime = std::time(0);
+}
+
