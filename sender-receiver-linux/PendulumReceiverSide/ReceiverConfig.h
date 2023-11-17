@@ -15,7 +15,7 @@
  *   "timeBetweenPausesMillis": 20000,
  *   "pauseDurationMillis": 800,
  *   "swingUpBehavior": "swingUpAtStart",
- *   "pendulumSailType": "sail14"
+ *   "sailType": "sail14"
  * }
  *
  * The pendulum types available are:
@@ -28,7 +28,7 @@
  * - crashAndSwingUpAtNewConfig: intentionally crash the pendulum at every new config and swing it up again
  * - noSwingUp: don't swing up the pendulum
  *
- * The pendulumSailType options are:
+ * The sailType options are:
  * - noSail: no sail
  * - sail10: 10cm long sail
  * - sail14: 14cm long sail

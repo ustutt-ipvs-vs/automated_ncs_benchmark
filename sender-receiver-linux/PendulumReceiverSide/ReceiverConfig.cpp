@@ -40,7 +40,7 @@ std::string ReceiverConfig::toString() const {
     result += "timeBetweenPausesMillis: " + std::to_string(timeBetweenPausesMillis) + "\n";
     result += "pauseDurationMillis: " + std::to_string(pauseDurationMillis) + "\n";
     result += "swingUpBehavior: " + getSwingUpBehaviorString() + "\n";
-    result += "pendulumSailType: " + pendulumSailType + "\n";
+    result += "sailType: " + pendulumSailType + "\n";
     return result;
 }
 
@@ -104,8 +104,8 @@ ReceiverConfig::ReceiverConfig(std::string filename) {
         swingUpBehavior = NO_SWING_UP;
     }
 
-    if(configJson.contains("pendulumSailType")) {
-        pendulumSailType = configJson["pendulumSailType"];
+    if(configJson.contains("sailType")) {
+        pendulumSailType = configJson["sailType"];
     } else {
         pendulumSailType = "noSail";
     }

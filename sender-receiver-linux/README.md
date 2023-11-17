@@ -207,7 +207,7 @@ with
   "timeBetweenPausesMillis": 20000,
   "pauseDurationMillis": 800,
   "swingUpBehavior": "crashAndSwingUpAtNewConfig",
-  "pendulumSailType": "sail14"
+  "sailType": "sail14"
 }
 ```
 
@@ -225,7 +225,7 @@ with
     - `swingUpAtNewConfigIfCrashed`: Swings up the pendulum at start and at the beginning of each new config, **if the pendulum has crashed before**. If the pendulum is already balancing at the start of a new config, it will not swing up.
     - `crashAndSwingUpAtNewConfig`: Swings up the pendulum at the start. At the beginning of each new config, the pendulum intenionally stops balancing to enforce a crash. Then the pendulum swings up again.
     - `noSwingUp`: Manual mode where the pendulum must be held upwards by the operating person at the beginning. No swing-up.
-- `pendulumSailType`: Determines which sail is used. Default: `noSail`. Possible options:
+- `sailType`: Determines which sail is used. Default: `noSail`. Possible options:
     - `noSail`: No sail is used.
     - `sail10`
     - `sail14`
