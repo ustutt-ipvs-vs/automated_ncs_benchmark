@@ -222,8 +222,9 @@ float fs = 1000.0 / balancePeriod;  // sampling frequency in Hz
 // Parameters for swing-up:
 uint32_t swingUpTimeLastDirSwitch = 0;
 int swingUpSampleNMinusOne, swingUpSampleNMinusTwo;
-// int swingUpTargetCartPosition = 0.09 * trackLengthSteps; // without sail
-int swingUpTargetCartPosition = 0.105 * trackLengthSteps; // with small sail
+int swingUpDistance = 0.105 * trackLengthSteps; // with small sail
+float swingUpSpeedFactor = 1.0;
+float swingUpAccelerationFactor = 1.0;
 uint32_t swingUpTimeLastPause = 0;
 uint32_t timeBalancingStarted = 0;
 const uint32_t balancingGracePeriodMillis = 30000;
@@ -745,7 +746,7 @@ void readInitializationValues(){
   float newRevolutionsPerTrack;
 
   // Expected Format:
-  // I:motorMaxRPM;revolutionsPerTrack;doSwingUpAtStart\n
+  // I:motorMaxRPM;revolutionsPerTrack;doSwingUpAtStart;swingUpDistanceFactor;swingUpSpeedFactor;swingUpAccelerationFactor;\n
   // where doSwingUpAtStart in {0, 1}
   bool receivedInitValues = false;
   while(!receivedInitValues){
@@ -757,10 +758,16 @@ void readInitializationValues(){
         newMotorMaxRPM = Serial.readStringUntil(';').toInt();
         newRevolutionsPerTrack = Serial.readStringUntil(';').toFloat();
         doSwingUpAtStart = Serial.readStringUntil(';').toInt();
+        float swingUpDistanceFactor = Serial.readStringUntil(';').toFloat();
+        swingUpSpeedFactor = Serial.readStringUntil(';').toFloat();
+        swingUpAccelerationFactor = Serial.readStringUntil(';').toFloat();
         receivedInitValues = true;
 
+        swingUpDistance = swingUpDistanceFactor * trackLengthSteps;
+
         // Echo received values to computer for validation:
-        Serial.printf("Received init values: motor max RPM: %i, revolutions per track: %f, swing up at start: %i\n", newMotorMaxRPM, newRevolutionsPerTrack, doSwingUpAtStart);
+        Serial.printf("Received init values: motor max RPM: %i, revolutions per track: %f, swing up at start: %i, swing up distance factor: %f, swing up speed factor %f , swing up accel. factor: %f\n", 
+        newMotorMaxRPM, newRevolutionsPerTrack, doSwingUpAtStart, swingUpDistanceFactor, swingUpSpeedFactor, swingUpAccelerationFactor);
       }
       Serial.read(); // Remove \n
     }
@@ -937,9 +944,9 @@ void updateRotaryEncoderValue() {
 
   void sendFeedbackToSender(unsigned long sequenceNumber, unsigned long timestamp){
     // The Feedback is of the following form:
-    // sequenceNumber;Timestamp;
+    // sequenceNumber;Timestamp;\n
     // for example
-    // FB:123;34523890
+    // FB:123;34523890;\n
 
     FeedbackSerial.printf("FB:%i;%i;\n", sequenceNumber, timestamp);
   }
@@ -1097,7 +1104,8 @@ void updateRotaryEncoderValue() {
           delay(4000);
           resetControlParameters();
 
-          // motor.setMaxSpeed((double)motorPPS * 0.4).setAcceleration((double) motorACC * 0.4);
+          motor.setMaxSpeed((double)motorPPS * swingUpSpeedFactor).setAcceleration((double) motorACC * swingUpAccelerationFactor);
+
           sendEncoderValuesThroughFeedbackLink = true;
           sendSwingUpStartSignalToSender();
           CartState = PERFORM_SWING_UP;
@@ -1157,9 +1165,9 @@ void updateRotaryEncoderValue() {
           bool isTurningPoint = (swingUpSampleNMinusOne - swingUpSampleNMinusTwo) * (swingUpSampleN - swingUpSampleNMinusOne) <= 0;
           if ((millis() - swingUpTimeLastDirSwitch > 300 && isTurningPoint)) {
 
-            swingUpTargetCartPosition = -swingUpTargetCartPosition;  // Change direction of cart
+            swingUpDistance = -swingUpDistance;  // Change direction of cart
 
-            motor.setTargetAbs(swingUpTargetCartPosition);
+            motor.setTargetAbs(swingUpDistance);
             driveto.move(motor);
 
             swingUpTimeLastDirSwitch = millis();
