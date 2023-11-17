@@ -88,7 +88,7 @@ void PendulumSender::start() {
 void PendulumSender::handleControlMessageFromTeensy(){
     if (serialInputBuffer.rfind("CT:GracePeriodEnded;", 0) == 0) {
         // Pendulum is starting to balance using network. Swing-up and grace period has ended.
-        std::cout << "Pendulum is starting to balance using network in current config." << std::endl;
+        std::cout << "Grace period has ended. Resetting priority determiner and logger now." << std::endl;
         priorityDeterminer->resetState(); // Reset priority determiner when pendulum starts balancing
         logger->reset(); // Reset logger so that swing-up and grace period is not part of logs
     } else {
