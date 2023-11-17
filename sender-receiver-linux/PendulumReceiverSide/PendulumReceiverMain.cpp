@@ -36,14 +36,16 @@ int main(int argc, char *argv[]){
         receiver = new PendulumReceiver(device, config.getReceiverAddress(), port,
                                         config.isDoPauses(), config.getTimeBetweenPausesMillis(),
                                         config.getPauseDurationMillis(), config.getMotorMaxRPM(),
-                                        config.getRevolutionsPerTrack(), config.getSwingUpBehavior());
+                                        config.getRevolutionsPerTrack(), config.getSwingUpDistanceFactor(),
+                                        config.getSwingUpSpeedFactor(), config.getSwingUpAccelerationFactor(),
+                                        config.getSwingUpBehavior());
 
         std::cout << "Using config file: " << configFile << std::endl;
         std::cout << config.toString() << std::endl;
 
     } else {
         std::cout << "No config file specified, using default values." << std::endl;
-        receiver = new PendulumReceiver(device, host, port, true, 20'000, 800, 20*60, 20.06);
+        receiver = new PendulumReceiver(device, host, port, true, 20'000, 800, 20*60, 20.06, 0.09, 1.0, 1.0, ReceiverConfig::SWING_UP_AT_START);
     }
     receiver->start();
 }

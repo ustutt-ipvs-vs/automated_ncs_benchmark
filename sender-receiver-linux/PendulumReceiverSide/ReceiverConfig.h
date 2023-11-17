@@ -14,7 +14,8 @@
  *   "doPauses": true,
  *   "timeBetweenPausesMillis": 20000,
  *   "pauseDurationMillis": 800,
- *   "swingUpBehavior": "swingUpAtStart"
+ *   "swingUpBehavior": "swingUpAtStart",
+ *   "pendulumSailType": "sail14"
  * }
  *
  * The pendulum types available are:
@@ -26,6 +27,14 @@
  * - swingUpAtNewConfigIfCrashed: swing up the pendulum at every new config if the pendulum crashed
  * - crashAndSwingUpAtNewConfig: intentionally crash the pendulum at every new config and swing it up again
  * - noSwingUp: don't swing up the pendulum
+ *
+ * The pendulumSailType options are:
+ * - noSail: no sail
+ * - sail10: 10cm long sail
+ * - sail14: 14cm long sail
+ * - sail17: 17cm long sail
+ * - sail20: 20cm long sail
+ * Default is noSail.
  *
  * The serialDeviceName can be set to "auto" to automatically find the a Teensy device.
  * It is also possible to specify the device name manually, e.g. "/dev/ttyACM0".
@@ -55,6 +64,7 @@ private:
     int timeBetweenPausesMillis;
     int pauseDurationMillis;
     enum SwingUpBehavior swingUpBehavior;
+    std::string pendulumSailType;
 
 public:
     const std::string &getReceiverAddress() const;
@@ -82,6 +92,14 @@ public:
     SwingUpBehavior getSwingUpBehavior() const;
 
     std::string getSwingUpBehaviorString() const;
+
+    const std::string &getPendulumSailType() const;
+
+    float getSwingUpDistanceFactor() const;
+
+    float getSwingUpSpeedFactor() const;
+
+    float getSwingUpAccelerationFactor() const;
 };
 
 

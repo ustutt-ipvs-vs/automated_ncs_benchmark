@@ -6,7 +6,8 @@
 
 PendulumReceiver::PendulumReceiver(std::string serialDeviceName, std::string receiverHost, int receiverPort,
                                    bool doPauses, int timeBetweenPausesMillis, int pauseDurationMillis,
-                                   int motorMaxRPM, double revolutionsPerTrack,
+                                   int motorMaxRPM, double revolutionsPerTrack, float swingUpDistanceFactor,
+                                   float swingUpSpeedFactor, float swingUpAccelerationFactor,
                                    ReceiverConfig::SwingUpBehavior swingUpBehavior){
     this->serialDeviceName = serialDeviceName;
     this->receiverAddress = inet_address(receiverHost, receiverPort);
@@ -16,6 +17,9 @@ PendulumReceiver::PendulumReceiver(std::string serialDeviceName, std::string rec
     this->motorMaxRPM = motorMaxRPM;
     this->revolutionsPerTrack = revolutionsPerTrack;
     this->swingUpBehavior = swingUpBehavior;
+    this->swingUpDistanceFactor = swingUpDistanceFactor;
+    this->swingUpSpeedFactor = swingUpSpeedFactor;
+    this->swingUpAccelerationFactor = swingUpAccelerationFactor;
     this->logger = new PendulumLogger("pendulumreceiver_config_1");
 
     receiverSocket.bind(receiverAddress);
@@ -48,7 +52,10 @@ void PendulumReceiver::start() {
     std::string teensyInitParams = "I:"
             + std::to_string(motorMaxRPM) + ";"
             + std::to_string(revolutionsPerTrack) + ";"
-            + std::to_string(swingUpAtStart) + ";\n";
+            + std::to_string(swingUpAtStart) + ";"
+            + std::to_string(swingUpDistanceFactor) + ";"
+            + std::to_string(swingUpSpeedFactor) + ";"
+            + std::to_string(swingUpAccelerationFactor) + ";\n";
     serialActuator.Write(teensyInitParams);
 
     // Wait for first serial values to arrive, before going into main loop:
