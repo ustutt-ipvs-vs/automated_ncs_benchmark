@@ -19,8 +19,23 @@
 % Dz_cont=[0;0];
 
 
-%% Aus Julia:
 
+%% Computation of worst delay
+
+h = 0.01; % smallest sampling stepsize
+% delayPrios = [2; 4; 6; 8; 10; 12; 14]e;
+basePeriod = 0.045; % seconds
+% 
+% lowestPrio = 4;
+
+lowestUsedPrioDelayInS = 8e-3;
+
+maxDelayPrios = lowestUsedPrioDelayInS + basePeriod;
+delay = ceil(maxDelayPrios/h)
+
+
+
+%% Aus Julia:
 l = 0.6;
 g = 9.8088;
 sys.m = 1.0;
@@ -28,20 +43,20 @@ sys.d = l/2.0;
 sys.I = l^2/3.0;
 
 K = sys.m * sys.d / (sys.m * sys.d^2 + sys.I)
-A_cond = [0   1   0   0;
+A_cont = [0   1   0   0;
      0   0   0   0;
      0   0   0   1;
      0   0  K*g  0]
-B_cond = [0; 1; 0; K]
+B_cont = [0; 1; 0; K]
 
 Bw_cont=[0;0;0;1];
 Cz_cont=[1,0,0,0;0,1,0,0];
 C_cont=[1,0,0,0;0,1,0,0];
+Dz_cont=[0;0];
 
 
 
 %% Discrete system
-h = 0.05;
 n_s= size(A_cont,1);
 
 A=eye(n_s)+A_cont*h;
@@ -55,11 +70,13 @@ Cz = Cz_cont;
 Dz=Dz_cont;
 D=0*C*B;
 
+
+
 %% LMI
 opt = sdpsettings('verbose', 0, 'solver', 'mosek');
 eps = 1e-8;
 
-delay=2-1;
+% delay=2-1;
 
 m=size(B,2);
 mw=size(Bw,2);
@@ -77,10 +94,19 @@ sysda = [A*X+B*Z  , B*Z           , Bw;
 
 
 con=[[blkdiag(X,X,gamma*eye(mw)), sysda';
-      sysda, blkdiag(X,(1/delay)*X,eye(n_w))]>=eps];
+      sysda, blkdiag(X,(1/(delay-1))*X,eye(n_w))]>=eps];
+
+%poleFactor = 1/0.9;
+%con = blkdiag(con,[X, poleFactor*A*X + poleFactor*B*Z; (poleFactor*A*X + poleFactor*B*Z)', X]>=eps)
 
 s = optimize(con, gamma, opt);
 gamma_iqc=sqrt(value(gamma))
+
+% Minimize controller
+con=[[blkdiag(X,X,gamma_iqc^2*(1/0.9)*eye(mw)), sysda';
+      sysda, blkdiag(X,(1/(delay-1))*X,eye(n_w))]>=eps];
+s = optimize(con, norm(Z), opt);
+
 K_iqc=value(Z)*(inv(value(X)))
 
 
