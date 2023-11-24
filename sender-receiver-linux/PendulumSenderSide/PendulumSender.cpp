@@ -65,12 +65,8 @@ void PendulumSender::start() {
 
         if (serialInputBuffer.rfind("FB:", 0) == 0) {
             handleSenderFeedback();
-            if(!pendulumStarted){
-                pendulumStarted = true;
-
-                priorityDeterminer->resetState(); // Reset priority determiner when pendulum starts balancing
-            }
-
+        } else if (serialInputBuffer.rfind("CT:", 0) == 0) {
+            handleControlMessageFromTeensy();
         } else if(serialInputBuffer.rfind("S:", 0) == 0){
             // Sometimes the serial interface sends multiple samples at once (separated by '\n').
             // We need to split them up and send them individually over the network:
@@ -86,6 +82,17 @@ void PendulumSender::start() {
         if(regularCallback != nullptr){
             regularCallback();
         }
+    }
+}
+
+void PendulumSender::handleControlMessageFromTeensy(){
+    if (serialInputBuffer.rfind("CT:GracePeriodEnded;", 0) == 0) {
+        // Pendulum is starting to balance using network. Swing-up and grace period has ended.
+        std::cout << "Grace period has ended. Resetting priority determiner and logger now." << std::endl;
+        priorityDeterminer->resetState(); // Reset priority determiner when pendulum starts balancing
+        logger->reset(); // Reset logger so that swing-up and grace period is not part of logs
+    } else {
+        std::cout << "Received unknown control message from sender Teensy: " << serialInputBuffer << std::endl;
     }
 }
 

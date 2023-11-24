@@ -20,6 +20,7 @@ public:
     virtual void saveToFileAsync();
     virtual std::string toJsonString();
     virtual nlohmann::json toJsonObject() = 0;
+    virtual void reset();
 
 protected:
     std::string name;

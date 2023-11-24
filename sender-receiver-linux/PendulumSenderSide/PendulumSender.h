@@ -30,7 +30,6 @@ private:
     SerialPort serialSensor;
     PendulumLogger* logger;
     std::string serialInputBuffer;
-    bool pendulumStarted = false;
     int teensyHistorySize;
     int angleBias;
     std::vector<int> teensySamplingPeriods;
@@ -69,6 +68,7 @@ private:
     void handleSenderFeedback();
     uint64_t timeSinceEpochMillisec();
     std::string applyAngleBias(std::string payload);
+    void handleControlMessageFromTeensy();
 };
 
 

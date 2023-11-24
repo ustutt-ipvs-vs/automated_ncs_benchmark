@@ -6,7 +6,9 @@
 
 PendulumReceiver::PendulumReceiver(std::string serialDeviceName, std::string receiverHost, int receiverPort,
                                    bool doPauses, int timeBetweenPausesMillis, int pauseDurationMillis,
-                                   int motorMaxRPM, double revolutionsPerTrack){
+                                   int motorMaxRPM, double revolutionsPerTrack, float swingUpDistanceFactor,
+                                   float swingUpSpeedFactor, float swingUpAccelerationFactor,
+                                   ReceiverConfig::SwingUpBehavior swingUpBehavior){
     this->serialDeviceName = serialDeviceName;
     this->receiverAddress = inet_address(receiverHost, receiverPort);
     this->doPauses = doPauses;
@@ -14,6 +16,10 @@ PendulumReceiver::PendulumReceiver(std::string serialDeviceName, std::string rec
     this->pauseDurationMillis = pauseDurationMillis;
     this->motorMaxRPM = motorMaxRPM;
     this->revolutionsPerTrack = revolutionsPerTrack;
+    this->swingUpBehavior = swingUpBehavior;
+    this->swingUpDistanceFactor = swingUpDistanceFactor;
+    this->swingUpSpeedFactor = swingUpSpeedFactor;
+    this->swingUpAccelerationFactor = swingUpAccelerationFactor;
     this->logger = new PendulumLogger("pendulumreceiver_config_1");
 
     receiverSocket.bind(receiverAddress);
@@ -37,8 +43,19 @@ void PendulumReceiver::start() {
     // Send Teensy drive geometry parameters:
     std::cout << "Sending drive geometry parameters: motor max RPM: " << motorMaxRPM << ", revolutions per track: "
         << revolutionsPerTrack << std::endl;
-    // Create string of form "I:motorMaxRPM;revolutionsPerTrack;\n"
-    std::string teensyInitParams = "I:" + std::to_string(motorMaxRPM) + ";" + std::to_string(revolutionsPerTrack) + ";\n";
+    // Create string of form "I:motorMaxRPM;revolutionsPerTrack;swingUpAtStart\n"
+
+    uint8_t swingUpAtStart = swingUpBehavior == ReceiverConfig::SwingUpBehavior::SWING_UP_AT_START
+            || swingUpBehavior == ReceiverConfig::SwingUpBehavior::CRASH_AND_SWING_UP_AT_NEW_CONFIG
+            || swingUpBehavior == ReceiverConfig::SwingUpBehavior::SWING_UP_AT_NEW_CONFIG_IF_CRASHED;
+
+    std::string teensyInitParams = "I:"
+            + std::to_string(motorMaxRPM) + ";"
+            + std::to_string(revolutionsPerTrack) + ";"
+            + std::to_string(swingUpAtStart) + ";"
+            + std::to_string(swingUpDistanceFactor) + ";"
+            + std::to_string(swingUpSpeedFactor) + ";"
+            + std::to_string(swingUpAccelerationFactor) + ";\n";
     serialActuator.Write(teensyInitParams);
 
     // Wait for first serial values to arrive, before going into main loop:
@@ -54,9 +71,7 @@ void PendulumReceiver::start() {
 
         // Detect new config signal of the form "NewConfig:number\n":
         if (networkInput.rfind("NewConfig:", 0) == 0) {
-            int newConfigNumber = std::stoi(networkInput.substr(10));
-            std::cout << "New MPTB config signal received: " << newConfigNumber << std::endl;
-            startNewLogfile(newConfigNumber);
+            handleNewConfigSignal();
             continue;
         }
 
@@ -92,8 +107,25 @@ void PendulumReceiver::start() {
                     startedBalancing = true;
                     lastPauseTime = high_resolution_clock::now();
                 }
+            } else if(serialInput.rfind("CT:GracePeriodEnded;") < serialInput.size()){
+                std::cout << "Grace period has ended. Resetting logger now." << std::endl;
+                logger->reset();
             }
         }
+    }
+}
+
+void PendulumReceiver::handleNewConfigSignal() {
+    int newConfigNumber = std::stoi(networkInput.substr(10));
+    std::cout << "New MPTB config signal received: " << newConfigNumber << std::endl;
+    startNewLogfile(newConfigNumber);
+
+    if(swingUpBehavior == ReceiverConfig::CRASH_AND_SWING_UP_AT_NEW_CONFIG){
+        std::cout << "Sending signal to crash and swing up again." << std::endl;
+        serialActuator.Write("DOCRASHANDSWINGUP:1;\n");
+    } else if(swingUpBehavior == ReceiverConfig::SWING_UP_AT_NEW_CONFIG_IF_CRASHED){
+        std::cout << "Sending signal to swing up if is crashed." << std::endl;
+        serialActuator.Write("DOSWINGUP:1;\n");
     }
 }
 

@@ -13,6 +13,7 @@ public:
     explicit CrossTrafficLogger(std::string name);
     void log(unsigned long long packetCount, unsigned long long bytesSentTotal, SchedulingInfoEntry* schedulingInfo);
     nlohmann::json toJsonObject() override;
+    void reset() override;
 
 private:
     std::vector<LogEntry> timepointLogs;

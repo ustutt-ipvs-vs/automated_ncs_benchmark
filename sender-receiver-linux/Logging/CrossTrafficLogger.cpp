@@ -20,3 +20,8 @@ nlohmann::json CrossTrafficLogger::toJsonObject() {
     };
     return jsonObject;
 }
+
+void CrossTrafficLogger::reset() {
+    Logger::reset();
+    timepointLogs.clear();
+}

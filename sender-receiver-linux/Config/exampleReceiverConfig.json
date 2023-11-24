@@ -4,5 +4,7 @@
   "serialDeviceName": "auto",
   "doPauses": true,
   "timeBetweenPausesMillis": 20000,
-  "pauseDurationMillis": 800
+  "pauseDurationMillis": 800,
+  "swingUpBehavior": "crashAndSwingUpAtNewConfig",
+  "sailType": "sail14"
 }

@@ -27,6 +27,7 @@ int historyPosition = 0;
 
 
 Encoder encoder(pinEncoderA, pinEncoderB);
+Stream* sensorValueSerial;
 
 void setup() {
   pinMode(LED_BUILTIN, OUTPUT);
@@ -34,10 +35,12 @@ void setup() {
 
   Serial.setTimeout(20);
 
-  FeedbackSerial.begin(115200);
-  FeedbackSerial.setTimeout(20);
+  sensorValueSerial = &Serial;
 
   readInitializationValues();
+
+  FeedbackSerial.begin(115200);
+  FeedbackSerial.setTimeout(20);
 }
 
 void readInitializationValues(){
@@ -121,7 +124,7 @@ void sendSampleIfDelayOver(){
     // S:encoderValue;samplingPeriodMillis;sequenceNumber;currentTime;\n
     // for example
     // S:-1204;50;1234;62345234;\n
-    Serial.printf("S:%i;%u;%i;%u;\n", encoder.read(), transmissionPeriodMillis, sequenceNumber, currentTime);
+    sensorValueSerial->printf("S:%i;%u;%i;%u;\n", encoder.read(), transmissionPeriodMillis, sequenceNumber, currentTime);
     Serial.send_now();
     lastTransmissionTime = currentTime;
     sequenceNumber++;
@@ -136,15 +139,23 @@ void checkAndHandleFeedback(){
     // for example
     // FB:123;34523890;\n
 
+    int firstChar = FeedbackSerial.read();
+    int secondChar = FeedbackSerial.read();
+    int thirdChar = FeedbackSerial.read();
+
 
     // The logging information sent to the sender site Linux client has the following form:
     // packetsLostTotal;latencyMillis;\n
     // for example
     // FB:55;13;\n
-    if(FeedbackSerial.read() == 'F' && FeedbackSerial.read() == 'B' && FeedbackSerial.read() == ':'){
+    // 
+    // The signals for start and end of swing up have the following formats:
+    // SS;\n
+    // SE;\n
+    if(firstChar == 'F' && secondChar == 'B' && thirdChar == ':'){ // Feedback packet
       long receivedSequenceNumber = FeedbackSerial.readStringUntil(';').toInt();
       long timestamp = FeedbackSerial.readStringUntil(';').toInt();
-      FeedbackSerial.read(); // read '\n'
+      FeedbackSerial.readStringUntil('\n'); // read '\n'
       long latency = millis() - timestamp;
 
       if(lastReceivedSequenceNumber > 0){ // don't count packet loss for first received packet
@@ -155,7 +166,18 @@ void checkAndHandleFeedback(){
 
       Serial.printf("FB:%i;%i;\n", packetsLostTotal, latency);    
       Serial.send_now();
-    }
+    } else if (firstChar == 'S' && secondChar == 'S' && thirdChar == ';'){
+      FeedbackSerial.readStringUntil('\n'); // read '\n'
+      sensorValueSerial = &FeedbackSerial;
+      Serial.println("Starting to send sensor values through feedback link for swing-up.");
+    } else if (firstChar == 'S' && secondChar == 'E' && thirdChar == ';'){
+      FeedbackSerial.readStringUntil('\n'); // read '\n'
+      sensorValueSerial = &Serial; // USB serial
+      Serial.println("Swing-up complete. Sending sensor values through USB serial again.");
+    } else if (firstChar == 'C' && secondChar == 'T' && thirdChar == ':'){
+      // Forward control message (prefix 'CT:') to linux  sender:
+      Serial.printf("CT:%s\n", FeedbackSerial.readStringUntil('\n').c_str()); // read '\n'
+    } 
   }
 }
 
