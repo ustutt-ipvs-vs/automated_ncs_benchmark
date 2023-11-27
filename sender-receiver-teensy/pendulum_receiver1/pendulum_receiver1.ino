@@ -3,6 +3,9 @@
 #include <TeensyStep.h>
 //#include <fastmath.h>
 
+#include <BasicLinearAlgebra.h>
+using BLA::operator<<; // Required for printing matrices to Serial
+
 #define FeedbackSerial Serial1
 
 //#define USE_BOUNCE2
@@ -133,6 +136,7 @@ int returnPosition = 0;
 
 unsigned k = 0;
 
+// Carabelli approach variables:
 float xi_cart = 0.0;  // cart position integral [m·s]
 
 float x_cart = 0.0;  // cart position [m]               NOT [msteps]
@@ -148,6 +152,15 @@ float v_pole = 0.0;  // pole angluar velocity [rad/s]   NOT [esteps/s]
 float poleAngle_p = 0.0;  // previous angle for angular velocity estimation
 
 float u_accel = 0.0;  // previous control input [m/s²]  NOT [msteps/s²]
+
+// IST approach variables:
+BLA::Matrix<4,1> x_k_k_minus_1; // TODO: Find dimensions
+BLA::Matrix<4,4> P_k_k_minus_1; // TODO: Find dimensions
+BLA::Matrix<4,4> K_k; // TODO: Find dimensions
+BLA::Matrix<4,1> x_k;
+BLA::Matrix<4,4> P_k; // TODO: Find dimensions
+
+bool useISTApproach = false;
 
 bool limitLeft;
 bool limitRight;
@@ -169,13 +182,15 @@ bool isUpright = false;
 // elapsedMicros profileTimer = 0;  // timer for measuring execution time
 
 
-// CONTROLLER AND FILTER COEFFICIENTS
+// CONTROLLER AND FILTER COEFFICIENTS.
 
 /* The remaining parameters (balancePeriod, K{x,v}{c,p}, and L{x,u,y}i[j])
  * are determined using the Julia script `$(git root)/src/demonstrator.jl>
  */
 
 unsigned balancePeriod = 50;
+
+ // CARABELLI APPROACH:
 
 float Kxc = 4.371647840086138;
 float Kvc = 5.153527889236189;
@@ -206,6 +221,21 @@ float Kxic = 0.25 * Kxc;  // integral gain (TODO: incorporate into system model)
 
 constexpr float f_kf = 0.9;  // factor for complementary filtering of kalman estimate with "raw" measurements
 
+// IST approach
+// Constants:
+BLA::Matrix<4,4> A;
+BLA::Matrix<4,1> B;
+BLA::Matrix<4,4> C; // TODO: find dimensions
+BLA::Matrix<4,4> Q; // TODO: find dimensions
+BLA::Matrix<4,4> R; // TODO: find dimensions
+BLA::Matrix<4,1> K_iqc;
+float sigmaSquare;
+BLA::Matrix<4,4> identityMatrix4x4 = {
+  1,0,0,0,
+  0,1,0,0,
+  0,0,1,0,
+  0,0,0,1
+};
 
 // SAMPLING PERIOD
 
@@ -963,6 +993,8 @@ void updateRotaryEncoderValue() {
 
   void resetControlParameters(){
     Serial.write("Resetting control parameters");
+
+    // Carabelli approach:
     k = 0;
     xi_cart = 0.0;
     x_cart = getCartPosMeter();
@@ -971,6 +1003,14 @@ void updateRotaryEncoderValue() {
     v_pole = 0.0;
     u_accel = 0.0;
     poleAngle_p = x_pole;
+
+    // IST approach:
+    x_k_k_minus_1.Fill(0);
+    P_k_k_minus_1 = identityMatrix4x4 * sigmaSquare;
+    u_accel = 0.0;
+    x_k.Fill(0);
+    P_k.Fill(0);
+
   }
 
   void sendGracePeriodEndedSignals(){
@@ -979,6 +1019,60 @@ void updateRotaryEncoderValue() {
     Serial.println(signal);
     Serial.send_now();
     FeedbackSerial.println(signal);
+  }
+
+  void updateUsingCarabelliKalmanAndLQR(float cartPos, float cartSpeed, float poleAngle){
+    float x_cart_p = x_cart;
+    float v_cart_p = v_cart;
+    float x_pole_p = x_pole;
+    float v_pole_p = v_pole;
+
+    xi_cart += cartPos * Ts;
+
+    /// KALMAN FILTER (steady-state) ///
+
+    x_cart = Lx11 * x_cart_p + Lx12 * v_cart_p + Lu1 * u_accel + Ly11 * cartPos + Ly12 * cartSpeed;
+    v_cart = Lx21 * x_cart_p + Lx22 * v_cart_p + Lu2 * u_accel + Ly21 * cartPos + Ly22 * cartSpeed;
+    x_pole = Lx33 * x_pole_p + Lx34 * v_pole_p + Lu3 * u_accel + Ly33 * poleAngle;
+    v_pole = Lx43 * x_pole_p + Lx44 * v_pole_p + Lu4 * u_accel + Ly43 * poleAngle;
+
+    x_cart = f_kf * x_cart + (1 - f_kf) * cartPos;
+    v_cart = f_kf * v_cart + (1 - f_kf) * cartSpeed;
+    x_pole = f_kf * x_pole + (1 - f_kf) * poleAngle;
+    v_pole = f_kf * v_pole + (1 - f_kf) * (poleAngle - poleAngle_p) * fs;
+
+    poleAngle_p = poleAngle;
+
+    //v_pole = 2*v_pole - v_pole_p; // correction
+
+    /*
+          x_cart = (float) cartPos; //Fxc * (float) cartPos + (1.0 - Fxc) * x_cart_p;
+          v_cart = cartSpeed; //Fvc_2 * (x_cart - x_cart_p) * fs + Fvc_2 * cartSpeed + (1.0 - Fvc) * v_cart_p;
+          x_pole = Fxp * poleAngle + (1.0 - Fxp) * x_pole_p;
+          v_pole = Fvp * (x_pole - x_pole_p) * fs + (1.0 - Fvp) * v_pole_p;
+  */
+
+    //        long T2 = profileTimer;/////////////////////////////////////////////////////////////////////////////////////////
+
+    /// CONTROLLER ///
+
+    u_accel = Kxc * x_cart + Kvc * v_cart + Kxp * x_pole + Kvp * v_pole;  // [m/s²]
+    u_accel += Kxic * xi_cart;
+  }
+
+  void updateUsingISTKalmanAndLQR(float cartPos, float cartSpeed, float poleAngle){
+    BLA::Matrix<4,1> z_k = {cartPos, cartSpeed, poleAngle, 0};
+
+    // Kalman filter (~A means "A transposed"):
+    x_k_k_minus_1 = A * x_k + B * u_accel;
+    P_k_k_minus_1 = A * P_k * ~A + Q;
+    K_k = P_k_k_minus_1 * ~C * BLA::Inverse(C * P_k_k_minus_1 * ~C + R);
+    x_k = x_k_k_minus_1 + K_k * (z_k - C * x_k_k_minus_1);
+    P_k = (identityMatrix4x4 - K_k * C) * P_k_k_minus_1;
+
+    // LQR:
+    u_accel = (~K_iqc * x_k)(0, 0);
+
   }
 
   void loop() {
@@ -1248,42 +1342,50 @@ void updateRotaryEncoderValue() {
 
           //        long T1 = profileTimer;////////////LED_BUILTIN/////////////////////////////////////////////////////////////////////////////
 
-          float x_cart_p = x_cart;
-          float v_cart_p = v_cart;
-          float x_pole_p = x_pole;
-          float v_pole_p = v_pole;
+        //   float x_cart_p = x_cart;
+        //   float v_cart_p = v_cart;
+        //   float x_pole_p = x_pole;
+        //   float v_pole_p = v_pole;
 
-          xi_cart += cartPos * Ts;
+        //   xi_cart += cartPos * Ts;
 
-          /// KALMAN FILTER (steady-state) ///
+        //   /// KALMAN FILTER (steady-state) ///
 
-          x_cart = Lx11 * x_cart_p + Lx12 * v_cart_p + Lu1 * u_accel + Ly11 * cartPos + Ly12 * cartSpeed;
-          v_cart = Lx21 * x_cart_p + Lx22 * v_cart_p + Lu2 * u_accel + Ly21 * cartPos + Ly22 * cartSpeed;
-          x_pole = Lx33 * x_pole_p + Lx34 * v_pole_p + Lu3 * u_accel + Ly33 * poleAngle;
-          v_pole = Lx43 * x_pole_p + Lx44 * v_pole_p + Lu4 * u_accel + Ly43 * poleAngle;
+        //   x_cart = Lx11 * x_cart_p + Lx12 * v_cart_p + Lu1 * u_accel + Ly11 * cartPos + Ly12 * cartSpeed;
+        //   v_cart = Lx21 * x_cart_p + Lx22 * v_cart_p + Lu2 * u_accel + Ly21 * cartPos + Ly22 * cartSpeed;
+        //   x_pole = Lx33 * x_pole_p + Lx34 * v_pole_p + Lu3 * u_accel + Ly33 * poleAngle;
+        //   v_pole = Lx43 * x_pole_p + Lx44 * v_pole_p + Lu4 * u_accel + Ly43 * poleAngle;
 
-          x_cart = f_kf * x_cart + (1 - f_kf) * cartPos;
-          v_cart = f_kf * v_cart + (1 - f_kf) * cartSpeed;
-          x_pole = f_kf * x_pole + (1 - f_kf) * poleAngle;
-          v_pole = f_kf * v_pole + (1 - f_kf) * (poleAngle - poleAngle_p) * fs;
+        //   x_cart = f_kf * x_cart + (1 - f_kf) * cartPos;
+        //   v_cart = f_kf * v_cart + (1 - f_kf) * cartSpeed;
+        //   x_pole = f_kf * x_pole + (1 - f_kf) * poleAngle;
+        //   v_pole = f_kf * v_pole + (1 - f_kf) * (poleAngle - poleAngle_p) * fs;
 
-          poleAngle_p = poleAngle;
+        //   poleAngle_p = poleAngle;
 
-          //v_pole = 2*v_pole - v_pole_p; // correction
+        //   //v_pole = 2*v_pole - v_pole_p; // correction
 
-          /*
-                x_cart = (float) cartPos; //Fxc * (float) cartPos + (1.0 - Fxc) * x_cart_p;
-                v_cart = cartSpeed; //Fvc_2 * (x_cart - x_cart_p) * fs + Fvc_2 * cartSpeed + (1.0 - Fvc) * v_cart_p;
-                x_pole = Fxp * poleAngle + (1.0 - Fxp) * x_pole_p;
-                v_pole = Fvp * (x_pole - x_pole_p) * fs + (1.0 - Fvp) * v_pole_p;
-        */
+        //   /*
+        //         x_cart = (float) cartPos; //Fxc * (float) cartPos + (1.0 - Fxc) * x_cart_p;
+        //         v_cart = cartSpeed; //Fvc_2 * (x_cart - x_cart_p) * fs + Fvc_2 * cartSpeed + (1.0 - Fvc) * v_cart_p;
+        //         x_pole = Fxp * poleAngle + (1.0 - Fxp) * x_pole_p;
+        //         v_pole = Fvp * (x_pole - x_pole_p) * fs + (1.0 - Fvp) * v_pole_p;
+        // */
 
-          //        long T2 = profileTimer;/////////////////////////////////////////////////////////////////////////////////////////
+        //   //        long T2 = profileTimer;/////////////////////////////////////////////////////////////////////////////////////////
 
-          /// CONTROLLER ///
+        //   /// CONTROLLER ///
 
-          u_accel = Kxc * x_cart + Kvc * v_cart + Kxp * x_pole + Kvp * v_pole;  // [m/s²]
-          u_accel += Kxic * xi_cart;
+        //   u_accel = Kxc * x_cart + Kvc * v_cart + Kxp * x_pole + Kvp * v_pole;  // [m/s²]
+        //   u_accel += Kxic * xi_cart;
+
+        if(useISTApproach){
+          updateUsingISTKalmanAndLQR(cartPos, cartSpeed, poleAngle);
+        } else {
+          updateUsingCarabelliKalmanAndLQR(cartPos, cartSpeed, poleAngle);
+        }
+
+
           u_accel = constrain(u_accel, -aMaxMeters, aMaxMeters);  // clamp to admissible range
 
           float target_speed = cartSpeed + u_accel * Ts;                    // [m/s]
