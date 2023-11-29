@@ -154,11 +154,11 @@ float poleAngle_p = 0.0;  // previous angle for angular velocity estimation
 float u_accel = 0.0;  // previous control input [m/s²]  NOT [msteps/s²]
 
 // IST approach variables:
-BLA::Matrix<4,1> x_k_k_minus_1; // TODO: Find dimensions
-BLA::Matrix<4,4> P_k_k_minus_1; // TODO: Find dimensions
-BLA::Matrix<4,4> K_k; // TODO: Find dimensions
+BLA::Matrix<4,1> x_k_k_minus_1;
+BLA::Matrix<4,4> P_k_k_minus_1;
+BLA::Matrix<4,3> K_k;
 BLA::Matrix<4,1> x_k;
-BLA::Matrix<4,4> P_k; // TODO: Find dimensions
+BLA::Matrix<4,4> P_k;
 
 bool useISTApproach = false;
 
@@ -225,9 +225,9 @@ constexpr float f_kf = 0.9;  // factor for complementary filtering of kalman est
 // Constants:
 BLA::Matrix<4,4> A;
 BLA::Matrix<4,1> B;
-BLA::Matrix<4,4> C; // TODO: find dimensions
-BLA::Matrix<4,4> Q; // TODO: find dimensions
-BLA::Matrix<4,4> R; // TODO: find dimensions
+BLA::Matrix<3,4> C;
+BLA::Matrix<4,4> Q;
+BLA::Matrix<3, 3> R; // TODO: find dimensions
 BLA::Matrix<4,1> K_iqc;
 float sigmaSquare;
 BLA::Matrix<4,4> identityMatrix4x4 = {
@@ -1061,7 +1061,7 @@ void updateRotaryEncoderValue() {
   }
 
   void updateUsingISTKalmanAndLQR(float cartPos, float cartSpeed, float poleAngle){
-    BLA::Matrix<4,1> z_k = {cartPos, cartSpeed, poleAngle, 0};
+    BLA::Matrix<3,1> z_k = {cartPos, cartSpeed, poleAngle};
 
     // Kalman filter (~A means "A transposed"):
     x_k_k_minus_1 = A * x_k + B * u_accel;
