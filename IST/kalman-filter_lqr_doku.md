@@ -16,9 +16,9 @@ Abhängig von Sampling-Periode:
 Sonstiges:
 - $C$ (In Wikipedia: $H$):
     - Wenn $z_k \in \R^{3\times1}$: 
-    $$C = \begin{pmatrix}1&0&0&0\\0&1&0&0\\0&0&1&0\end{pmatrix}\in\R^{3\times 4}$$
+        $$C = \begin{pmatrix}1&0&0&0\\0&1&0&0\\0&0&1&0\end{pmatrix}\in\R^{3\times 4}$$
      - Wenn $z_k \in \R^{4\times1}$: 
-    $$C = \begin{pmatrix}1&0&0&0\\0&1&0&0\\0&0&1&0\\0&0&0&1\end{pmatrix}\in\R^{4\times 4}$$
+        $$C = \begin{pmatrix}1&0&0&0\\0&1&0&0\\0&0&1&0\\0&0&0&1\end{pmatrix}\in\R^{4\times 4}$$
 - $x_{0|-1} = (0, 0, 0, 0)^T \in\R^{4\times 1}$
 
 Experimentell zu bestimmen:
@@ -35,19 +35,10 @@ $$K_\text{iqc} \in \R^{4\times 1}$$
 
 ## Messung im Schritt $k$
 Mit 3 Parametern: 
-$$z_k = \begin{pmatrix}
-\text{cartPos}_k\\
-\text{cartSpeed}_k\\
-\text{poleAngle}_k\\
-\end{pmatrix} \in \R^{3\times 1}$$
+$$z_k = \begin{pmatrix}\text{cartPos}_k\\\text{cartSpeed}_k\\\text{poleAngle}_k\\\end{pmatrix} \in \R^{3\times 1}$$
 
 Mit 4 Parametern: 
-$$z_k = \begin{pmatrix}
-\text{cartPos}_k\\
-\text{cartSpeed}_k\\
-\text{poleAngle}_k\\
-\text{poleAngleSpeed}_k\\
-\end{pmatrix} \in \R^{4\times 1}$$
+$$z_k = \begin{pmatrix}\text{cartPos}_k\\\text{cartSpeed}_k\\\text{poleAngle}_k\\\text{poleAngleSpeed}_k\\\end{pmatrix} \in \R^{4\times 1}$$
 
 ## Werte aus Schritt $k-1$
 - $z_{k-1} \in \R^{3\times 1}$ bzw. $z_k \in \R^{4\times 1}$: Vorheriger Messwert
