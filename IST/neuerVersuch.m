@@ -27,7 +27,7 @@ h = 10e-3; % smallest sampling stepsize
 basePeriod = 45e-3; % seconds
 % 
 % lowestPrio = 4;
-maxSamplingStepsize = 300e-3;
+maxSamplingStepsize = 100e-3;
 
 lowestUsedPrioDelayInS = 8e-3;
 
@@ -146,7 +146,7 @@ s = optimize(con, norm(Z), opt);
 
 K_iqc=value(Z)*(inv(value(X)))
 
-
+disp("Hinweis zur Ausgabe: Erster Wert von K_iqc (bzw. K_ss) ist für Kxic (integral feedback). Restliche 4 Werte sind Kxc, Kvc, Kxp, Kvp")
 %
 %% Switched system approach
 %
@@ -185,7 +185,7 @@ for i=1:1:delay+1
         D_lift = [D_lift; D_lift(max(end-n_w+1,1):end,:) + Cz*A^(i-2)*B];
     end
 
-    for j=1:1:delay+1 % TODO sicher dass bis delay+1 und nicht bis i?
+    for j=1:1:delay+1
         ineq=[G+G'-X{i}   , Z'*B_lift'+G'*A_lift' , G'*Cz_lift'+Z'*D_lift';
               B_lift*Z+A_lift*G ,  X{j} - Bw_lift*gamma*Bw_lift', -Bw_lift*gamma*Dw_lift';
               Cz_lift*G+D_lift*Z , -Dw_lift*gamma*Bw_lift', eye(i*n_w)-Dw_lift*gamma*Dw_lift'];

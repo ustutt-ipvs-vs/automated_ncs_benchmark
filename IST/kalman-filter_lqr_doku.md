@@ -9,9 +9,9 @@ Von Matlab-Skript gegeben:
 - $A_\text{cont} \in\R^{4\times 4}$
 - $B_\text{cont} \in\R^{4\times 1}$
 
-Abhängig von Sampling-Periode:
-- $A = I_{4\times 4} + A_\text{cont} \cdot h \in\R^{4\times 4}$ (in Wikipedia: $F$)
-- $B = B_\text{cont}\cdot h \in\R^{4\times 1}$
+Abhängig von Sampling-Periode $Ts$:
+- $A = I_{4\times 4} + A_\text{cont} \cdot Ts \in\R^{4\times 4}$ (in Wikipedia: $F$)
+- $B = B_\text{cont}\cdot Ts \in\R^{4\times 1}$
 
 Sonstiges:
 - $C$ (In Wikipedia: $H$):
@@ -22,16 +22,20 @@ Sonstiges:
 - $x_{0|-1} = (0, 0, 0, 0)^T \in\R^{4\times 1}$
 
 Experimentell zu bestimmen:
-- $Q = Q_0\cdot h  \in\R^{4\times 4}$ mit
+- $Q = \sum_{i=1}^{Ts/h} A_h^{i-1}Q_0{A_h^{i-1}}^\top  \in\R^{4\times 4}$ mit
     - $Q_0$: Tuning-Parameter; selbst bestimmen.
-- $R = R_0\cdot h  \in\R^{4\times 4}$ bzw. $\R^{3\times 3}$ mit
+- $Q = Q_0\cdot Ts  \in\R^{4\times 4}$ (nicht ganz Richtig, alternative Vereinfachung) mit
+    - $Q_0$: Tuning-Parameter; selbst bestimmen.
+- $R = R_0  \in\R^{4\times 4}$ bzw. $\R^{3\times 3}$ (hier ohne Einfluss von $Ts$) mit
     - $R_0$: Tuning-Parameter; selbst bestimmen.
 - $P_{0|-1} = \sigma^2 \cdot I_{4\times 4} \in \R^{4\times 4}$ mit
     - $\sigma^2\in\R$: Selbst bestimmen.
 
-### Für LQR-Regler
-Von Matlab-Skript gegeben:
+### Für (nicht mehr LQR) Regler (jetzt Regler speziell für delays angepasst)
+Von Matlab-Skript in zwei Varianten gegeben:
 $$K_\text{iqc} \in \R^{4\times 1}$$
+und
+$$K_\text{ss} \in \R^{4\times 1}$$
 
 ## Messung im Schritt $k$
 Mit 3 Parametern: 
@@ -41,9 +45,9 @@ Mit 4 Parametern:
 $$z_k = \begin{pmatrix}\text{cartPos}_k\\\text{cartSpeed}_k\\\text{poleAngle}_k\\\text{poleAngleSpeed}_k\\\end{pmatrix} \in \R^{4\times 1}$$
 
 ## Werte aus Schritt $k-1$
-- $x_k \in \R^{4\times 1}$: Vorherige Ausgabe aus Kalman-Filter
-- $u_{k-1} \in \R$: Letzte Ausgabe aus LQR-Regler
-- $P_{k-1}\in \R^{4\times 4}$
+- $x_k \in \R^{4\times 1}$: Vorherige Ausgabe des Zustands aus Kalman-Filter
+- $u_{k-1} \in \R$: Letzte Ausgabe aus Regler
+- $P_{k-1}\in \R^{4\times 4}$ Vorherige Ausgabe der Kovarianz aus Kalman-Filter
 
 ## Update des Kalman-Filters im Schritt $k$
 1. State Prediction:
@@ -57,5 +61,5 @@ $$z_k = \begin{pmatrix}\text{cartPos}_k\\\text{cartSpeed}_k\\\text{poleAngle}_k\
 5. State Covariance Update:
     $$P_k = (I - K_k \cdot C) \cdot P_{k|k-1} \in \R^{4\times 4}$$
 
-## Update des LQR im Schritt $k$
+## Update des Eingangs mit Regler im Schritt $k$
 $$u_k = K_\text{iqc}^T\cdot x_k \in \R$$
