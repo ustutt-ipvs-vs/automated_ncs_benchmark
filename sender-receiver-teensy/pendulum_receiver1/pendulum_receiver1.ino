@@ -89,6 +89,7 @@ constexpr float ESTEP_PER_RAD = encoderPPR / TWO_PI;
 
 // Variables for remote encoder input:
 int currentEncoderValue = 0;
+float currentAngularVelocity = 0;
 bool encoderInitialized = false;
 bool newEncoderValueAvailable = false; // set to true after every received value
 
@@ -109,6 +110,11 @@ int32_t angleSteps(int encoderPos) {
 
 float getPoleAngleRad() {  // get encoder angle in radians
   return RAD_PER_ESTEP * angleSteps(currentEncoderValue);
+}
+
+float getAngularVelocityRadPerSecond(){
+  Serial.printf("Angular Velocity: %f", currentAngularVelocity);
+  return currentAngularVelocity;
 }
 
 float getCartPosMeter() {
@@ -156,7 +162,7 @@ float u_accel = 0.0;  // previous control input [m/s²]  NOT [msteps/s²]
 // IST approach variables:
 BLA::Matrix<4,1> x_k_k_minus_1;
 BLA::Matrix<4,4> P_k_k_minus_1;
-BLA::Matrix<4,3> K_k;
+BLA::Matrix<4,4> K_k;
 BLA::Matrix<4,1> x_k;
 BLA::Matrix<4,4> P_k;
 
@@ -225,9 +231,9 @@ constexpr float f_kf = 0.9;  // factor for complementary filtering of kalman est
 // Constants:
 BLA::Matrix<4,4> A;
 BLA::Matrix<4,1> B;
-BLA::Matrix<3,4> C;
+BLA::Matrix<4,4> C;
 BLA::Matrix<4,4> Q;
-BLA::Matrix<3, 3> R; // TODO: find dimensions
+BLA::Matrix<4, 4> R; // TODO: find dimensions
 BLA::Matrix<4,1> K_iqc;
 float sigmaSquare;
 BLA::Matrix<4,4> identityMatrix4x4 = {
@@ -904,10 +910,10 @@ void checkLimitSwitches() {
 
 void updateRotaryEncoderValue() {
   // The sample value string is of the following form:
-  // encoderValue;samplingPeriodMillis;sequenceNumber;currentTime;\n
-  // where the sampling period is in milliseconds
+  // encoderValue;samplingPeriodMillis;sequenceNumber;currentTime;angularVelocity\n
+  // where the sampling period is in milliseconds and the angular velocity is in radians per second.
   // for example
-  // S:-1204;50;1234;62345234;\n
+  // S:-1204;50;1234;62345234;-1.308997\n
   //
   // Additionally, pause signals of the following form can be transmitted (for pause with 800ms duration):
   // PAUSE:800;\n
@@ -959,6 +965,7 @@ void updateRotaryEncoderValue() {
         unsigned delaySinceLastSample = serialDevice->readStringUntil(';').toInt();
         long sequenceNumber = serialDevice->readStringUntil(';').toInt();
         long timestamp = serialDevice->readStringUntil(';').toInt();
+        currentAngularVelocity = serialDevice->readStringUntil(';').toFloat();
 
         updateParametersForSamplingPeriod(delaySinceLastSample);
         if(CartState == BALANCE){
@@ -1060,8 +1067,8 @@ void updateRotaryEncoderValue() {
     u_accel += Kxic * xi_cart;
   }
 
-  void updateUsingISTKalmanAndLQR(float cartPos, float cartSpeed, float poleAngle){
-    BLA::Matrix<3,1> z_k = {cartPos, cartSpeed, poleAngle};
+  void updateUsingISTKalmanAndLQR(float cartPos, float cartSpeed, float poleAngle, float angularVelocity){
+    BLA::Matrix<4,1> z_k = {cartPos, cartSpeed, poleAngle, angularVelocity};
 
     // Kalman filter (~A means "A transposed"):
     x_k_k_minus_1 = A * x_k + B * u_accel;
@@ -1339,6 +1346,7 @@ void updateRotaryEncoderValue() {
           float cartPos = METER_PER_MSTEP * cartSteps;
           float cartSpeed = getCartSpeedMeter();
           float poleAngle = getPoleAngleRad();
+          float angularVelocity = getAngularVelocityRadPerSecond();
 
           //        long T1 = profileTimer;////////////LED_BUILTIN/////////////////////////////////////////////////////////////////////////////
 
@@ -1380,7 +1388,7 @@ void updateRotaryEncoderValue() {
         //   u_accel += Kxic * xi_cart;
 
         if(useISTApproach){
-          updateUsingISTKalmanAndLQR(cartPos, cartSpeed, poleAngle);
+          updateUsingISTKalmanAndLQR(cartPos, cartSpeed, poleAngle, angularVelocity);
         } else {
           updateUsingCarabelliKalmanAndLQR(cartPos, cartSpeed, poleAngle);
         }

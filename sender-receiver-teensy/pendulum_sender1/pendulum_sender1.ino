@@ -25,6 +25,7 @@ int* samplesHistory; // Acts as ring buffer
 int samplingPeriodsMillis[NUM_SAMPLING_PERIODS];
 int historyPosition = 0;
 
+double angleSpeed;
 
 Encoder encoder(pinEncoderA, pinEncoderB);
 Stream* sensorValueSerial;
@@ -119,16 +120,25 @@ void calculateTransmissionPeriod(){
 
 void sendSampleIfDelayOver(){
   unsigned long currentTime = millis();
+  float angularVelocity = getAngularVelocity();
   if(lastTransmissionTime + transmissionPeriodMillis <= currentTime){
     // The sample value string is of the following form:
-    // S:encoderValue;samplingPeriodMillis;sequenceNumber;currentTime;\n
+    // S:encoderValue;samplingPeriodMillis;sequenceNumber;currentTime;angularVelocity;\n
     // for example
-    // S:-1204;50;1234;62345234;\n
-    sensorValueSerial->printf("S:%i;%u;%i;%u;\n", encoder.read(), transmissionPeriodMillis, sequenceNumber, currentTime);
+    // S:-1204;50;1234;62345234;-1.308997\n
+    sensorValueSerial->printf("S:%i;%u;%i;%u;%f;\n", encoder.read(), transmissionPeriodMillis, sequenceNumber, currentTime, angularVelocity);
     Serial.send_now();
     lastTransmissionTime = currentTime;
     sequenceNumber++;
   }
+}
+
+float getAngularVelocity(){
+  int currentSample = samplesHistory[(historyPosition - 1 + historySize) % historySize];
+  int previousSample = samplesHistory[(historyPosition - 2 + historySize) % historySize];
+  float angleChange = (((float) currentSample - (float) previousSample) / (float) encoderNumSteps) * 2.f * PI;
+  float angularVelocity = angleChange / ((float) sensorPeekPeriodMillis / 1000.f);
+  return angularVelocity;
 }
 
 void checkAndHandleFeedback(){
