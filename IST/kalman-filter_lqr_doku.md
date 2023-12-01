@@ -24,7 +24,7 @@ Sonstiges:
 Experimentell zu bestimmen:
 - $Q = Q_0\cdot h  \in\R^{4\times 4}$ mit
     - $Q_0$: Tuning-Parameter; selbst bestimmen.
-- $R = R_0\cdot h  \in\R^{4\times 4}$ mit
+- $R = R_0\cdot h  \in\R^{4\times 4}$ bzw. $\R^{3\times 3}$ mit
     - $R_0$: Tuning-Parameter; selbst bestimmen.
 - $P_{0|-1} = \sigma^2 \cdot I_{4\times 4} \in \R^{4\times 4}$ mit
     - $\sigma^2\in\R$: Selbst bestimmen.
@@ -41,7 +41,7 @@ Mit 4 Parametern:
 $$z_k = \begin{pmatrix}\text{cartPos}_k\\\text{cartSpeed}_k\\\text{poleAngle}_k\\\text{poleAngleSpeed}_k\\\end{pmatrix} \in \R^{4\times 1}$$
 
 ## Werte aus Schritt $k-1$
-- $z_{k-1} \in \R^{3\times 1}$ bzw. $z_k \in \R^{4\times 1}$: Vorheriger Messwert
+- $x_k \in \R^{4\times 1}$: Vorherige Ausgabe aus Kalman-Filter
 - $u_{k-1} \in \R$: Letzte Ausgabe aus LQR-Regler
 - $P_{k-1}\in \R^{4\times 4}$
 
@@ -51,7 +51,7 @@ $$z_k = \begin{pmatrix}\text{cartPos}_k\\\text{cartSpeed}_k\\\text{poleAngle}_k\
 2. State Covariance Prediction:
     $$P_{k|k-1} = A \cdot P_{k-1} \cdot A^T + Q \in \R^{4\times 4}$$
 3. Kalman Gain:
-    $$K_k = P_{k|k-1} \cdot C^T \cdot (C \cdot P_{k|k-1} \cdot C^T + R)^{-1} \in \R^{4\times 4}$$
+    $$K_k = P_{k|k-1} \cdot C^T \cdot (C \cdot P_{k|k-1} \cdot C^T + R)^{-1} \in \R^{4\times 4} \text{ bzw. } \R^{4\times 3}$$
 4. State Update:
     $$x_k = x_{k|k-1} + K_k \cdot (z_k - C \cdot x_{k|k-1}) \in \R^{4\times 1}$$
 5. State Covariance Update:
