@@ -5,6 +5,7 @@
 
 #include "PendulumSender.h"
 #include "../Logging/LogEntries/SchedulingInfoEntries/TokenBucketInfoEntry.h"
+#include "../Parameters/Parameters.h"
 #include <sstream>
 #include <iostream>
 #include <chrono>
@@ -112,10 +113,10 @@ void PendulumSender::stop() {
 }
 
 void PendulumSender::sendPacket(std::string payload) {
-    // Pad payload width '#' to 32 bytes and store result in paddedPayload
+    // Pad payload width '#' to SAMPLE_SIZE bytes and store result in paddedPayload
     std::string paddedPayload = payload;
 
-    paddedPayload.append(32 - payload.size(), '#');
+    paddedPayload.append(SAMPLE_SIZE - payload.size(), '#');
 
 
     priorityDeterminer->reportPacketReadyToSend(paddedPayload.size());

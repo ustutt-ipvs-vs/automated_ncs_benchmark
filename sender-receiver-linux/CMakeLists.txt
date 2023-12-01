@@ -30,7 +30,8 @@ add_executable(cross_traffic
         Scheduling/ConstantPriority.h
         Scheduling/MultiPriorityTokenBucket.cpp
         Scheduling/MultiPriorityTokenBucket.h
-        )
+        Parameters/Parameters.h
+)
 
 add_executable(pendulum_sender
         PendulumSenderSide/PendulumSender.cpp
@@ -71,7 +72,8 @@ add_executable(pendulum_sender
         PendulumSenderSide/MPTBSubConfig.cpp
         PendulumSenderSide/MPTBSubConfig.h
         PendulumSenderSide/SenderMultiConfig.h
-        PendulumSenderSide/SenderMultiConfig.cpp)
+        PendulumSenderSide/SenderMultiConfig.cpp
+        Parameters/Parameters.h)
 
 add_executable(pendulum_receiver
         PendulumReceiverSide/PendulumReceiverMain.cpp
@@ -104,6 +106,7 @@ add_executable(pendulum_receiver
         SerialPortScan/TeensyPortDetector.h
         PendulumReceiverSide/ReceiverConfig.cpp
         PendulumReceiverSide/ReceiverConfig.h
+        Parameters/Parameters.h
         )
 
 

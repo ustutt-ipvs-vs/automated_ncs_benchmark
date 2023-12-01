@@ -10,6 +10,7 @@
 #include "../SerialPortScan/TeensyPortDetector.h"
 #include "SenderMultiConfig.h"
 #include "MPTBSubConfig.h"
+#include "../Parameters/Parameters.h"
 
 /**
  * Usage from command line:
@@ -54,9 +55,6 @@ std::string device = "/dev/ttyACM0";
 std::string host = "10.0.1.2";
 int port = 3000;
 
-// 78B = 32B payload + 14B Ethernet header + 4B VLAN tag + 20B IP header + 8B UDP header
-double frameSizeOfSample = 78;
-
 // Number of samples that Teensy keeps in its history buffer to determine sampling period.
 // Gets transmitted to the sender Teensy at initialization.
 int teensyHistorySize = 100;
@@ -92,18 +90,18 @@ void sigIntHandler(int signal) {
 std::vector<double> samplingPeriodsToDataRates(std::vector<double> samplingPeriods) {
     std::vector<double> dataRates;
     for (double samplingPeriod: samplingPeriods) {
-        double dataRate = (1000.0 / samplingPeriod) * frameSizeOfSample;
+        double dataRate = (1000.0 / samplingPeriod) * FRAME_SIZE_OF_SAMPLE;
         dataRates.emplace_back(dataRate);
     }
     return dataRates;
 }
 
 double numberOfSamplesToBytes(double numberOfSamples) {
-    return numberOfSamples * frameSizeOfSample;
+    return numberOfSamples * FRAME_SIZE_OF_SAMPLE;
 }
 
 double samplingPeriodToDataRate(double samplingPeriod) {
-    return (1000.0 / samplingPeriod) * frameSizeOfSample;
+    return (1000.0 / samplingPeriod) * FRAME_SIZE_OF_SAMPLE;
 }
 
 int main(int argc, char *argv[]) {
