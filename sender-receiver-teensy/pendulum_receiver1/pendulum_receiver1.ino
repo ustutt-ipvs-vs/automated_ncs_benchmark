@@ -1448,10 +1448,17 @@ void updateRotaryEncoderValue() {
 
         //if (k % 10 == 0) {
         if(!sendEncoderValuesThroughFeedbackLink){
+          if(useISTApproach){
+            Serial.printf("log:%u;%f;%f;%f;%f;%f;%f;%f;%f;%f\n", k,
+                          cartPos, cartSpeed, poleAngle,
+                          x_k(0), x_k(1), x_k(2), x_k(3),
+                          u_accel, target_speed);
+          } else {
           Serial.printf("log:%u;%f;%f;%f;%f;%f;%f;%f;%f;%f\n", k,
                         cartPos, cartSpeed, poleAngle,
                         x_cart, v_cart, x_pole, v_pole,
                         u_accel, target_speed);
+          }
           Serial.send_now();
         }
         //}
