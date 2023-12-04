@@ -113,7 +113,6 @@ float getPoleAngleRad() {  // get encoder angle in radians
 }
 
 float getAngularVelocityRadPerSecond(){
-  Serial.printf("Angular Velocity: %f", currentAngularVelocity);
   return currentAngularVelocity;
 }
 
