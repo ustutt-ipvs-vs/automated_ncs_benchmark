@@ -174,17 +174,20 @@ const BLA::Matrix<4,4> A_cont = {
 };
 const BLA::Matrix<4,1> B_cont = {0, 1.0000, 0, 1.4286};
 const BLA::Matrix<4,4> C = identityMatrix4x4;
+
+const float q0_factor = 1e-6;
+const float r_factor = 1e-6;
 const BLA::Matrix<4,4> Q_0 = {  // TODO: Find value experimentally (dummy value)
-  1,0,0,0,
-  0,1,0,0,
-  0,0,1,0,
-  0,0,0,1
+  q0_factor,0,0,0,
+  0,q0_factor,0,0,
+  0,0,q0_factor,0,
+  0,0,0,q0_factor
 };
 const BLA::Matrix<4, 4> R = {  // TODO: Find value experimentally (dummy value)
-  1,0,0,0,
-  0,1,0,0,
-  0,0,1,0,
-  0,0,0,1
+  r_factor,0,0,0,
+  0,r_factor,0,0,
+  0,0,r_factor,0,
+  0,0,0,r_factor
 };
 const BLA::Matrix<4,1> K_iqc = {13.6723,   13.5022,  -74.6153,  -19.8637};
 const float sigmaSquare = 1; // TODO: Find value experimentally (dummy value)
@@ -1453,10 +1456,10 @@ void updateRotaryEncoderValue() {
                           x_k(0), x_k(1), x_k(2), x_k(3),
                           u_accel, target_speed);
           } else {
-          Serial.printf("log:%u;%f;%f;%f;%f;%f;%f;%f;%f;%f\n", k,
-                        cartPos, cartSpeed, poleAngle,
-                        x_cart, v_cart, x_pole, v_pole,
-                        u_accel, target_speed);
+            Serial.printf("log:%u;%f;%f;%f;%f;%f;%f;%f;%f;%f\n", k,
+                          cartPos, cartSpeed, poleAngle,
+                          x_cart, v_cart, x_pole, v_pole,
+                          u_accel, target_speed);
           }
           Serial.send_now();
         }
