@@ -58,12 +58,14 @@ private:
     float swingUpDistanceFactor;
     float swingUpSpeedFactor;
     float swingUpAccelerationFactor;
+    std::string kalmanAndControllerParamString;
 
 public:
     PendulumReceiver(std::string serialDeviceName, std::string receiverHost, int receiverPort, bool doPauses,
                      int timeBetweenPausesMillis, int pauseDurationMillis, int motorMaxRPM, double revolutionsPerTrack,
                      float swingUpDistanceFactor, float swingUpSpeedFactor, float swingUpAccelerationFactor,
-                     ReceiverConfig::SwingUpBehavior swingUpBehavior = ReceiverConfig::SwingUpBehavior::NO_SWING_UP);
+                     ReceiverConfig::SwingUpBehavior swingUpBehavior = ReceiverConfig::SwingUpBehavior::NO_SWING_UP,
+                     std::string kalmanAndControllerParamString = "0.0;0.0;0.0;0.0;0.0;0.0;0.0;0.0;");
     void start();
     void stop();
 

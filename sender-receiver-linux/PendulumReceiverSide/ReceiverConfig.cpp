@@ -41,6 +41,17 @@ std::string ReceiverConfig::toString() const {
     result += "pauseDurationMillis: " + std::to_string(pauseDurationMillis) + "\n";
     result += "swingUpBehavior: " + getSwingUpBehaviorString() + "\n";
     result += "sailType: " + pendulumSailType + "\n";
+
+    result += "controllerKVector: [";
+    for(float i : controllerKVector){
+        result +=  std::to_string(i) + ", ";
+    }
+    result += "]\n";
+    result += "controllerIntegratorParam: " + std::to_string(controllerIntegratorParam) + "\n";
+    result += "RMatrixDiagonalValue: " + std::to_string(RMatrixDiagonalValue) + "\n";
+    result += "Q0MatrixDiagonalValue: " + std::to_string(Q0MatrixDiagonalValue) + "\n";
+    result += "sigmaSquare: " + std::to_string(sigmaSquare) + "\n";
+
     return result;
 }
 
@@ -108,6 +119,36 @@ ReceiverConfig::ReceiverConfig(std::string filename) {
         pendulumSailType = configJson["sailType"];
     } else {
         pendulumSailType = "noSail";
+    }
+
+    if(configJson.contains("controllerKVector")) {
+        controllerKVector = configJson["controllerKVector"].get<std::vector<float>>();;
+    } else {
+        controllerKVector = {3.6723, 13.5022, -74.6153, -19.8637};
+    }
+
+    if(configJson.contains("controllerIntegratorParam")) {
+        controllerIntegratorParam = configJson["controllerIntegratorParam"];
+    } else {
+        controllerIntegratorParam = 5.0322;
+    }
+
+    if(configJson.contains("RMatrixDiagonalValue")) {
+        RMatrixDiagonalValue = configJson["RMatrixDiagonalValue"];
+    } else {
+        RMatrixDiagonalValue = 0.0;
+    }
+
+    if(configJson.contains("Q0MatrixDiagonalValue")) {
+        Q0MatrixDiagonalValue = configJson["Q0MatrixDiagonalValue"];
+    } else {
+        Q0MatrixDiagonalValue = 0.0;
+    }
+
+    if(configJson.contains("sigmaSquare")) {
+        sigmaSquare = configJson["sigmaSquare"];
+    } else {
+        sigmaSquare = 1.0;
     }
 }
 
@@ -190,5 +231,39 @@ float ReceiverConfig::getSwingUpAccelerationFactor() const {
         throw std::runtime_error("Unknown pendulum sail type: " + pendulumSailType);
     }
 }
+
+const std::vector<float> &ReceiverConfig::getControllerKVector() const {
+    return controllerKVector;
+}
+
+float ReceiverConfig::getControllerIntegratorParam() const {
+    return controllerIntegratorParam;
+}
+
+float ReceiverConfig::getRMatrixDiagonalValue() const {
+    return RMatrixDiagonalValue;
+}
+
+float ReceiverConfig::getQ0MatrixDiagonalValue() const {
+    return Q0MatrixDiagonalValue;
+}
+
+float ReceiverConfig::getSigmaSquare() const {
+    return sigmaSquare;
+}
+
+std::string ReceiverConfig::getKalmanAndControllerParameterString() {
+    std::string result;
+    for(float i : controllerKVector){
+        result +=  std::to_string(i) + ";";
+    }
+    result += std::to_string(controllerIntegratorParam) + ";";
+    result += std::to_string(RMatrixDiagonalValue) + ";";
+    result += std::to_string(Q0MatrixDiagonalValue) + ";";
+    result += std::to_string(sigmaSquare) + ";";
+    return result;
+}
+
+
 
 

@@ -38,7 +38,7 @@ int main(int argc, char *argv[]){
                                         config.getPauseDurationMillis(), config.getMotorMaxRPM(),
                                         config.getRevolutionsPerTrack(), config.getSwingUpDistanceFactor(),
                                         config.getSwingUpSpeedFactor(), config.getSwingUpAccelerationFactor(),
-                                        config.getSwingUpBehavior());
+                                        config.getSwingUpBehavior(), config.getKalmanAndControllerParameterString());
 
         std::cout << "Using config file: " << configFile << std::endl;
         std::cout << config.toString() << std::endl;

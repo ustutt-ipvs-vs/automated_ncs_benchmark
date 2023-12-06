@@ -6,5 +6,11 @@
   "timeBetweenPausesMillis": 20000,
   "pauseDurationMillis": 800,
   "swingUpBehavior": "crashAndSwingUpAtNewConfig",
-  "sailType": "sail14"
+  "sailType": "sail14",
+
+  "controllerKVector": [1.0, 2.0, 3.0, 4.0],
+  "controllerIntegratorParam": 1.0,
+  "RMatrixDiagonalValue": 1.0,
+  "Q0MatrixDiagonalValue": 1.0,
+  "sigmaSquare": 1.0
 }

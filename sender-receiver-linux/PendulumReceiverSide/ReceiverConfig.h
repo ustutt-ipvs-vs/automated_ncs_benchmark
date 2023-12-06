@@ -15,7 +15,12 @@
  *   "timeBetweenPausesMillis": 20000,
  *   "pauseDurationMillis": 800,
  *   "swingUpBehavior": "swingUpAtStart",
- *   "sailType": "sail14"
+ *   "sailType": "sail14",
+ *   "controllerKVector": [1.0, 2.0, 3.0, 4.0],
+ *   "controllerIntegratorParam": 1.0,
+ *   "RMatrixDiagonalValue": 1.0,
+ *   "Q0MatrixDiagonalValue": 1.0,
+ *   "sigmaSquare": 1.0
  * }
  *
  * The pendulum types available are:
@@ -66,6 +71,12 @@ private:
     enum SwingUpBehavior swingUpBehavior;
     std::string pendulumSailType;
 
+    std::vector<float> controllerKVector;
+    float controllerIntegratorParam;
+    float RMatrixDiagonalValue;
+    float Q0MatrixDiagonalValue;
+    float sigmaSquare;
+
 public:
     const std::string &getReceiverAddress() const;
 
@@ -100,7 +111,26 @@ public:
     float getSwingUpSpeedFactor() const;
 
     float getSwingUpAccelerationFactor() const;
-};
 
+
+    const std::vector<float> &getControllerKVector() const;
+
+    float getControllerIntegratorParam() const;
+
+    float getRMatrixDiagonalValue() const;
+
+    float getQ0MatrixDiagonalValue() const;
+
+    float getSigmaSquare() const;
+
+    /**
+     * Returns a string containing all the parameters that are used by the Kalman filter and the controller.
+     * The string is formatted as follows:
+     * controllerKVector[0];controllerKVector[1];controllerKVector[2];controllerKVector[3];controllerIntegratorParam;RMatrixDiagonalValue;Q0MatrixDiagonalValue;sigmaSquare;
+     *
+     * This string is used to transfer to initial config to the Teensy microcontroller on initialization.
+     */
+    std::string getKalmanAndControllerParameterString();
+};
 
 #endif //SENDER_RECEIVER_LINUX_RECEIVERCONFIG_H
