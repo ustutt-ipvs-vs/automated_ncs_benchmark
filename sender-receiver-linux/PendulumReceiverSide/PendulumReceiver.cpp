@@ -57,7 +57,7 @@ void PendulumReceiver::start() {
             + std::to_string(swingUpAtStart) + ";"
             + std::to_string(swingUpDistanceFactor) + ";"
             + std::to_string(swingUpSpeedFactor) + ";"
-            + std::to_string(swingUpAccelerationFactor)
+            + std::to_string(swingUpAccelerationFactor) + ";"
             + kalmanAndControllerParamString + "\n";
     serialActuator.Write(teensyInitParams);
 
