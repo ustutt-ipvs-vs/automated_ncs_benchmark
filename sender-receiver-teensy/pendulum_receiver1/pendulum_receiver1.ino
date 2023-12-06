@@ -175,22 +175,12 @@ const BLA::Matrix<4,4> A_cont = {
 const BLA::Matrix<4,1> B_cont = {0, 1.0000, 0, 1.4286};
 const BLA::Matrix<4,4> C = identityMatrix4x4;
 
-const float q0_factor = 1e-6;
-const float r_factor = 1e-6;
-const BLA::Matrix<4,4> Q_0 = {  // TODO: Find value experimentally (dummy value)
-  q0_factor,0,0,0,
-  0,q0_factor,0,0,
-  0,0,q0_factor,0,
-  0,0,0,q0_factor
-};
-const BLA::Matrix<4, 4> R = {  // TODO: Find value experimentally (dummy value)
-  r_factor,0,0,0,
-  0,r_factor,0,0,
-  0,0,r_factor,0,
-  0,0,0,r_factor
-};
-const BLA::Matrix<4,1> K_iqc = {13.6723,   13.5022,  -74.6153,  -19.8637};
-const float sigmaSquare = 1; // TODO: Find value experimentally (dummy value)
+float q0_factor = 1e-6;
+float r_factor = 1e-6;
+BLA::Matrix<4,4> Q_0;
+BLA::Matrix<4, 4> R;
+BLA::Matrix<4,1> K_iqc = {13.6723,   13.5022,  -74.6153,  -19.8637};
+float sigmaSquare = 1; // TODO: Find value experimentally (dummy value)
 
 float K_iqc_integrator = 5.0322;
 
@@ -828,13 +818,29 @@ void readInitializationValues(){
         float swingUpDistanceFactor = Serial.readStringUntil(';').toFloat();
         swingUpSpeedFactor = Serial.readStringUntil(';').toFloat();
         swingUpAccelerationFactor = Serial.readStringUntil(';').toFloat();
+
+        K_iqc(0) = Serial.readStringUntil(';').toFloat();
+        K_iqc(1) = Serial.readStringUntil(';').toFloat();
+        K_iqc(2) = Serial.readStringUntil(';').toFloat();
+        K_iqc(3) = Serial.readStringUntil(';').toFloat();
+        K_iqc_integrator = Serial.readStringUntil(';').toFloat();
+        r_factor = Serial.readStringUntil(';').toFloat();
+        q0_factor = Serial.readStringUntil(';').toFloat();
+        sigmaSquare = Serial.readStringUntil(';').toFloat();
+
+        R = identityMatrix4x4 * r_factor;
+        Q_0 = identityMatrix4x4 * q0_factor;
+
         receivedInitValues = true;
 
         swingUpDistance = swingUpDistanceFactor * trackLengthSteps;
 
         // Echo received values to computer for validation:
-        Serial.printf("Received init values: motor max RPM: %i, revolutions per track: %f, swing up at start: %i, swing up distance factor: %f, swing up speed factor %f , swing up accel. factor: %f\n", 
-        newMotorMaxRPM, newRevolutionsPerTrack, doSwingUpAtStart, swingUpDistanceFactor, swingUpSpeedFactor, swingUpAccelerationFactor);
+        Serial.printf("Received init values: motor max RPM: %i, revolutions per track: %f, swing up at start: %i, "
+          "swing up distance factor: %f, swing up speed factor %f , swing up accel. factor: %f, "
+          "K_iqc: [%f, %f, %f, %f], K_iqc_integrator: %f, r_factor: %f, q0_factor: %f, sigmaSquare: %f\n", 
+        newMotorMaxRPM, newRevolutionsPerTrack, doSwingUpAtStart, swingUpDistanceFactor, swingUpSpeedFactor, swingUpAccelerationFactor,
+        K_iqc(0), K_iqc(1), K_iqc(2), K_iqc(3), K_iqc_integrator, r_factor, q0_factor, sigmaSquare);
       }
       Serial.read(); // Remove \n
     }
