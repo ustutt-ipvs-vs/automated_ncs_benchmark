@@ -136,13 +136,13 @@ ReceiverConfig::ReceiverConfig(std::string filename) {
     if(configJson.contains("RMatrixDiagonalValue")) {
         RMatrixDiagonalValue = configJson["RMatrixDiagonalValue"];
     } else {
-        RMatrixDiagonalValue = 0.0;
+        RMatrixDiagonalValue = 1.0;
     }
 
     if(configJson.contains("Q0MatrixDiagonalValue")) {
         Q0MatrixDiagonalValue = configJson["Q0MatrixDiagonalValue"];
     } else {
-        Q0MatrixDiagonalValue = 0.0;
+        Q0MatrixDiagonalValue = 1.0;
     }
 
     if(configJson.contains("sigmaSquare")) {
