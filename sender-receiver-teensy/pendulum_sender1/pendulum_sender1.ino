@@ -23,6 +23,8 @@ int historySize = 0;
 int* samplesHistory; // Acts as ring buffer
 #define NUM_SAMPLING_PERIODS 10
 int samplingPeriodsMillis[NUM_SAMPLING_PERIODS];
+float sensitivityFactor = 1.0;
+float sensitivityOffset = 0.0;
 int historyPosition = 0;
 
 double angleSpeed;
@@ -46,7 +48,7 @@ void setup() {
 
 void readInitializationValues(){
   // Expected Format: 
-  // H:historySize;period1;period2;period3;period4;period5;period6;period7;period8;period9;period10;\n
+  // H:sensitivityFactor;sensitivityOffset;historySize;period1;period2;period3;period4;period5;period6;period7;period8;period9;period10;\n
   bool receivedHistorySize = false;
   while(!receivedHistorySize){
     Serial.println("READY");
@@ -54,6 +56,8 @@ void readInitializationValues(){
 
     if(Serial.available() > 0){
       if(Serial.readStringUntil(':').startsWith("H")){
+        sensitivityFactor = Serial.readStringUntil(';').toInt();
+        sensitivityOffset = Serial.readStringUntil(';').toInt();
         historySize = Serial.readStringUntil(';').toInt();
         for(int i=0; i<NUM_SAMPLING_PERIODS; i++){
           samplingPeriodsMillis[i] = Serial.readStringUntil(';').toInt();
@@ -68,6 +72,7 @@ void readInitializationValues(){
           Serial.printf("%i, ", samplingPeriodsMillis[i]);
         }
         Serial.println();
+        Serial.printf("Received sensitivity factor:%f, offset: %f\n", sensitivityFactor, sensitivityOffset);
       }
       Serial.read(); // Remove \n
     }
