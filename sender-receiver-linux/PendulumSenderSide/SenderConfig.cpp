@@ -57,6 +57,19 @@ SenderConfig::SenderConfig(std::string filename) {
     } else {
         samplingPeriods = {100, 90, 80, 70, 60, 50, 40, 30, 20, 10}; // default value
     }
+
+    if (configJson.contains("samplingPeriodSensitivityFactor")) {
+        samplingPeriodSensitivityFactor = configJson["samplingPeriodSensitivityFactor"];
+    } else {
+        samplingPeriodSensitivityFactor = 1.0; // default value
+    }
+
+    if (configJson.contains("samplingPeriodSensitivityOffset")) {
+        samplingPeriodSensitivityOffset = configJson["samplingPeriodSensitivityOffset"];
+    } else {
+        samplingPeriodSensitivityOffset = 0.0; // default value
+    }
+
     if (configJson.contains("initialPriorityClass")) {
         initialPriorityClass = configJson["initialPriorityClass"];
     } else {
@@ -142,6 +155,8 @@ std::string SenderConfig::toString() const {
         result += std::to_string(period) + " ";
     }
     result += "\n";
+    result += "samplingPeriodSensitivityFactor: " + std::to_string(samplingPeriodSensitivityFactor) + "\n";
+    result += "samplingPeriodSensitivityOffset: " + std::to_string(samplingPeriodSensitivityOffset) + "\n";
     result += "serialDeviceName: " + serialDeviceName + "\n";
     result += "automaticallyFindSerialDevice: " + std::to_string(automaticallyFindSerialDevice) + "\n";
     result += "receiverAddress: " + receiverAddress + "\n";
@@ -150,4 +165,12 @@ std::string SenderConfig::toString() const {
 
 int SenderConfig::getBias() const {
     return bias;
+}
+
+float SenderConfig::getSamplingPeriodSensitivityFactor() const {
+    return samplingPeriodSensitivityFactor;
+}
+
+float SenderConfig::getSamplingPeriodSensitivityOffset() const {
+    return samplingPeriodSensitivityOffset;
 }

@@ -30,6 +30,8 @@
  *   "historySize": 100,
  *   "bias": 0,
  *   "samplingPeriods": [100, 90, 80, 70, 60, 50, 40, 30, 20, 10],
+ *   "samplingPeriodSensitivityFactor": 0.5,
+ *   "samplingPeriodSensitivityOffset": 2.0,
  *   "initialPriorityClass": 0,
  *   "serialDeviceName": "/dev/ttyACM0",
  *   "receiverAddress": "10.0.1.3"
@@ -39,6 +41,8 @@
  *  historySize = 100
  *  bias = 0
  *  samplingPeriods = [100, 90, 80, 70, 60, 50, 40, 30, 20, 10]
+ *  samplingPeriodSensitivityFactor: 1.0
+ *  samplingPeriodSensitivityOffset: 0.0
  *  initialPriorityClass = 0
  *  serialDeviceName = "auto"   // automatically find the device by scanning /dev/ttyACM*
  *
@@ -62,6 +66,8 @@ private:
     int historySize;
     int bias;
     std::vector<int> samplingPeriods;
+    float samplingPeriodSensitivityFactor;
+    float samplingPeriodSensitivityOffset;
     std::string serialDeviceName;
     bool automaticallyFindSerialDevice;
 
@@ -70,6 +76,10 @@ private:
 
 public:
     const std::vector<int> &getSamplingPeriods() const;
+
+    float getSamplingPeriodSensitivityFactor() const;
+
+    float getSamplingPeriodSensitivityOffset() const;
 
     int getHistorySize() const;
 

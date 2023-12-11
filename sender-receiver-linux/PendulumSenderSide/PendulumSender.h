@@ -33,6 +33,8 @@ private:
     int teensyHistorySize;
     int angleBias;
     std::vector<int> teensySamplingPeriods;
+    float samplingPeriodSensitivityFactor;
+    float samplingPeriodSensitivityOffset;
 
     uint64_t startTime;
     uint64_t lastLogTime = 0;
@@ -53,6 +55,7 @@ private:
 public:
     PendulumSender(PriorityDeterminer* priorityDeterminer, std::string serialDeviceName, std::string receiverHost,
                    int receiverPort, int teensyHistorySize, std::vector<int> teensySamplingPeriods,
+                   float samplingPeriodSensitivityFactor = 1.0, float samplingPeriodSensitivityOffset = 0.0,
                    std::function<void()> regularCallback = nullptr, std::string logFilePrefix = "pendulumsender",
                    int angleBias = 0);
     void start();

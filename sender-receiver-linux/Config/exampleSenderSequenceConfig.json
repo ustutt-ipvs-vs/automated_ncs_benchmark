@@ -31,6 +31,8 @@
   "historySize": 100,
   "bias": 0,
   "samplingPeriods": [100, 90, 80, 70, 60, 50, 40, 30, 20, 10],
+  "samplingPeriodSensitivityFactor": 1.0,
+  "samplingPeriodSensitivityOffset": 0.0,
   "serialDeviceName": "auto",
   "receiverAddress": "10.0.1.5"
 }

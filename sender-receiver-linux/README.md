@@ -138,6 +138,8 @@ The sender and receiver can be started with various parameter options:
   "historySize": 100,
   "bias": 0,
   "samplingPeriods": [100, 90, 80, 70, 60, 50, 40, 30, 20, 10],
+  "samplingPeriodSensitivityFactor": 1.0,
+  "samplingPeriodSensitivityOffset": 0.0,
   "initialPriorityClass": 0,
   "serialDeviceName": "auto",
   "receiverAddress": "10.0.1.3"
@@ -155,6 +157,8 @@ with
 - `bias` Bias as an integer value. Is *added* to the raw sensor value before sending it to the receiver. Default value: `0`
 - `samplingPeriods`: Array of 10 sampling periods in milliseconds, where the first element corresponds to the smallest change and the 10th element corresponds to the largest maximum absolute angle change.
 - `initialPriorityClass`: Priority class used at start ()
+- `samplingPeriodSensitivityFactor`: Factor by which the maximum absolute angle change is multiplied to determine sampling period. Default value: `1.0`
+- `samplingPeriodSensitivityOffset`: Offset by which the maximum absolute angle change is shifted to determine sampling period. Default value: `0.0`
 - `serialDeviceName`: Linux file which associated with the serial interface of the sender Teensy. If you set it to `auto`, the computer tries to recognize a Teensy device automatically. Default value: `auto`
 - `receiverAddress`: IP address of the receiver PC
 
@@ -186,6 +190,8 @@ This config allows to run multiple MPTB configurations one after another without
   "historySize": 100,
   "bias": 0,
   "samplingPeriods": [100, 90, 80, 70, 60, 50, 40, 30, 20, 10],
+  "samplingPeriodSensitivityFactor": 1.0,
+  "samplingPeriodSensitivityOffset": 0.0,
   "serialDeviceName": "auto",
   "receiverAddress": "10.0.1.5"
 }

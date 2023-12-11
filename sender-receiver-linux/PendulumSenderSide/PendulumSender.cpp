@@ -14,7 +14,9 @@ const int RESTRICT_LOGGING_TO_MS = 50;
 
 PendulumSender::PendulumSender(PriorityDeterminer* priorityDeterminer, std::string serialDeviceName,
                                std::string receiverHost, int receiverPort, int teensyHistorySize,
-                               std::vector<int> teensySamplingPeriods, std::function<void()> regularCallback,
+                               std::vector<int> teensySamplingPeriods,
+                               float samplingPeriodSensitivityFactor, float samplingPeriodSensitivityOffset,
+                               std::function<void()> regularCallback,
                                std::string logFilePrefix, int angleBias)
                                : regularCallback(regularCallback) {
     this->serialDeviceName = serialDeviceName;
@@ -26,6 +28,8 @@ PendulumSender::PendulumSender(PriorityDeterminer* priorityDeterminer, std::stri
     this->priorityDeterminer = priorityDeterminer;
     this->teensyHistorySize = teensyHistorySize;
     this->teensySamplingPeriods = teensySamplingPeriods;
+    this->samplingPeriodSensitivityFactor = samplingPeriodSensitivityFactor;
+    this->samplingPeriodSensitivityOffset = samplingPeriodSensitivityOffset;
     this->logger = new PendulumLogger(logFilePrefix);
     this->angleBias = angleBias;
 }
@@ -43,8 +47,11 @@ void PendulumSender::start() {
 
     // Send Teensy history size:
     std::cout << "Sending Teensy history size: " << teensyHistorySize << std::endl;
-    // Create string of form "H:historySize;period1;period2;period3;...\n"
-    std::string teensyInitParams = "H:" + std::to_string(teensyHistorySize) + ";";
+    // Create string of form "H:sensitivityFactor;sensitivityOffset;historySize;period1;period2;period3;...\n"
+    std::string teensyInitParams = "H:"
+            + std::to_string(samplingPeriodSensitivityFactor) + ";"
+            + std::to_string(samplingPeriodSensitivityOffset) + ";"
+            + std::to_string(teensyHistorySize) + ";";
     for (int period : teensySamplingPeriods) {
         teensyInitParams += std::to_string(period) + ";";
     }
@@ -54,8 +61,8 @@ void PendulumSender::start() {
     // Wait for first serial values to arrive, before going into main loop:
     std::cout << "Waiting for first sensor value" << std::endl;
     serialSensor.Read(serialInputBuffer);
-    serialInputBuffer.clear();
     std::cout << serialInputBuffer << std::endl;
+    serialInputBuffer.clear();
 
     startTime = timeSinceEpochMillisec();
 
@@ -78,6 +85,8 @@ void PendulumSender::start() {
                 singleSample = applyAngleBias(singleSample);
                 sendPacket(singleSample);
             }
+        } else {
+            std::cout << serialInputBuffer << std::endl;
         }
 
         if(regularCallback != nullptr){

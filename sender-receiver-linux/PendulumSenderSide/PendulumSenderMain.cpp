@@ -66,6 +66,9 @@ int teensyAngleBias = 0;
 // Different sampling periods used by the Teensy sender in milliseconds:
 std::vector<int> teensySamplingPeriods = {100, 90, 80, 70, 60, 50, 40, 30, 20, 10};
 
+float samplingPeriodSensitivityFactor = 1.0;
+float samplingPeriodSensitivityOffset = 0.0;
+
 std::vector<double> strictPrioritySamplingPeriods = {90, 80, 70, 60, 50, 40, 30, 20};
 std::vector<double> mediumPrioritySamplingPeriods = {75, 59, 43, 26, 10, 9, 8, 7};
 std::vector<double> generousPrioritySamplingPeriods = {50, 30, 10, 9, 8, 7, 6, 5};
@@ -114,6 +117,7 @@ int main(int argc, char *argv[]) {
         determiner = generateDeterminerFromCommandLineArguments(argc, argv);
 
         sender = new PendulumSender(determiner, device, host, port, teensyHistorySize, teensySamplingPeriods,
+                                    samplingPeriodSensitivityFactor, samplingPeriodSensitivityOffset,
                                     nullptr, "pendulumsender", teensyAngleBias);
         sender->start();
     }
@@ -152,6 +156,8 @@ void runMptbSequence(int argc, char *const *argv){
     teensyHistorySize = config.getHistorySize();
     teensyAngleBias = config.getBias();
     teensySamplingPeriods = config.getSamplingPeriods();
+    samplingPeriodSensitivityFactor = config.getSamplingPeriodSensitivityFactor();
+    samplingPeriodSensitivityOffset = config.getSamplingPeriodSensitivityOffset();
 
     if(config.isAutomaticallyFindSerialDevice()){
         std::cout << "Automatically finding serial device..." << std::endl;
@@ -189,7 +195,9 @@ void runMptbSequence(int argc, char *const *argv){
 
     PriorityDeterminer *determiner = getIthSubconfigMptbDeterminer(0, config);
     sender = new PendulumSender(determiner, device, host, port,
-                                teensyHistorySize, teensySamplingPeriods, regularCallback, "pendulumsender_config_1",
+                                teensyHistorySize, teensySamplingPeriods,
+                                samplingPeriodSensitivityFactor, samplingPeriodSensitivityOffset,
+                                regularCallback, "pendulumsender_config_1",
                                 teensyAngleBias);
     sender->start();
 }
@@ -362,6 +370,8 @@ PriorityDeterminer *generateDeterminerFromCommandLineArguments(int argc, char *c
         teensyHistorySize = config.getHistorySize();
         teensyAngleBias = config.getBias();
         teensySamplingPeriods = config.getSamplingPeriods();
+        samplingPeriodSensitivityFactor = config.getSamplingPeriodSensitivityFactor();
+        samplingPeriodSensitivityOffset = config.getSamplingPeriodSensitivityOffset();
 
         if(config.isAutomaticallyFindSerialDevice()){
             std::cout << "Automatically finding serial device..." << std::endl;

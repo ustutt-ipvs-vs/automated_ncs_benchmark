@@ -38,6 +38,18 @@ SenderMultiConfig::SenderMultiConfig(std::string filename) {
         samplingPeriods = {100, 90, 80, 70, 60, 50, 40, 30, 20, 10}; // default value
     }
 
+    if (configJson.contains("samplingPeriodSensitivityFactor")) {
+        samplingPeriodSensitivityFactor = configJson["samplingPeriodSensitivityFactor"];
+    } else {
+        samplingPeriodSensitivityFactor = 1.0; // default value
+    }
+
+    if (configJson.contains("samplingPeriodSensitivityOffset")) {
+        samplingPeriodSensitivityOffset = configJson["samplingPeriodSensitivityOffset"];
+    } else {
+        samplingPeriodSensitivityOffset = 0.0; // default value
+    }
+
     if(historySize < 0){
         throw std::runtime_error("historySize must be at least 0");
     }
@@ -84,6 +96,8 @@ std::string SenderMultiConfig::toString() const {
         result += std::to_string(samplingPeriod) + " ";
     }
     result += "\n";
+    result += "samplingPeriodSensitivityFactor: " + std::to_string(samplingPeriodSensitivityFactor) + "\n";
+    result += "samplingPeriodSensitivityOffset: " + std::to_string(samplingPeriodSensitivityOffset) + "\n";
     result += "serialDeviceName: " + serialDeviceName + "\n";
     result += "receiverAddress: " + receiverAddress + "\n";
     result += "mptbSubConfigs:\n";
@@ -95,6 +109,14 @@ std::string SenderMultiConfig::toString() const {
 
 int SenderMultiConfig::getBias() const {
     return bias;
+}
+
+float SenderMultiConfig::getSamplingPeriodSensitivityFactor() const {
+    return samplingPeriodSensitivityFactor;
+}
+
+float SenderMultiConfig::getSamplingPeriodSensitivityOffset() const {
+    return samplingPeriodSensitivityOffset;
 }
 
 
