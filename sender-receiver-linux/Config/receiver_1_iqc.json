@@ -1,0 +1,16 @@
+{
+  "receiverAddress": "10.0.1.3",
+  "pendulumType": "newPendulum",
+  "serialDeviceName": "auto",
+  "doPauses": false,
+  "timeBetweenPausesMillis": 20000,
+  "pauseDurationMillis": 800,
+  "swingUpBehavior":"swingUpAtStart",
+  "sailType":"sail17",
+
+  "controllerKVector": [13.6723, 13.5022, -74.6153, -19.8637],
+  "controllerIntegratorParam": 5.0322,
+  "RMatrixDiagonalValue": 0.01,
+  "Q0MatrixDiagonalValue": 0.01,
+  "sigmaSquare": 1.0
+}
