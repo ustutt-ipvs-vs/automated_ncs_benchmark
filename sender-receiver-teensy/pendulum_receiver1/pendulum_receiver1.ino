@@ -196,7 +196,12 @@ BLA::Matrix<4,4> K_k;
 BLA::Matrix<4,1> x_k;
 BLA::Matrix<4,4> P_k;
 
-bool useISTApproach = true;
+
+enum approach {
+  IST_KALMAN_IST_CONTROLLER,
+  IST_KALMAN_CARABELLI_CONTROLLER,
+  CARABELLI_KALMAN_CARABELLI_CONTROLLER
+} approachUsed = IST_KALMAN_IST_CONTROLLER;
 
 bool limitLeft;
 bool limitRight;
@@ -297,11 +302,12 @@ void updateParametersForSamplingPeriod(unsigned samplingPeriod){
   Ts = balancePeriod / 1000.0;  // sampling period in seconds
   fs = 1000.0 / balancePeriod;  // sampling frequency in Hz
 
-  if(useISTApproach){
+  if(approachUsed == IST_KALMAN_IST_CONTROLLER || approachUsed == IST_KALMAN_CARABELLI_CONTROLLER){
     A = identityMatrix4x4 + A_cont * Ts;
     B = B_cont * Ts;
     Q = Q_0 * Ts;
-  } else {
+  }
+  if(approachUsed == CARABELLI_KALMAN_CARABELLI_CONTROLLER || approachUsed == IST_KALMAN_CARABELLI_CONTROLLER) {
     switch(samplingPeriod){
       case 10:
         Kxc = 5.460879579024502;
@@ -798,13 +804,31 @@ void initializeCartState() {
   initTimer = 0;
 }
 
+void setApproachFromParameter(int parameter){
+  switch(parameter){
+    case 0: approachUsed = IST_KALMAN_IST_CONTROLLER; break;
+    case 1: approachUsed = CARABELLI_KALMAN_CARABELLI_CONTROLLER; break;
+    case 2: approachUsed = IST_KALMAN_CARABELLI_CONTROLLER; break;
+  }
+}
+
+String getUsedApproachString(){
+  switch(approachUsed){
+    case IST_KALMAN_IST_CONTROLLER: return "IST_KALMAN_IST_CONTROLLER";
+    case CARABELLI_KALMAN_CARABELLI_CONTROLLER: return "CARABELLI_KALMAN_CARABELLI_CONTROLLER";
+    case IST_KALMAN_CARABELLI_CONTROLLER: return "IST_KALMAN_CARABELLI_CONTROLLER";
+  }
+  return "";
+}
+
 void readInitializationValues(){
   int newMotorMaxRPM;
   float newRevolutionsPerTrack;
 
   // Expected Format:
-  // I:motorMaxRPM;revolutionsPerTrack;doSwingUpAtStart;swingUpDistanceFactor;swingUpSpeedFactor;swingUpAccelerationFactor;\n
+  // I:motorMaxRPM;revolutionsPerTrack;doSwingUpAtStart;swingUpDistanceFactor;swingUpSpeedFactor;swingUpAccelerationFactor;approach\n
   // where doSwingUpAtStart in {0, 1}
+  // and approach in {0, 1, 2} with 0: IST_KALMAN_IST_CONTROLLER, 1: CARABELLI_KALMAN_CARABELLI_CONTROLLER, 2: IST_KALMAN_CARABELLI_CONTROLLER
   bool receivedInitValues = false;
   while(!receivedInitValues){
     Serial.println("READY");
@@ -827,6 +851,7 @@ void readInitializationValues(){
         r_factor = Serial.readStringUntil(';').toFloat();
         q0_factor = Serial.readStringUntil(';').toFloat();
         sigmaSquare = Serial.readStringUntil(';').toFloat();
+        setApproachFromParameter(Serial.readStringUntil(';').toInt());
 
         R = identityMatrix4x4 * r_factor;
         Q_0 = identityMatrix4x4 * q0_factor;
@@ -838,9 +863,9 @@ void readInitializationValues(){
         // Echo received values to computer for validation:
         Serial.printf("Received init values: motor max RPM: %i, revolutions per track: %f, swing up at start: %i, "
           "swing up distance factor: %f, swing up speed factor %f , swing up accel. factor: %f, "
-          "K_iqc: [%f, %f, %f, %f], K_iqc_integrator: %f, r_factor: %f, q0_factor: %f, sigmaSquare: %f\n", 
+          "K_iqc: [%f, %f, %f, %f], K_iqc_integrator: %f, r_factor: %f, q0_factor: %f, sigmaSquare: %f, approach: %s\n", 
         newMotorMaxRPM, newRevolutionsPerTrack, doSwingUpAtStart, swingUpDistanceFactor, swingUpSpeedFactor, swingUpAccelerationFactor,
-        K_iqc(0), K_iqc(1), K_iqc(2), K_iqc(3), K_iqc_integrator, r_factor, q0_factor, sigmaSquare);
+        K_iqc(0), K_iqc(1), K_iqc(2), K_iqc(3), K_iqc_integrator, r_factor, q0_factor, sigmaSquare, getUsedApproachString().c_str());
       }
       Serial.read(); // Remove \n
     }
@@ -1122,6 +1147,20 @@ void updateRotaryEncoderValue() {
     u_accel = (~K_iqc * x_k)(0, 0);
     xi_cart += cartPos * Ts; // integrator
     u_accel += K_iqc_integrator * xi_cart;
+  }
+
+  void updateKalmanUsingISTUpdateLQRUsingCarabelli(float cartPos, float cartSpeed, float poleAngle, float angularVelocity){
+    BLA::Matrix<4,1> z_k = {cartPos, cartSpeed, poleAngle, angularVelocity};
+
+    // Kalman filter (~A means "A transposed"):
+    x_k_k_minus_1 = A * x_k + B * u_accel;
+    P_k_k_minus_1 = A * P_k * ~A + Q;
+    K_k = P_k_k_minus_1 * ~C * BLA::Inverse(C * P_k_k_minus_1 * ~C + R);
+    x_k = x_k_k_minus_1 + K_k * (z_k - C * x_k_k_minus_1);
+    P_k = (identityMatrix4x4 - K_k * C) * P_k_k_minus_1;
+
+    u_accel = Kxc * x_k(0) + Kvc * x_k(1) + Kxp * x_k(2) + Kvp * x_k(3);  // [m/s²]
+    u_accel += Kxic * xi_cart;
   }
 
   void loop() {
@@ -1429,10 +1468,12 @@ void updateRotaryEncoderValue() {
         //   u_accel = Kxc * x_cart + Kvc * v_cart + Kxp * x_pole + Kvp * v_pole;  // [m/s²]
         //   u_accel += Kxic * xi_cart;
 
-        if(useISTApproach){
+        if(approachUsed == IST_KALMAN_IST_CONTROLLER){
           updateUsingISTKalmanAndLQR(cartPos, cartSpeed, poleAngle, angularVelocity);
-        } else {
+        } else if (approachUsed == CARABELLI_KALMAN_CARABELLI_CONTROLLER){
           updateUsingCarabelliKalmanAndLQR(cartPos, cartSpeed, poleAngle);
+        } else if (approachUsed == IST_KALMAN_CARABELLI_CONTROLLER){
+          updateKalmanUsingISTUpdateLQRUsingCarabelli(cartPos, cartSpeed, poleAngle, angularVelocity);
         }
 
 
@@ -1456,7 +1497,7 @@ void updateRotaryEncoderValue() {
 
         //if (k % 10 == 0) {
         if(!sendEncoderValuesThroughFeedbackLink){
-          if(useISTApproach){
+          if(approachUsed == IST_KALMAN_IST_CONTROLLER || approachUsed == IST_KALMAN_CARABELLI_CONTROLLER){
             Serial.printf("log:%u;%f;%f;%f;%f;%f;%f;%f;%f;%f\n", k,
                           cartPos, cartSpeed, poleAngle,
                           x_k(0), x_k(1), x_k(2), x_k(3),
