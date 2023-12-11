@@ -99,23 +99,23 @@ void calculateTransmissionPeriod(){
 
     previousEncoderValue = currentEncoderValue;
 
-    if(compareValue <= 1){
+    if(compareValue <= 1.0 * sensitivityFactor + sensitivityOffset){
       transmissionPeriodMillis = samplingPeriodsMillis[0];
-    } else if(compareValue <= 2){
+    } else if(compareValue <= 2.0 * sensitivityFactor + sensitivityOffset){
       transmissionPeriodMillis = samplingPeriodsMillis[1];
-    } else if(compareValue <= 3){
+    } else if(compareValue <= 3.0 * sensitivityFactor + sensitivityOffset){
       transmissionPeriodMillis = samplingPeriodsMillis[2];
-    } else if(compareValue <= 4){
+    } else if(compareValue <= 4.0 * sensitivityFactor + sensitivityOffset){
       transmissionPeriodMillis = samplingPeriodsMillis[3];
-    } else if(compareValue <= 5){
+    } else if(compareValue <= 5.0 * sensitivityFactor + sensitivityOffset){
       transmissionPeriodMillis = samplingPeriodsMillis[4];
-    } else if(compareValue <= 6){
+    } else if(compareValue <= 6.0 * sensitivityFactor + sensitivityOffset){
       transmissionPeriodMillis = samplingPeriodsMillis[5];
-    } else if(compareValue <= 7){
+    } else if(compareValue <= 7.0 * sensitivityFactor + sensitivityOffset){
       transmissionPeriodMillis = samplingPeriodsMillis[6];
-    } else if(compareValue <= 8){
+    } else if(compareValue <= 8.0 * sensitivityFactor + sensitivityOffset){
       transmissionPeriodMillis = samplingPeriodsMillis[7];
-    } else if(compareValue <= 9){
+    } else if(compareValue <= 9.0 * sensitivityFactor + sensitivityOffset){
       transmissionPeriodMillis = samplingPeriodsMillis[8];
     } else {
       transmissionPeriodMillis = samplingPeriodsMillis[9];
