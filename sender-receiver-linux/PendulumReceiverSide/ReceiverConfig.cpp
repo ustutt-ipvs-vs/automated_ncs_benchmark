@@ -192,7 +192,7 @@ float ReceiverConfig::getSwingUpDistanceFactor() const {
     } if(pendulumSailType == "sail14"){
         return 0.13;
     } if(pendulumSailType == "sail17"){
-        return 0.10; // // TODO: measure (dummy value)
+        return 0.122; // // TODO: measure (dummy value)
     } if(pendulumSailType == "sail20"){
         return 0.10; // TODO: measure (dummy value)
     } else {
