@@ -252,3 +252,4 @@ with
     - `istKalmanIstController`: use the Kalman filter and the controller from IST
     - `carabelliKalmanCarabelliController`: use the Kalman filter and the controller from Carabelli
     - `istKalmanCarabelliController`: use the Kalman filter from IST and the controller from Carabelli
+    - `carabelliKalmanIstController`: use the Kalman filter from Carabelli and the controller from IST

@@ -160,6 +160,8 @@ ReceiverConfig::ReceiverConfig(std::string filename) {
             controlApproach = CARABELLI_KALMAN_CARABELLI_CONTROLLER;
         } else if(controlApproachString == "istKalmanCarabelliController"){
             controlApproach = IST_KALMAN_CARABELLI_CONTROLLER;
+        } else if(controlApproachString == "carabelliKalmanIstController"){
+            controlApproach = CARABELLI_KALMAN_IST_CONTROLLER;
         } else{
             std::string optionsString;
             for(const std::string& option : controlApproachStrings){
@@ -305,6 +307,8 @@ int ReceiverConfig::getControlApproachInt() const {
             return 1;
         case ReceiverConfig::ControlApproach::IST_KALMAN_CARABELLI_CONTROLLER:
             return 2;
+        case ReceiverConfig::ControlApproach::CARABELLI_KALMAN_IST_CONTROLLER:
+            return 3;
         default:
             throw std::runtime_error("Unknown control approach: " + getControlApproachString());
     }

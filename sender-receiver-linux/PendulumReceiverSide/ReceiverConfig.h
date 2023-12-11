@@ -46,6 +46,7 @@
  * - istKalmanIstController: use the Kalman filter and the controller from IST
  * - carabelliKalmanCarabelliController: use the Kalman filter and the controller from Carabelli
  * - istKalmanCarabelliController: use the Kalman filter from IST and the controller from Carabelli
+ * - carabelliKalmanIstController: use the Kalman filter from Carabelli and the controller from IST
  * Default is istKalmanIstController.
  *
  * The serialDeviceName can be set to "auto" to automatically find the a Teensy device.
@@ -63,7 +64,8 @@ public:
     enum ControlApproach {
         IST_KALMAN_IST_CONTROLLER,
         CARABELLI_KALMAN_CARABELLI_CONTROLLER,
-        IST_KALMAN_CARABELLI_CONTROLLER
+        IST_KALMAN_CARABELLI_CONTROLLER,
+        CARABELLI_KALMAN_IST_CONTROLLER
     };
 
 private:
@@ -77,7 +79,8 @@ private:
     const std::vector<std::string> controlApproachStrings = {
             "istKalmanIstController",
             "carabelliKalmanCarabelliController",
-            "istKalmanCarabelliController"
+            "istKalmanCarabelliController",
+            "carabelliKalmanIstController"
     };
 
     std::string receiverAddress;

@@ -200,7 +200,8 @@ BLA::Matrix<4,4> P_k;
 enum approach {
   IST_KALMAN_IST_CONTROLLER,
   IST_KALMAN_CARABELLI_CONTROLLER,
-  CARABELLI_KALMAN_CARABELLI_CONTROLLER
+  CARABELLI_KALMAN_CARABELLI_CONTROLLER,
+  CARABELLI_KALMAN_IST_CONTROLLER
 } approachUsed = IST_KALMAN_IST_CONTROLLER;
 
 bool limitLeft;
@@ -307,7 +308,8 @@ void updateParametersForSamplingPeriod(unsigned samplingPeriod){
     B = B_cont * Ts;
     Q = Q_0 * Ts;
   }
-  if(approachUsed == CARABELLI_KALMAN_CARABELLI_CONTROLLER || approachUsed == IST_KALMAN_CARABELLI_CONTROLLER) {
+  if(approachUsed == CARABELLI_KALMAN_CARABELLI_CONTROLLER || approachUsed == IST_KALMAN_CARABELLI_CONTROLLER 
+    || approachUsed == CARABELLI_KALMAN_IST_CONTROLLER) {
     switch(samplingPeriod){
       case 10:
         Kxc = 5.460879579024502;
@@ -809,6 +811,7 @@ void setApproachFromParameter(int parameter){
     case 0: approachUsed = IST_KALMAN_IST_CONTROLLER; break;
     case 1: approachUsed = CARABELLI_KALMAN_CARABELLI_CONTROLLER; break;
     case 2: approachUsed = IST_KALMAN_CARABELLI_CONTROLLER; break;
+    case 3: approachUsed = CARABELLI_KALMAN_IST_CONTROLLER; break;
   }
 }
 
@@ -817,6 +820,7 @@ String getUsedApproachString(){
     case IST_KALMAN_IST_CONTROLLER: return "IST_KALMAN_IST_CONTROLLER";
     case CARABELLI_KALMAN_CARABELLI_CONTROLLER: return "CARABELLI_KALMAN_CARABELLI_CONTROLLER";
     case IST_KALMAN_CARABELLI_CONTROLLER: return "IST_KALMAN_CARABELLI_CONTROLLER";
+    case CARABELLI_KALMAN_IST_CONTROLLER: return "CARABELLI_KALMAN_IST_CONTROLLER";
   }
   return "";
 }
@@ -1163,6 +1167,31 @@ void updateRotaryEncoderValue() {
     u_accel += Kxic * xi_cart;
   }
 
+  void updateKalmanUsingCarabelliUpdateLQRUsingIST(float cartPos, float cartSpeed, float poleAngle){
+    // Kalman filter from Carabelli
+    float x_cart_p = x_cart;
+    float v_cart_p = v_cart;
+    float x_pole_p = x_pole;
+    float v_pole_p = v_pole;
+
+    x_cart = Lx11 * x_cart_p + Lx12 * v_cart_p + Lu1 * u_accel + Ly11 * cartPos + Ly12 * cartSpeed;
+    v_cart = Lx21 * x_cart_p + Lx22 * v_cart_p + Lu2 * u_accel + Ly21 * cartPos + Ly22 * cartSpeed;
+    x_pole = Lx33 * x_pole_p + Lx34 * v_pole_p + Lu3 * u_accel + Ly33 * poleAngle;
+    v_pole = Lx43 * x_pole_p + Lx44 * v_pole_p + Lu4 * u_accel + Ly43 * poleAngle;
+
+    x_cart = f_kf * x_cart + (1 - f_kf) * cartPos;
+    v_cart = f_kf * v_cart + (1 - f_kf) * cartSpeed;
+    x_pole = f_kf * x_pole + (1 - f_kf) * poleAngle;
+    v_pole = f_kf * v_pole + (1 - f_kf) * (poleAngle - poleAngle_p) * fs;
+
+    poleAngle_p = poleAngle;
+
+    // Controller from IST:
+    u_accel = (~K_iqc * x_k)(0, 0);
+    xi_cart += cartPos * Ts; // integrator
+    u_accel += K_iqc_integrator * xi_cart;
+  }
+
   void loop() {
     // check limit switches
     checkLimitSwitches();
@@ -1474,7 +1503,10 @@ void updateRotaryEncoderValue() {
           updateUsingCarabelliKalmanAndLQR(cartPos, cartSpeed, poleAngle);
         } else if (approachUsed == IST_KALMAN_CARABELLI_CONTROLLER){
           updateKalmanUsingISTUpdateLQRUsingCarabelli(cartPos, cartSpeed, poleAngle, angularVelocity);
-        }
+        }  else if (approachUsed == IST_KALMAN_CARABELLI_CONTROLLER){
+          updateKalmanUsingCarabelliUpdateLQRUsingIST(cartPos, cartSpeed, poleAngle);
+        } 
+
 
 
           u_accel = constrain(u_accel, -aMaxMeters, aMaxMeters);  // clamp to admissible range
