@@ -1183,11 +1183,14 @@ void updateRotaryEncoderValue() {
     v_cart = f_kf * v_cart + (1 - f_kf) * cartSpeed;
     x_pole = f_kf * x_pole + (1 - f_kf) * poleAngle;
     v_pole = f_kf * v_pole + (1 - f_kf) * (poleAngle - poleAngle_p) * fs;
+    BLA::Matrix<4,1> x_k_carabelli = {x_cart, v_cart, x_pole, v_pole};
 
     poleAngle_p = poleAngle;
 
+    
+
     // Controller from IST:
-    u_accel = (~K_iqc * x_k)(0, 0);
+    u_accel = (~K_iqc * x_k_carabelli)(0, 0);
     xi_cart += cartPos * Ts; // integrator
     u_accel += K_iqc_integrator * xi_cart;
   }
@@ -1503,7 +1506,7 @@ void updateRotaryEncoderValue() {
           updateUsingCarabelliKalmanAndLQR(cartPos, cartSpeed, poleAngle);
         } else if (approachUsed == IST_KALMAN_CARABELLI_CONTROLLER){
           updateKalmanUsingISTUpdateLQRUsingCarabelli(cartPos, cartSpeed, poleAngle, angularVelocity);
-        }  else if (approachUsed == IST_KALMAN_CARABELLI_CONTROLLER){
+        }  else if (approachUsed == CARABELLI_KALMAN_IST_CONTROLLER){
           updateKalmanUsingCarabelliUpdateLQRUsingIST(cartPos, cartSpeed, poleAngle);
         } 
 
