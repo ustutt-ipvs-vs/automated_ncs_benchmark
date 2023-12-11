@@ -213,7 +213,13 @@ with
   "timeBetweenPausesMillis": 20000,
   "pauseDurationMillis": 800,
   "swingUpBehavior": "crashAndSwingUpAtNewConfig",
-  "sailType": "sail14"
+  "sailType": "sail14",
+  "controllerKVector": [1.0, 2.0, 3.0, 4.0],
+  "controllerIntegratorParam": 1.0,
+  "RMatrixDiagonalValue": 1.0,
+  "Q0MatrixDiagonalValue": 1.0,
+  "sigmaSquare": 1.0,
+  "controlApproach":"ist_kalman_ist_controller"
 }
 ```
 
@@ -237,3 +243,12 @@ with
     - `sail14`
     - `sail17`
     - `sail20`
+- `controllerKVector`: Vector of 4 floating point numbers. The IST controller uses this vector as the K vector. Default: `[3.6723, 13.5022, -74.6153, -19.8637]`
+- `controllerIntegratorParam`: Floating point number. The IST controller uses this value as the integrator parameter. Default: `5.0322`
+- `RMatrixDiagonalValue`: Floating point number. The IST Kalman filter uses this value as the diagonal value of the R matrix. Default: `1.0`
+- `Q0MatrixDiagonalValue`: Floating point number. The IST Kalman filter uses this value as the diagonal value of the Q0 matrix. Default: `1.0`
+- `sigmaSquare`: Floating point number. The IST Kalman filter uses this value to initialize `P_k_k_minus_1`. Default: `1.0`
+- `controlApproach`: String. Determines which control approach is used. Default: `istKalmanIstController`. Possible options:
+    - `istKalmanIstController`: use the Kalman filter and the controller from IST
+    - `carabelliKalmanCarabelliController`: use the Kalman filter and the controller from Carabelli
+    - `istKalmanCarabelliController`: use the Kalman filter from IST and the controller from Carabelli

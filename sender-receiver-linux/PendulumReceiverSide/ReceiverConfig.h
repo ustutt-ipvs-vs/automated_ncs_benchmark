@@ -20,7 +20,8 @@
  *   "controllerIntegratorParam": 1.0,
  *   "RMatrixDiagonalValue": 1.0,
  *   "Q0MatrixDiagonalValue": 1.0,
- *   "sigmaSquare": 1.0
+ *   "sigmaSquare": 1.0,
+ *   "controlApproach":"ist_kalman_ist_controller"
  * }
  *
  * The pendulum types available are:
@@ -41,6 +42,12 @@
  * - sail20: 20cm long sail
  * Default is noSail.
  *
+ * The controlApproach options are:
+ * - istKalmanIstController: use the Kalman filter and the controller from IST
+ * - carabelliKalmanCarabelliController: use the Kalman filter and the controller from Carabelli
+ * - istKalmanCarabelliController: use the Kalman filter from IST and the controller from Carabelli
+ * Default is istKalmanIstController.
+ *
  * The serialDeviceName can be set to "auto" to automatically find the a Teensy device.
  * It is also possible to specify the device name manually, e.g. "/dev/ttyACM0".
  */
@@ -53,12 +60,24 @@ public:
         NO_SWING_UP
     };
 
+    enum ControlApproach {
+        IST_KALMAN_IST_CONTROLLER,
+        CARABELLI_KALMAN_CARABELLI_CONTROLLER,
+        IST_KALMAN_CARABELLI_CONTROLLER
+    };
+
 private:
     const std::vector<std::string> swingUpBehaviorStrings = {
             "swingUpAtStart",
             "swingUpAtNewConfigIfCrashed",
             "crashAndSwingUpAtNewConfig",
             "noSwingUp"
+    };
+
+    const std::vector<std::string> controlApproachStrings = {
+            "istKalmanIstController",
+            "carabelliKalmanCarabelliController",
+            "istKalmanCarabelliController"
     };
 
     std::string receiverAddress;
@@ -76,6 +95,8 @@ private:
     float RMatrixDiagonalValue;
     float Q0MatrixDiagonalValue;
     float sigmaSquare;
+    enum ControlApproach controlApproach;
+
 
 public:
     const std::string &getReceiverAddress() const;
@@ -122,6 +143,13 @@ public:
     float getQ0MatrixDiagonalValue() const;
 
     float getSigmaSquare() const;
+
+
+    ControlApproach getControlApproch() const;
+
+    std::string getControlApproachString() const;
+
+    int getControlApproachInt() const;
 
     /**
      * Returns a string containing all the parameters that are used by the Kalman filter and the controller.

@@ -51,6 +51,7 @@ std::string ReceiverConfig::toString() const {
     result += "RMatrixDiagonalValue: " + std::to_string(RMatrixDiagonalValue) + "\n";
     result += "Q0MatrixDiagonalValue: " + std::to_string(Q0MatrixDiagonalValue) + "\n";
     result += "sigmaSquare: " + std::to_string(sigmaSquare) + "\n";
+    result += "controlApproach: " + getControlApproachString() + "\n";
 
     return result;
 }
@@ -149,6 +150,29 @@ ReceiverConfig::ReceiverConfig(std::string filename) {
         sigmaSquare = configJson["sigmaSquare"];
     } else {
         sigmaSquare = 1.0;
+    }
+
+    if(configJson.contains("controlApproach")) {
+        std::string controlApproachString = configJson["controlApproach"];
+        if(controlApproachString == "istKalmanIstController"){
+            controlApproach = IST_KALMAN_IST_CONTROLLER;
+        } else if(controlApproachString == "carabelliKalmanCarabelliController"){
+            controlApproach = CARABELLI_KALMAN_CARABELLI_CONTROLLER;
+        } else if(controlApproachString == "istKalmanCarabelliController"){
+            controlApproach = IST_KALMAN_CARABELLI_CONTROLLER;
+        } else{
+            std::string optionsString;
+            for(const std::string& option : controlApproachStrings){
+                optionsString += option;
+                if (option != controlApproachStrings.back()){
+                    optionsString += ", ";
+                }
+            }
+            throw std::runtime_error("Unknown controlApproach: " + controlApproachString
+             + " The following options are available: " + optionsString);
+        }
+    } else {
+        controlApproach = IST_KALMAN_IST_CONTROLLER;
     }
 }
 
@@ -261,7 +285,29 @@ std::string ReceiverConfig::getKalmanAndControllerParameterString() {
     result += std::to_string(RMatrixDiagonalValue) + ";";
     result += std::to_string(Q0MatrixDiagonalValue) + ";";
     result += std::to_string(sigmaSquare) + ";";
+    result += std::to_string(getControlApproachInt()) + ";";
     return result;
+}
+
+ReceiverConfig::ControlApproach ReceiverConfig::getControlApproch() const {
+    return controlApproach;
+}
+
+std::string ReceiverConfig::getControlApproachString() const {
+    return controlApproachStrings.at(controlApproach);
+}
+
+int ReceiverConfig::getControlApproachInt() const {
+    switch(controlApproach){
+        case ReceiverConfig::ControlApproach::IST_KALMAN_IST_CONTROLLER:
+            return 0;
+        case ReceiverConfig::ControlApproach::CARABELLI_KALMAN_CARABELLI_CONTROLLER:
+            return 1;
+        case ReceiverConfig::ControlApproach::IST_KALMAN_CARABELLI_CONTROLLER:
+            return 2;
+        default:
+            throw std::runtime_error("Unknown control approach: " + getControlApproachString());
+    }
 }
 
 
