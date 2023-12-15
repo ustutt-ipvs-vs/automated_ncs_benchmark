@@ -1,16 +1,18 @@
 {
   "mptbSequence": [
     {
-      "durationMinutes": 1.0,
+      "name": "mptb1",
+      "durationMinutes": 2.0,
       "b": 200.0,
-      "r": 35.0,
+      "r": 5.0,
       "numThresholds": 3,
       "thresholds": [-20000000, -200, -400],
       "prioMapping": [0, 1, 2, 7],
       "costs": [1, 1, 1, 0]
     },
     {
-      "durationMinutes": 0.5,
+      "name": "mptb2",
+      "durationMinutes": 2.0,
       "b": 5000.0,
       "r": 350.0,
       "numThresholds": 2,
@@ -19,7 +21,8 @@
       "costs": [2, 1, 0]
     },
     {
-      "durationMinutes": 0.5,
+      "name": "mptb3",
+      "durationMinutes": 2.0,
       "b": 5000.0,
       "r": 350.0,
       "numThresholds": 2,
