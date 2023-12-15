@@ -76,6 +76,8 @@ public:
     void startNewLogfile(std::string previousConfigName);
 
     void handleNewConfigSignal();
+
+    void handleEndSignal();
 };
 
 

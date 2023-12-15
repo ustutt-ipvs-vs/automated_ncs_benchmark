@@ -80,8 +80,7 @@ void PendulumReceiver::start() {
 
         // Detect end signal of the form "EndSignal\n":
         if (networkInput.rfind("EndSignal", 0) == 0) {
-            std::cout << "End signal received." << std::endl;
-            stop();
+            handleEndSignal();
             continue;
         }
 
@@ -118,9 +117,10 @@ void PendulumReceiver::start() {
     }
 }
 
+/**
+ * Handles the new config signal of the form "NewConfig:number;previousConfigName\n"
+ */
 void PendulumReceiver::handleNewConfigSignal() {
-    // parse the message in the following format: NewConfig:number;previousConfigName\n
-    // and store the number in newConfigNumber and the previousConfigName in previousConfigName
     int colonIndex = networkInput.find(':');
     int semicolonIndex = networkInput.find(';');
     int newlineIndex = networkInput.find('\n');
@@ -138,6 +138,18 @@ void PendulumReceiver::handleNewConfigSignal() {
         std::cout << "Sending signal to swing up if is crashed." << std::endl;
         serialActuator.Write("DOSWINGUP:1;\n");
     }
+}
+
+/**
+ * Handles the end signal of the following form: "EndSignal:previousConfigName\n"
+ */
+void PendulumReceiver::handleEndSignal() {
+    std::cout << "End signal received." << std::endl;
+    int colonIndex = networkInput.find(':');
+    std::string previousConfigName = networkInput.substr(colonIndex + 1, networkInput.size() - colonIndex - 2);
+    std::cout << "Previous config name: " << previousConfigName << std::endl;
+    logger->setName("pendulumreceiver_" + previousConfigName);
+    stop();
 }
 
 void PendulumReceiver::sendPauseSignal() {
