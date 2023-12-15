@@ -219,18 +219,21 @@ void PendulumSender::swapPriorityDeterminer(PriorityDeterminer *newPriorityDeter
 /**
  * Sends a signal to the receiver to change the MPTB config to the given number.
  *
- * The payload of the signal is "NewConfig:number\n" where number is the parameter of this function encoded as a string.
+ * The payload of the signal is "NewConfig:number;previousConfigName\n" where number is the parameter of this
+ * function encoded as a string and previousConfigName is the name of the previous MPTB config used for the
+ * log file.
+ *
  * The signal is sent with the highest priority (0).
  *
  * @throws std::runtime_error if senderSocket is not open
  * @param number
  */
-void PendulumSender::sendNewMptbConfigSignal(int number) {
+void PendulumSender::sendNewMptbConfigSignal(int number, std::string previousConfigName) {
     if(!senderSocket.is_open()){
         throw std::runtime_error("PendulumSender: Cannot send new MPTB config signal because senderSocket is not open.");
     }
 
-    std::string payload = "NewConfig:" + std::to_string(number) + "\n";
+    std::string payload = "NewConfig:" + std::to_string(number) + ";" + previousConfigName + "\n";
     senderSocket.set_option(SOL_SOCKET, SO_PRIORITY, 0);
     senderSocket.send_to(payload, receiverAddress);
     std::cout << "PendulumSender: Sent new MPTB config signal: " << payload << std::endl;
@@ -239,17 +242,17 @@ void PendulumSender::sendNewMptbConfigSignal(int number) {
 /**
  * Sends a signal to the receiver to end the current run.
  *
- * The payload of the signal is "EndSignal\n".
+ * The payload of the signal is "EndSignal:previousConfigName\n".
  * The signal is sent with the highest priority (0).
  *
  * @throws std::runtime_error if senderSocket is not open
  */
-void PendulumSender::sendEndSignal() {
+void PendulumSender::sendEndSignal(std::string previousConfigName) {
     if(!senderSocket.is_open()){
         throw std::runtime_error("PendulumSender: Cannot send End signal because senderSocket is not open.");
     }
 
-    std::string payload = "EndSignal\n";
+    std::string payload = "EndSignal:" + previousConfigName + "\n";
     senderSocket.set_option(SOL_SOCKET, SO_PRIORITY, 0);
     senderSocket.send_to(payload, receiverAddress);
 

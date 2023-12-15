@@ -51,3 +51,7 @@ void Logger::reset() {
     this->startTime = std::time(0);
 }
 
+void Logger::setName(std::string name) {
+    this->name = name;
+}
+

@@ -73,7 +73,7 @@ public:
 
     void sendPauseSignal();
 
-    void startNewLogfile(int number);
+    void startNewLogfile(std::string previousConfigName);
 
     void handleNewConfigSignal();
 };

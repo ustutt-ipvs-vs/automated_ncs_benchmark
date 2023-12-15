@@ -33,6 +33,7 @@ const std::vector<double> &MPTBSubConfig::getCosts() const {
 }
 
 MPTBSubConfig::MPTBSubConfig(nlohmann::json configJson) {
+    name = configJson["name"];
     durationMinutes = configJson["durationMinutes"];
     b = configJson["b"];
     r = configJson["r"];
@@ -59,6 +60,7 @@ MPTBSubConfig::MPTBSubConfig(nlohmann::json configJson) {
 
 std::string MPTBSubConfig::toString() const {
     std::string result = "MPTBSubConfig:\n";
+    result += "name: " + name + "\n";
     result += "durationMinutes: " + std::to_string(durationMinutes) + "\n";
     result += "b: " + std::to_string(b) + "\n";
     result += "r: " + std::to_string(r) + "\n";
@@ -79,5 +81,9 @@ std::string MPTBSubConfig::toString() const {
     }
     result += "\n";
     return result;
+}
+
+std::string MPTBSubConfig::getName() const {
+    return name;
 }
 

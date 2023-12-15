@@ -61,8 +61,8 @@ public:
     void start();
     void stop();
     void swapPriorityDeterminer(PriorityDeterminer* newPriorityDeterminer, std::string logFilePrefix);
-    void sendNewMptbConfigSignal(int number);
-    void sendEndSignal();
+    void sendNewMptbConfigSignal(int number, std::string previousConfigName);
+    void sendEndSignal(std::string previousConfigName);
 
 
 private:

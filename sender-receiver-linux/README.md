@@ -169,6 +169,7 @@ This config allows to run multiple MPTB configurations one after another without
 {
   "mptbSequence": [
     {
+      "name": "mptb1",
       "durationMinutes": 1.0,
       "b": 200.0,
       "r": 35.0,
@@ -178,6 +179,7 @@ This config allows to run multiple MPTB configurations one after another without
       "costs": [1, 1, 1, 0]
     },
     {
+      "name": "mptb2",
       "durationMinutes": 0.5,
       "b": 5000.0,
       "r": 350.0,
@@ -199,6 +201,7 @@ This config allows to run multiple MPTB configurations one after another without
 ```
 
 with
+- `name`: Name of the configuration. This name is used for the file name of the log file.
 - `mptbSequence`: Array with an arbitrary number of MPTB configuration objects. These configurations are executed sequentially in the order given by the array.
 - `durationMinutes`: Number of minutes (floating point number) that this configuration should be executed.
 - All other parameters like in the single-run config.

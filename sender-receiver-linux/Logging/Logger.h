@@ -14,6 +14,7 @@ class Logger {
 public:
     Logger(std::string name);
     virtual ~Logger()= default; // virtual destructor to allow for polymorphic behavior
+    virtual void setName(std::string name);
     virtual void saveToFile(std::string filename);
     virtual void saveToFile();
     virtual void saveTofileAsync(std::string filename);

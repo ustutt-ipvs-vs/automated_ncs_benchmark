@@ -119,9 +119,17 @@ void PendulumReceiver::start() {
 }
 
 void PendulumReceiver::handleNewConfigSignal() {
-    int newConfigNumber = std::stoi(networkInput.substr(10));
-    std::cout << "New MPTB config signal received: " << newConfigNumber << std::endl;
-    startNewLogfile(newConfigNumber);
+    // parse the message in the following format: NewConfig:number;previousConfigName\n
+    // and store the number in newConfigNumber and the previousConfigName in previousConfigName
+    int colonIndex = networkInput.find(':');
+    int semicolonIndex = networkInput.find(';');
+    int newlineIndex = networkInput.find('\n');
+    int newConfigNumber = std::stoi(networkInput.substr(colonIndex + 1, semicolonIndex - colonIndex - 1));
+    std::string previousConfigName = networkInput.substr(semicolonIndex + 1, newlineIndex - semicolonIndex - 1);
+
+    std::cout << "New MPTB config signal received: " << newConfigNumber << " " << std::endl;
+    std::cout << "Previous config name: " << previousConfigName << std::endl;
+    startNewLogfile(previousConfigName);
 
     if(swingUpBehavior == ReceiverConfig::CRASH_AND_SWING_UP_AT_NEW_CONFIG){
         std::cout << "Sending signal to crash and swing up again." << std::endl;
@@ -157,9 +165,10 @@ void PendulumReceiver::stop() {
     logger->saveToFile();
 }
 
-void PendulumReceiver::startNewLogfile(int number) {
+void PendulumReceiver::startNewLogfile(std::string previousConfigName) {
+    logger->setName("pendulumreceiver_" + previousConfigName);
     logger->saveToFileAsync(); // Save asynchronously to avoid blocking the main thread
-    logger = new PendulumLogger("pendulumreceiver_config_" + std::to_string(number));
+    logger = new PendulumLogger();
 }
 
 

@@ -6,6 +6,7 @@
 
 class MPTBSubConfig {
 private:
+    std::string name;
     double durationMinutes;
     double b;
     double r;
@@ -16,6 +17,8 @@ private:
 
 public:
     MPTBSubConfig(nlohmann::json configJson);
+
+    std::string getName() const;
 
     double getDurationMinutes() const;
 

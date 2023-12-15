@@ -178,7 +178,7 @@ void runMptbSequence(int argc, char *const *argv){
         if(timeSinceEpochMillisec() - currentConfigurationStartTime > currentConfigRuntimeMinutes * 60.0 * 1000.0){
             currentConfigurationIndex++;
             if(currentConfigurationIndex >= config.getMptbSubConfigs().size()){
-                sender->sendEndSignal();
+                sender->sendEndSignal(config.getMptbSubConfigs().at(currentConfigurationIndex-1).getName());
                 sender->stop();
                 std::cout << "Finished all MPTB sub-configs" << std::endl;
                 exit(0);
@@ -187,8 +187,8 @@ void runMptbSequence(int argc, char *const *argv){
             std::cout << "Starting MPTB sub-config with duration " << nextConfigRuntimeMinutes << " minutes" << std::endl;
             PriorityDeterminer *priorityDeterminer = getIthSubconfigMptbDeterminer(currentConfigurationIndex, config);
             sender->swapPriorityDeterminer(priorityDeterminer,
-                                           "pendulumsender_config_" + std::to_string(currentConfigurationIndex + 1));
-            sender->sendNewMptbConfigSignal(currentConfigurationIndex + 1);
+                                           "pendulumsender_" + config.getMptbSubConfigs().at(currentConfigurationIndex).getName());
+            sender->sendNewMptbConfigSignal(currentConfigurationIndex + 1, config.getMptbSubConfigs().at(currentConfigurationIndex-1).getName());
             currentConfigurationStartTime = timeSinceEpochMillisec();
         }
     };
@@ -197,7 +197,7 @@ void runMptbSequence(int argc, char *const *argv){
     sender = new PendulumSender(determiner, device, host, port,
                                 teensyHistorySize, teensySamplingPeriods,
                                 samplingPeriodSensitivityFactor, samplingPeriodSensitivityOffset,
-                                regularCallback, "pendulumsender_config_1",
+                                regularCallback, "pendulumsender_" + config.getMptbSubConfigs().at(0).getName(),
                                 teensyAngleBias);
     sender->start();
 }

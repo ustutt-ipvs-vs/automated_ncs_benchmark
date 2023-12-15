@@ -6,6 +6,7 @@
 #include "LogEntries/SenderFeedbackLogEntry.h"
 #include <sstream>
 
+PendulumLogger::PendulumLogger() : Logger("no_name"){}
 PendulumLogger::PendulumLogger(std::string name) : Logger(name) {}
 
 void PendulumLogger::log(unsigned long long packetCount, unsigned long long bytesSentTotal, std::string payload,

@@ -15,6 +15,7 @@
 
 class PendulumLogger : public Logger {
 public:
+    explicit PendulumLogger();
     explicit PendulumLogger(std::string name);
     ~PendulumLogger() override = default;
 
