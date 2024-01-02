@@ -12,7 +12,7 @@ netemQueueLength=20 # in packets
 
 # Values are in milliseconds:
 low_latency_values=(2 4 6 8 10 12 14 16)
-medium_latency_values=(2 4 6 8 10 12 14 16)	# Original: (5 10 15 20 25 30 35 40)
+medium_latency_values=(0 1 2 3 4 5 6 7)	# Original: (5 10 15 20 25 30 35 40)
 high_latency_values=(10 20 30 40 50 60 70 80)
 
 # If first argument is 'ls' use low latency values, if it is 'lm' use medium latency values, 
