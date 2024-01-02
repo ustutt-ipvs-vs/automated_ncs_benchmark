@@ -5,12 +5,13 @@
   "doPauses": false,
   "timeBetweenPausesMillis": 20000,
   "pauseDurationMillis": 800,
-  "swingUpBehavior":"swingUpAtStart",
+  "swingUpBehavior":"noSwingUp",
   "sailType":"sail17",
 
-  "controllerKVector": [13.6723, 13.5022, -74.6153, -19.8637],
-  "controllerIntegratorParam": 5.0322,
-  "RMatrixDiagonalValue": 0.01,
+  "controllerKVector": [2.5193,4.3701,-35.9513,-10.0110],
+  "controllerIntegratorParam": 0.5245,
+  "RMatrixDiagonalValue": 0.09,
   "Q0MatrixDiagonalValue": 0.01,
+  "controlApproach": "carabelliKalmanIstController",
   "sigmaSquare": 1.0
 }
