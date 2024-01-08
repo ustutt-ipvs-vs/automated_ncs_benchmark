@@ -22,14 +22,14 @@
 
 %% Computation of worst delay
 
-h = 10e-3; % smallest sampling stepsize
+h = 20e-3; % smallest sampling stepsize
 % delayPrios = [2; 4; 6; 8; 10; 12; 14]e-3;
-basePeriod = 45e-3; % seconds
+basePeriod = 40e-3; % seconds
 % 
 % lowestPrio = 4;
-maxSamplingStepsize = 100e-3;
+maxSamplingStepsize = 200e-3;
 
-lowestUsedPrioDelayInS = 8e-3;
+lowestUsedPrioDelayInS = 14e-3;
 
 maxDelayPrios = lowestUsedPrioDelayInS + max(basePeriod,maxSamplingStepsize);
 delay = ceil(maxDelayPrios/h)
