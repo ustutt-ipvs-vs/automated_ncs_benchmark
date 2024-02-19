@@ -50,6 +50,8 @@ private:
     unsigned long long bytesSentTotal = 0;
     unsigned long long feedbackPacketsCount = 0;
 
+    std::vector<int> networkDelaysPerPrio;
+
     std::function<void()> regularCallback;
 
 public:
@@ -57,7 +59,7 @@ public:
                    int receiverPort, int teensyHistorySize, std::vector<int> teensySamplingPeriods,
                    float samplingPeriodSensitivityFactor = 1.0, float samplingPeriodSensitivityOffset = 0.0,
                    std::function<void()> regularCallback = nullptr, std::string logFilePrefix = "pendulumsender",
-                   int angleBias = 0);
+                   int angleBias = 0, std::vector<int> networkDelaysPerPrio = std::vector<int>(8, 0));
     void start();
     void stop();
     void swapPriorityDeterminer(PriorityDeterminer* newPriorityDeterminer, std::string logFilePrefix);
@@ -70,7 +72,7 @@ private:
 
     void handleSenderFeedback();
     uint64_t timeSinceEpochMillisec();
-    std::string applyAngleBias(std::string payload);
+    std::string applyAngleBiasAndNetworkDelay(std::string payload, int networkDelay);
     void handleControlMessageFromTeensy();
 };
 

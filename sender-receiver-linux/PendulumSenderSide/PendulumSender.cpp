@@ -17,7 +17,7 @@ PendulumSender::PendulumSender(PriorityDeterminer* priorityDeterminer, std::stri
                                std::vector<int> teensySamplingPeriods,
                                float samplingPeriodSensitivityFactor, float samplingPeriodSensitivityOffset,
                                std::function<void()> regularCallback,
-                               std::string logFilePrefix, int angleBias)
+                               std::string logFilePrefix, int angleBias, std::vector<int> networkDelaysPerPrio)
                                : regularCallback(regularCallback) {
     this->serialDeviceName = serialDeviceName;
     receiverAddress = inet_address(receiverHost, receiverPort);
@@ -32,6 +32,7 @@ PendulumSender::PendulumSender(PriorityDeterminer* priorityDeterminer, std::stri
     this->samplingPeriodSensitivityOffset = samplingPeriodSensitivityOffset;
     this->logger = new PendulumLogger(logFilePrefix);
     this->angleBias = angleBias;
+    this->networkDelaysPerPrio = networkDelaysPerPrio;
 }
 
 void PendulumSender::start() {
@@ -82,7 +83,6 @@ void PendulumSender::start() {
             std::istringstream sampleStream(serialInputBuffer);
             while (std::getline(sampleStream, singleSample, '\n')) {
                 singleSample += '\n';
-                singleSample = applyAngleBias(singleSample);
                 sendPacket(singleSample);
             }
         } else {
@@ -122,15 +122,14 @@ void PendulumSender::stop() {
 }
 
 void PendulumSender::sendPacket(std::string payload) {
+    priorityDeterminer->reportPacketReadyToSend(SAMPLE_SIZE);
+    unsigned int priority = priorityDeterminer->getPriority();
+    int networkDelay = networkDelaysPerPrio.at(priority);
+    payload = applyAngleBiasAndNetworkDelay(payload, networkDelay);
+
     // Pad payload width '#' to SAMPLE_SIZE bytes and store result in paddedPayload
     std::string paddedPayload = payload;
-
     paddedPayload.append(SAMPLE_SIZE - payload.size(), '#');
-
-
-    priorityDeterminer->reportPacketReadyToSend(paddedPayload.size());
-
-    int priority = priorityDeterminer->getPriority();
 
     // Drop packets if priority is BE.
     if (priority == 7) {
@@ -138,14 +137,12 @@ void PendulumSender::sendPacket(std::string payload) {
         return;
     }
 
-
     senderSocket.set_option(SOL_SOCKET, SO_PRIORITY, priority);
     senderSocket.send_to(paddedPayload, receiverAddress);
 
     packetCount++;
     bytesSentTotal += paddedPayload.size();
 
-    
     // Limit logging rate
     uint64_t currentTime = timeSinceEpochMillisec();
     if(currentTime - lastLogTime >= RESTRICT_LOGGING_TO_MS){
@@ -260,16 +257,16 @@ void PendulumSender::sendEndSignal(std::string previousConfigName) {
 }
 
 /**
- * Adds the given angle bias to the encoder value in the given payload.
+ * Adds the given angle bias to the encoder value and adds the given network delay to the sampling period.
  *
  * The payload has the following form:
  * S:encoderValue;samplingPeriodMillis;sequenceNumber;currentTime;\n
  *
  * the returned payload has the following form:
- * S:encoderValue+angleBias;samplingPeriodMillis;sequenceNumber;currentTime;\n
+ * S:encoderValue+angleBias;samplingPeriodMillis+networkDelay;sequenceNumber;currentTime;\n
  */
-std::string PendulumSender::applyAngleBias(std::string payload) {
-    if(angleBias == 0){
+std::string PendulumSender::applyAngleBiasAndNetworkDelay(std::string payload, int networkDelay) {
+    if(angleBias == 0 && networkDelay == 0){
         return payload;
     }
 
@@ -282,8 +279,16 @@ std::string PendulumSender::applyAngleBias(std::string payload) {
     // Add angle bias to encoder value:
     pendulumSensorValue += angleBias;
 
+    // Extract sampling period from payload:
+    int samplingPeriod;
+    stringStream.ignore(1); // skip ';'
+    stringStream >> samplingPeriod;
+
+    // Add network delay to sampling period:
+    samplingPeriod += networkDelay;
+
     // Reconstruct payload with new encoder value:
-    std::string result = "S:" + std::to_string(pendulumSensorValue);
+    std::string result = "S:" + std::to_string(pendulumSensorValue) + ";" + std::to_string(samplingPeriod);
     std::string restOfPayload;
     std::getline(stringStream, restOfPayload, '\n');
     result += restOfPayload;

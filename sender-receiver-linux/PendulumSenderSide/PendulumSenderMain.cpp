@@ -77,6 +77,8 @@ double strictBucketB = 75; // Samples
 double mediumBucketB = 300;
 double generousBucketB = 500;
 
+std::vector<int> networkDelaysPerPrio = {0, 0, 0, 0, 0, 0, 0, 0};
+
 PendulumSender *sender;
 
 
@@ -118,10 +120,9 @@ int main(int argc, char *argv[]) {
 
         sender = new PendulumSender(determiner, device, host, port, teensyHistorySize, teensySamplingPeriods,
                                     samplingPeriodSensitivityFactor, samplingPeriodSensitivityOffset,
-                                    nullptr, "pendulumsender", teensyAngleBias);
+                                    nullptr, "pendulumsender", teensyAngleBias, networkDelaysPerPrio);
         sender->start();
     }
-
 }
 
 PriorityDeterminer *getIthSubconfigMptbDeterminer(int i, SenderMultiConfig config){
@@ -135,7 +136,8 @@ PriorityDeterminer *getIthSubconfigMptbDeterminer(int i, SenderMultiConfig confi
 
     return new MultiPriorityTokenBucket(bAsBytes, rAsBytesPerSecond, subConfig.getNumThresholds(),
                                               thresholdsBytes,
-                                              subConfig.getCosts(), subConfig.getPrioMapping());}
+                                              subConfig.getCosts(), subConfig.getPrioMapping());
+}
 
 uint64_t timeSinceEpochMillisec(){
     using namespace std::chrono;
@@ -198,7 +200,7 @@ void runMptbSequence(int argc, char *const *argv){
                                 teensyHistorySize, teensySamplingPeriods,
                                 samplingPeriodSensitivityFactor, samplingPeriodSensitivityOffset,
                                 regularCallback, "pendulumsender_" + config.getMptbSubConfigs().at(0).getName(),
-                                teensyAngleBias);
+                                teensyAngleBias, config.getNetworkDelaysPerPrio());
     sender->start();
 }
 
@@ -372,6 +374,7 @@ PriorityDeterminer *generateDeterminerFromCommandLineArguments(int argc, char *c
         teensySamplingPeriods = config.getSamplingPeriods();
         samplingPeriodSensitivityFactor = config.getSamplingPeriodSensitivityFactor();
         samplingPeriodSensitivityOffset = config.getSamplingPeriodSensitivityOffset();
+        networkDelaysPerPrio = config.getNetworkDelaysPerPrio();
 
         if(config.isAutomaticallyFindSerialDevice()){
             std::cout << "Automatically finding serial device..." << std::endl;
