@@ -28,7 +28,19 @@ float Ly33 = 0.989822343862;
 float Ly43 = 4.27759379409;
 
 void updateCarabelliParameters(unsigned samplingPeriod){
-  switch(samplingPeriod){
+	const unsigned int minVal = 10;
+	const unsigned int maxVal = 80;
+	const unsigned int stepSize = 2;
+	const unsigned int remainder = samplingPeriod % stepSize;
+	if (remainder != 0) {
+		samplingPeriod += stepSize - remainder; // Round up to the next multiple of stepSize
+	}
+
+	// Ensure samplingPeriod is within the range [minVal, maxVal]
+	samplingPeriod = min(maxVal, max(minVal, samplingPeriod));
+
+	switch(samplingPeriod){
+
     case 10:
       Kxc = 5.460879579024174;
       Kvc = 6.317330404682156;
