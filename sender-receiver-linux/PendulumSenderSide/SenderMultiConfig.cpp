@@ -26,9 +26,9 @@ SenderMultiConfig::SenderMultiConfig(std::string filename) {
         if(configJson["networkDelaysPerPrio"].size() != 8) {
             throw std::runtime_error("networkDelaysPerPrio must have 8 elements");
         }
-        networkDelaysPerPrio = configJson["networkDelaysPerPrio"].get<std::vector<double>>();
+        networkDelaysPerPrio = configJson["networkDelaysPerPrio"].get<std::vector<int>>();
     } else {
-        networkDelaysPerPrio = std::vector<double>(8, 0.0); // default value
+        networkDelaysPerPrio = std::vector<int>(8, 0); // default value
     }
 
     if (configJson.contains("historySize")) {
