@@ -42,6 +42,15 @@ SenderConfig::SenderConfig(std::string filename) {
     prioMapping = configJson["prioMapping"].get<std::vector<int>>();
     costs = configJson["costs"].get<std::vector<double>>();
 
+    if (configJson.contains("networkDelaysPerPrio")) {
+        if(configJson["networkDelaysPerPrio"].size() != 8) {
+            throw std::runtime_error("networkDelaysPerPrio must have 8 elements");
+        }
+        networkDelaysPerPrio = configJson["networkDelaysPerPrio"].get<std::vector<double>>();
+    } else {
+        networkDelaysPerPrio = std::vector<double>(8, 0.0); // default value
+    }
+
     if (configJson.contains("historySize")) {
         historySize = configJson["historySize"];
     } else {
@@ -148,6 +157,13 @@ std::string SenderConfig::toString() const {
         result += std::to_string(cost) + " ";
     }
     result += "\n";
+
+    result += "networkDelaysPerPrio: ";
+    for(int delay : networkDelaysPerPrio){
+        result += std::to_string(delay) + " ";
+    }
+    result += "\n";
+
     result += "historySize: " + std::to_string(historySize) + "\n";
     result += "bias: " + std::to_string(bias) + "\n";
     result += "samplingPeriods: ";
@@ -173,4 +189,8 @@ float SenderConfig::getSamplingPeriodSensitivityFactor() const {
 
 float SenderConfig::getSamplingPeriodSensitivityOffset() const {
     return samplingPeriodSensitivityOffset;
+}
+
+const std::vector<int> &SenderConfig::getNetworkDelaysPerPrio() const {
+    return networkDelaysPerPrio;
 }

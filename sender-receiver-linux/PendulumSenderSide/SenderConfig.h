@@ -19,7 +19,8 @@
  *   "samplingPeriodSensitivityOffset": 2.0,
  *   "initialPriorityClass": 0,
  *   "serialDeviceName": "/dev/ttyACM0",
- *   "receiverAddress": "10.0.1.3"
+ *   "receiverAddress": "10.0.1.3",
+ *   "networkDelaysPerPrio": [2, 4, 6, 8, 10, 12, 14, 16]
  * }
  *
  *  The default values are, if not specified otherwise:
@@ -30,6 +31,7 @@
  *  samplingPeriodSensitivityOffset: 0.0
  *  initialPriorityClass = 0
  *  serialDeviceName = "auto"   // automatically find the device by scanning /dev/ttyACM*
+ *  "networkDelaysPerPrio": [0, 0, 0, 0, 0, 0, 0, 0]
  *
  * The serialDeviceName can be set to "auto" to automatically find the a Teensy device.
  * It is also possible to specify the device name manually, e.g. "/dev/ttyACM0".
@@ -53,6 +55,7 @@ private:
     std::vector<double> thresholds;
     std::vector<int> prioMapping;
     std::vector<double> costs;
+    std::vector<int> networkDelaysPerPrio;
 
     // Teensy parameters:
     int historySize;
@@ -97,6 +100,8 @@ public:
     const std::vector<int> &getPrioMapping() const;
 
     const std::vector<double> &getCosts() const;
+
+    const std::vector<int> &getNetworkDelaysPerPrio() const;
 
     int getInitialPriorityClass() const;
 

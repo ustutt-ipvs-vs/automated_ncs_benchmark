@@ -22,6 +22,15 @@ SenderMultiConfig::SenderMultiConfig(std::string filename) {
         mptbSubConfigs.emplace_back(subConfig);
     }
 
+    if (configJson.contains("networkDelaysPerPrio")) {
+        if(configJson["networkDelaysPerPrio"].size() != 8) {
+            throw std::runtime_error("networkDelaysPerPrio must have 8 elements");
+        }
+        networkDelaysPerPrio = configJson["networkDelaysPerPrio"].get<std::vector<double>>();
+    } else {
+        networkDelaysPerPrio = std::vector<double>(8, 0.0); // default value
+    }
+
     if (configJson.contains("historySize")) {
         historySize = configJson["historySize"];
     } else {
@@ -100,6 +109,11 @@ std::string SenderMultiConfig::toString() const {
     result += "samplingPeriodSensitivityOffset: " + std::to_string(samplingPeriodSensitivityOffset) + "\n";
     result += "serialDeviceName: " + serialDeviceName + "\n";
     result += "receiverAddress: " + receiverAddress + "\n";
+    result += "networkDelaysPerPrio: ";
+    for(int networkDelay : networkDelaysPerPrio){
+        result += std::to_string(networkDelay) + " ";
+    }
+    result += "\n";
     result += "mptbSubConfigs:\n";
     for(const MPTBSubConfig& subConfig : mptbSubConfigs){
         result += subConfig.toString() + "\n";
@@ -119,4 +133,7 @@ float SenderMultiConfig::getSamplingPeriodSensitivityOffset() const {
     return samplingPeriodSensitivityOffset;
 }
 
+const std::vector<int> &SenderMultiConfig::getNetworkDelaysPerPrio() const {
+    return networkDelaysPerPrio;
+}
 

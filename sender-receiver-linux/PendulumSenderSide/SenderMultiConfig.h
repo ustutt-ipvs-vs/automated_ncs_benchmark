@@ -34,7 +34,8 @@
  *   "samplingPeriodSensitivityOffset": 2.0,
  *   "initialPriorityClass": 0,
  *   "serialDeviceName": "/dev/ttyACM0",
- *   "receiverAddress": "10.0.1.3"
+ *   "receiverAddress": "10.0.1.3",
+ *   "networkDelaysPerPrio": [2, 4, 6, 8, 10, 12, 14, 16]
  * }
  *
  *  The default values are, if not specified otherwise:
@@ -45,6 +46,7 @@
  *  samplingPeriodSensitivityOffset: 0.0
  *  initialPriorityClass = 0
  *  serialDeviceName = "auto"   // automatically find the device by scanning /dev/ttyACM*
+ *  "networkDelaysPerPrio": [0, 0, 0, 0, 0, 0, 0, 0]
  *
  * The serialDeviceName can be set to "auto" to automatically find the a Teensy device.
  * It is also possible to specify the device name manually, e.g. "/dev/ttyACM0".
@@ -73,6 +75,7 @@ private:
 
     // Network parameters:
     std::string receiverAddress;
+    std::vector<int> networkDelaysPerPrio;
 
 public:
     const std::vector<int> &getSamplingPeriods() const;
@@ -96,6 +99,8 @@ public:
     std::string toString() const;
 
     const std::vector<MPTBSubConfig> &getMptbSubConfigs() const;
+
+    const std::vector<int> &getNetworkDelaysPerPrio() const;
 
 };
 

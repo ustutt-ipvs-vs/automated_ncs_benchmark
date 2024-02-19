@@ -37,5 +37,6 @@
   "samplingPeriodSensitivityFactor": 1.0,
   "samplingPeriodSensitivityOffset": 0.0,
   "serialDeviceName": "auto",
-  "receiverAddress": "10.0.1.5"
+  "receiverAddress": "10.0.1.5",
+  "networkDelaysPerPrio": [2, 4, 6, 8, 10, 12, 14, 16]
 }

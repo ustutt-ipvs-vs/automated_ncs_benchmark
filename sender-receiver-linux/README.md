@@ -142,7 +142,8 @@ The sender and receiver can be started with various parameter options:
   "samplingPeriodSensitivityOffset": 0.0,
   "initialPriorityClass": 0,
   "serialDeviceName": "auto",
-  "receiverAddress": "10.0.1.3"
+  "receiverAddress": "10.0.1.3",
+  "networkDelaysPerPrio": [2, 4, 6, 8, 10, 12, 14, 16]
 }
 ```
 
@@ -161,6 +162,7 @@ with
 - `samplingPeriodSensitivityOffset`: Offset by which the maximum absolute angle change is shifted to determine sampling period. Default value: `0.0`
 - `serialDeviceName`: Linux file which associated with the serial interface of the sender Teensy. If you set it to `auto`, the computer tries to recognize a Teensy device automatically. Default value: `auto`
 - `receiverAddress`: IP address of the receiver PC
+- `networkDelaysPerPrio`: Array of network delays in milliseconds (integers) for each priority class. Must have 8 elements. First element associated with the best priority class (0).
 
 
 ### Sender Config (multiple MPTB configurations)
@@ -195,7 +197,8 @@ This config allows to run multiple MPTB configurations one after another without
   "samplingPeriodSensitivityFactor": 1.0,
   "samplingPeriodSensitivityOffset": 0.0,
   "serialDeviceName": "auto",
-  "receiverAddress": "10.0.1.5"
+  "receiverAddress": "10.0.1.5",
+  "networkDelaysPerPrio": [2, 4, 6, 8, 10, 12, 14, 16]
 }
 
 ```
