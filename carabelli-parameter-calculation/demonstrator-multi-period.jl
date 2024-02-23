@@ -16,7 +16,7 @@ w = [ 1e-3, 1e-3, 1e-1, 2.5 ]
 
 # Which sampling periods to generate parameters for:
 minSamplingPeriod = 10
-maxSamplingPeriod = 80
+maxSamplingPeriod = 200
 samplingPeriodStepSize = 2
 
 function printconsts(A, name)
