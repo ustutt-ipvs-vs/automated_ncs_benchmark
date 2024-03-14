@@ -27,9 +27,9 @@ h = 20e-3; % smallest sampling stepsize
 basePeriod = 40e-3; % seconds
 % 
 % lowestPrio = 4;
-maxSamplingStepsize = 200e-3;
+maxSamplingStepsize = 40e-3;
 
-lowestUsedPrioDelayInS = 14e-3;
+lowestUsedPrioDelayInS = 12e-3;
 
 maxDelayPrios = lowestUsedPrioDelayInS + max(basePeriod,maxSamplingStepsize);
 delay = ceil(maxDelayPrios/h)
@@ -151,55 +151,55 @@ disp("Hinweis zur Ausgabe: Erster Wert von K_iqc (bzw. K_ss) ist für Kxic (inte
 %% Switched system approach
 %
 
-A_lift=eye(n_s);
-Bw_lift=[];
-Cz_lift=[];
-B_lift=0;
-D_lift=D;
-
-clear X
-G=sdpvar(n_s,n_s,'full');
-Z=sdpvar(m,n_s,'full');
-for i=1:1:delay+1
-    X{i}=sdpvar(n_s);
-end
-
-con=[];
-
-for i=1:1:delay+1
-    A_lift=A_lift*A;
-    B_lift=B_lift+A^(i-1)*B;
-
-    Bw_lift=[A^(i-1)*B,Bw_lift];
-    Cz_lift=[Cz_lift;Cz*A^(i-1)];
-
-    Dw_lift=0;
-    Dw_lift = Dw_lift + kron(diag(1:1:i),D);
-
-    for j=1:1:i-1
-        Dw_lift = Dw_lift + kron(diag(ones(1,i-j),-j),C*A^(j-1)*B);
-%         Dw_lift = Dw_lift + kron(A^(j-1),diag(ones(1,h-j),-j));
-    end
-
-    if i ~= 1
-        D_lift = [D_lift; D_lift(max(end-n_w+1,1):end,:) + Cz*A^(i-2)*B];
-    end
-
-    for j=1:1:delay+1
-        ineq=[G+G'-X{i}   , Z'*B_lift'+G'*A_lift' , G'*Cz_lift'+Z'*D_lift';
-              B_lift*Z+A_lift*G ,  X{j} - Bw_lift*gamma*Bw_lift', -Bw_lift*gamma*Dw_lift';
-              Cz_lift*G+D_lift*Z , -Dw_lift*gamma*Bw_lift', eye(i*n_w)-Dw_lift*gamma*Dw_lift'];
-
-        con=[con, ineq>=eps];
-    end
-
-
-end
-
-
-s = optimize(con, -gamma, opt);
-gamma_ss=sqrt(1/value(gamma))
-K_ss=value(Z)*inv(value(G))
+% A_lift=eye(n_s);
+% Bw_lift=[];
+% Cz_lift=[];
+% B_lift=0;
+% D_lift=D;
+% 
+% clear X
+% G=sdpvar(n_s,n_s,'full');
+% Z=sdpvar(m,n_s,'full');
+% for i=1:1:delay+1
+%     X{i}=sdpvar(n_s);
+% end
+% 
+% con=[];
+% 
+% for i=1:1:delay+1
+%     A_lift=A_lift*A;
+%     B_lift=B_lift+A^(i-1)*B;
+% 
+%     Bw_lift=[A^(i-1)*B,Bw_lift];
+%     Cz_lift=[Cz_lift;Cz*A^(i-1)];
+% 
+%     Dw_lift=0;
+%     Dw_lift = Dw_lift + kron(diag(1:1:i),D);
+% 
+%     for j=1:1:i-1
+%         Dw_lift = Dw_lift + kron(diag(ones(1,i-j),-j),C*A^(j-1)*B);
+% %         Dw_lift = Dw_lift + kron(A^(j-1),diag(ones(1,h-j),-j));
+%     end
+% 
+%     if i ~= 1
+%         D_lift = [D_lift; D_lift(max(end-n_w+1,1):end,:) + Cz*A^(i-2)*B];
+%     end
+% 
+%     for j=1:1:delay+1
+%         ineq=[G+G'-X{i}   , Z'*B_lift'+G'*A_lift' , G'*Cz_lift'+Z'*D_lift';
+%               B_lift*Z+A_lift*G ,  X{j} - Bw_lift*gamma*Bw_lift', -Bw_lift*gamma*Dw_lift';
+%               Cz_lift*G+D_lift*Z , -Dw_lift*gamma*Bw_lift', eye(i*n_w)-Dw_lift*gamma*Dw_lift'];
+% 
+%         con=[con, ineq>=eps];
+%     end
+% 
+% 
+% end
+% 
+% 
+% s = optimize(con, -gamma, opt);
+% gamma_ss=sqrt(1/value(gamma))
+% K_ss=value(Z)*inv(value(G))
 
 
 % %% System for synthesis
