@@ -1,3 +1,4 @@
+format long g % Don't print numbers in scientific notation
 
 l = 0.6;
 g = 9.8088;
@@ -29,8 +30,9 @@ tau_k = delay; % delay in seconds
 
 % Calculate phi, Gamma_1 and Gamma_0
 phi = expm(A*h);
-Gamma_1 = integral(@(s)expm(A*s)*B, h-tau_k, h, 'ArrayValued', true);
-Gamma_0 = integral(@(s)expm(A*s)*B, 0, h-tau_k, 'ArrayValued', true);
+Gamma_1 = integral(@(s)expm(A*s), h-tau_k, h, 'ArrayValued', true) * B;
+Gamma_0 = integral(@(s)expm(A*s), 0, h-tau_k, 'ArrayValued', true) * B;
+
 
 % Calculate parameter matrices under consideration of delays:
 A_z = [phi, Gamma_1; zeros(m, n), zeros(m, m)];
