@@ -128,10 +128,11 @@ void sendSampleIfDelayOver(){
   float angularVelocity = getAngularVelocity();
   if(lastTransmissionTime + transmissionPeriodMillis <= currentTime){
     // The sample value string is of the following form:
-    // S:encoderValue;samplingPeriodMillis;sequenceNumber;currentTime;angularVelocity;\n
+    // S:encoderValue;samplingPeriodMillis;sequenceNumber;currentTime;angularVelocity;latencyMillis\n
     // for example
-    // S:-1204;50;1234;62345234;-1.308997\n
-    sensorValueSerial->printf("S:%i;%u;%i;%u;%f;\n", encoder.read(), transmissionPeriodMillis, sequenceNumber, currentTime, angularVelocity);
+    // S:-1204;50;1234;62345234;-1.308997;0\n
+    // The latency (set to 0) is just a placeholder and will be replaced by the Linux sender component.
+    sensorValueSerial->printf("S:%i;%u;%i;%u;%f;0;\n", encoder.read(), transmissionPeriodMillis, sequenceNumber, currentTime, angularVelocity);
     Serial.send_now();
     lastTransmissionTime = currentTime;
     sequenceNumber++;

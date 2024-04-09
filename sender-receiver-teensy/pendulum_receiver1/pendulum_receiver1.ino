@@ -91,6 +91,7 @@ constexpr float ESTEP_PER_RAD = encoderPPR / TWO_PI;
 // Variables for remote encoder input:
 int currentEncoderValue = 0;
 float currentAngularVelocity = 0;
+int currentLatencyMillis = 0;
 bool encoderInitialized = false;
 bool newEncoderValueAvailable = false; // set to true after every received value
 
@@ -482,10 +483,10 @@ void checkLimitSwitches() {
 
 void updateRotaryEncoderValue() {
   // The sample value string is of the following form:
-  // encoderValue;samplingPeriodMillis;sequenceNumber;currentTime;angularVelocity\n
+  // encoderValue;samplingPeriodMillis;sequenceNumber;currentTime;angularVelocity;networkDelayMillis\n
   // where the sampling period is in milliseconds and the angular velocity is in radians per second.
   // for example
-  // S:-1204;50;1234;62345234;-1.308997\n
+  // S:-1204;50;1234;62345234;-1.308997;4\n
   //
   // Additionally, pause signals of the following form can be transmitted (for pause with 800ms duration):
   // PAUSE:800;\n
@@ -538,6 +539,7 @@ void updateRotaryEncoderValue() {
         long sequenceNumber = serialDevice->readStringUntil(';').toInt();
         long timestamp = serialDevice->readStringUntil(';').toInt();
         currentAngularVelocity = serialDevice->readStringUntil(';').toFloat();
+        currentLatencyMillis = serialDevice->readStringUntil(';').toInt();
 
         updateParametersForSamplingPeriod(delaySinceLastSample);
         if(CartState == BALANCE){
@@ -604,7 +606,7 @@ void updateRotaryEncoderValue() {
     FeedbackSerial.println(signal);
   }
 
-  void updateUsingCarabelliKalmanAndLQR(float cartPos, float cartSpeed, float poleAngle){
+  void updateUsingCarabelliKalmanAndLQR(float cartPos, float cartSpeed, float poleAngle, unsigned latency){
     float x_cart_p = x_cart;
     float v_cart_p = v_cart;
     float x_pole_p = x_pole;
@@ -636,6 +638,19 @@ void updateRotaryEncoderValue() {
   */
 
     //        long T2 = profileTimer;/////////////////////////////////////////////////////////////////////////////////////////
+
+
+    /// Smith Predictor ///
+
+    // Apply Smith predictor to compensate for network delay on pole angle data:
+    updateSmithPredictorParameters(latency);
+    BLA::Matrix<4,1> x_k = {x_cart, v_cart, x_pole, v_pole};
+    x_k = LQRMatrixA * x_k + LQRMatrixB * u_accel;
+    // Note: We do NOT update x_cart and v_cart from x_k, since these values are retrieved locally and don't 
+    // have a network delay, i.e., no prediction necessary!
+    x_pole = x_k(2);
+    v_pole = x_k(3);
+
 
     /// CONTROLLER ///
 
@@ -1009,7 +1024,7 @@ void updateRotaryEncoderValue() {
         if(approachUsed == IST_KALMAN_IST_CONTROLLER){
           updateUsingISTKalmanAndLQR(cartPos, cartSpeed, poleAngle, angularVelocity);
         } else if (approachUsed == CARABELLI_KALMAN_CARABELLI_CONTROLLER){
-          updateUsingCarabelliKalmanAndLQR(cartPos, cartSpeed, poleAngle);
+          updateUsingCarabelliKalmanAndLQR(cartPos, cartSpeed, poleAngle, currentLatencyMillis);
         } else if (approachUsed == IST_KALMAN_CARABELLI_CONTROLLER){
           updateKalmanUsingISTUpdateLQRUsingCarabelli(cartPos, cartSpeed, poleAngle, angularVelocity);
         }  else if (approachUsed == CARABELLI_KALMAN_IST_CONTROLLER){
