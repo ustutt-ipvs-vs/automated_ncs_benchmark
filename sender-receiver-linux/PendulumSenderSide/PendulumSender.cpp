@@ -260,10 +260,10 @@ void PendulumSender::sendEndSignal(std::string previousConfigName) {
  * Adds the given angle bias to the encoder value and appends the given network delay.
  *
  * The payload has the following form:
- * S:encoderValue;samplingPeriodMillis;sequenceNumber;currentTime;0;\n
+ * S:encoderValue;samplingPeriodMillis;sequenceNumber;angularVelocity;currentTime;0;\n
  *
  * the returned payload has the following form:
- * S:encoderValue+angleBias;samplingPeriodMillis;sequenceNumber;currentTime;networkDelay;\n
+ * S:encoderValue+angleBias;samplingPeriodMillis;sequenceNumber;currentTime;angularVelocity;networkDelay;\n
  */
 std::string PendulumSender::applyAngleBiasAndNetworkDelay(std::string payload, int networkDelay) {
     if(angleBias == 0 && networkDelay == 0){
@@ -294,8 +294,10 @@ std::string PendulumSender::applyAngleBiasAndNetworkDelay(std::string payload, i
     stringStream.ignore(1); // skip ';'
     stringStream >> currentTime;
 
-    // Add network delay to sampling period:
-    samplingPeriod += networkDelay;
+    // Extract angular velocity from payload:
+    double angularVelocity;
+    stringStream.ignore(1); // skip ';'
+    stringStream >> angularVelocity;
 
     // Reconstruct payload with new encoder value:
     std::string result = "S:"
@@ -303,6 +305,7 @@ std::string PendulumSender::applyAngleBiasAndNetworkDelay(std::string payload, i
             + std::to_string(samplingPeriod) + ";"
             + std::to_string(sequenceNumber) + ";"
             + std::to_string(currentTime) + ";"
+            + std::to_string(angularVelocity) + ";"
             + std::to_string(networkDelay) + ";";
     result += '\n';
     return result;
