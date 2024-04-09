@@ -257,13 +257,13 @@ void PendulumSender::sendEndSignal(std::string previousConfigName) {
 }
 
 /**
- * Adds the given angle bias to the encoder value and adds the given network delay to the sampling period.
+ * Adds the given angle bias to the encoder value and appends the given network delay.
  *
  * The payload has the following form:
- * S:encoderValue;samplingPeriodMillis;sequenceNumber;currentTime;\n
+ * S:encoderValue;samplingPeriodMillis;sequenceNumber;currentTime;0;\n
  *
  * the returned payload has the following form:
- * S:encoderValue+angleBias;samplingPeriodMillis+networkDelay;sequenceNumber;currentTime;\n
+ * S:encoderValue+angleBias;samplingPeriodMillis;sequenceNumber;currentTime;networkDelay;\n
  */
 std::string PendulumSender::applyAngleBiasAndNetworkDelay(std::string payload, int networkDelay) {
     if(angleBias == 0 && networkDelay == 0){
@@ -284,14 +284,26 @@ std::string PendulumSender::applyAngleBiasAndNetworkDelay(std::string payload, i
     stringStream.ignore(1); // skip ';'
     stringStream >> samplingPeriod;
 
+    // Extract sequence number from payload:
+    int sequenceNumber;
+    stringStream.ignore(1); // skip ';'
+    stringStream >> sequenceNumber;
+
+    // Extract current time from payload:
+    unsigned long long currentTime;
+    stringStream.ignore(1); // skip ';'
+    stringStream >> currentTime;
+
     // Add network delay to sampling period:
     samplingPeriod += networkDelay;
 
     // Reconstruct payload with new encoder value:
-    std::string result = "S:" + std::to_string(pendulumSensorValue) + ";" + std::to_string(samplingPeriod);
-    std::string restOfPayload;
-    std::getline(stringStream, restOfPayload, '\n');
-    result += restOfPayload;
+    std::string result = "S:"
+            + std::to_string(pendulumSensorValue) + ";"
+            + std::to_string(samplingPeriod) + ";"
+            + std::to_string(sequenceNumber) + ";"
+            + std::to_string(currentTime) + ";"
+            + std::to_string(networkDelay) + ";";
     result += '\n';
     return result;
 }
