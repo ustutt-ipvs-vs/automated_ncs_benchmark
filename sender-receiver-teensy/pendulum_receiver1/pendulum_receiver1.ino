@@ -573,7 +573,7 @@ void updateRotaryEncoderValue() {
   }
 
   void resetControlParameters(){
-    Serial.write("Resetting control parameters");
+    Serial.println("Resetting control parameters");
 
     // Carabelli approach:
     k = 0;
@@ -836,6 +836,7 @@ void updateRotaryEncoderValue() {
             Serial.send_now();
           }
         } else {
+          rotate.stop();
           delay(4000);
           resetControlParameters();
 
