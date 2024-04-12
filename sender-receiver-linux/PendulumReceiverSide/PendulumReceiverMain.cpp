@@ -42,8 +42,8 @@ int main(int argc, char *argv[]){
         std::cout << config.toString() << std::endl;
 
     } else {
-        std::cout << "No config file specified, using default values." << std::endl;
-        receiver = new PendulumReceiver(device, host, port, true, 20'000, 800, 20*60, 20.06, 0.09, 1.0, 1.0, ReceiverConfig::SWING_UP_AT_START);
+        std::cout << "No config file specified. Can't start." << std::endl;
+        return 1;
     }
     receiver->start();
 }
