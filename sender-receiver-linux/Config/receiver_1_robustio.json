@@ -12,6 +12,6 @@
   "controllerIntegratorParam": 0.7085,
   "RMatrixDiagonalValue": 0.09,
   "Q0MatrixDiagonalValue": 0.01,
-  "controlApproach": "carabelliKalmanIstController",
+  "controlApproach": "RobustIO",
   "sigmaSquare": 1.0
 }

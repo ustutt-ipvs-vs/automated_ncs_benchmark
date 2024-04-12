@@ -13,5 +13,5 @@
   "RMatrixDiagonalValue": 1.0,
   "Q0MatrixDiagonalValue": 1.0,
   "sigmaSquare": 1.0,
-  "controlApproach": "istKalmanIstController"
+  "controlApproach": "mLQR"
 }

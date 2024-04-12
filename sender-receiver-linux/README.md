@@ -210,7 +210,7 @@ with
   "sailType": "sail14",
   "controllerKVector": [1.0, 2.0, 3.0, 4.0],
   "controllerIntegratorParam": 1.0,
-  "controlApproach":"carabelliKalmanCarabelliController"
+  "controlApproach":"mLQR"
 }
 ```
 
@@ -231,8 +231,8 @@ with
     - `sail14`
     - `sail17`
     - `sail20`
-- `controllerKVector`: Vector of 4 floating point numbers. The IST controller uses this vector as the K vector. Default: `[3.6723, 13.5022, -74.6153, -19.8637]`
-- `controllerIntegratorParam`: Floating point number. The IST controller uses this value as the integrator parameter. Default: `5.0322`
-- `controlApproach`: String. Determines which control approach is used. Default: `carabelliKalmanCarabelliController`. Possible options:
-    - `carabelliKalmanCarabelliController`: use the Kalman filter and the controller from Carabelli
-    - `carabelliKalmanIstController`: use the Kalman filter from Carabelli and the controller from IST
+- `controllerKVector`: Vector of 4 floating point numbers. The RobustIO controller uses this vector as the K vector. Default: `[3.6723, 13.5022, -74.6153, -19.8637]`
+- `controllerIntegratorParam`: Floating point number. The RobustIO controller uses this value as the integrator parameter. Default: `5.0322`
+- `controlApproach`: String. Determines which control approach is used. Default: `mLQR`. Possible options:
+    - `mLQR`
+    - `RobustIO`

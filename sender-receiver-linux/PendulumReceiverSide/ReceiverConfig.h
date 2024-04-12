@@ -15,7 +15,7 @@
  *   "sailType": "sail14",
  *   "controllerKVector": [1.0, 2.0, 3.0, 4.0],
  *   "controllerIntegratorParam": 1.0,
- *   "controlApproach":"carabelli_kalman_carabelli_controller"
+ *   "controlApproach":"mLQR"
  * }
  *
  * The pendulum types available are:
@@ -37,9 +37,9 @@
  * Default is noSail.
  *
  * The controlApproach options are:
- * - carabelliKalmanCarabelliController: use the Kalman filter and the controller from Carabelli
- * - carabelliKalmanIstController: use the Kalman filter from Carabelli and the controller from IST
- * Default is carabelliKalmanCarabelliController.
+ * - mLQR
+ * - RobustIO
+ * Default is mLQR.
  *
  * The serialDeviceName can be set to "auto" to automatically find the a Teensy device.
  * It is also possible to specify the device name manually, e.g. "/dev/ttyACM0".
@@ -54,8 +54,8 @@ public:
     };
 
     enum ControlApproach {
-        CARABELLI_KALMAN_CARABELLI_CONTROLLER,
-        CARABELLI_KALMAN_IST_CONTROLLER
+        MLQR,
+        ROBUST_IO
     };
 
 private:
@@ -67,8 +67,8 @@ private:
     };
 
     const std::vector<std::string> controlApproachStrings = {
-            "carabelliKalmanCarabelliController",
-            "carabelliKalmanIstController"
+            "mLQR",
+            "RobustIO"
     };
 
     std::string receiverAddress;

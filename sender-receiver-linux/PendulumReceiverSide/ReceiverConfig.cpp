@@ -100,10 +100,10 @@ ReceiverConfig::ReceiverConfig(std::string filename) {
 
     if(configJson.contains("controlApproach")) {
         std::string controlApproachString = configJson["controlApproach"];
-        if(controlApproachString == "carabelliKalmanCarabelliController"){
-            controlApproach = CARABELLI_KALMAN_CARABELLI_CONTROLLER;
-        } else if(controlApproachString == "carabelliKalmanIstController"){
-            controlApproach = CARABELLI_KALMAN_IST_CONTROLLER;
+        if(controlApproachString == "mLQR"){
+            controlApproach = MLQR;
+        } else if(controlApproachString == "RobustIO"){
+            controlApproach = ROBUST_IO;
         } else{
             std::string optionsString;
             for(const std::string& option : controlApproachStrings){
@@ -116,7 +116,7 @@ ReceiverConfig::ReceiverConfig(std::string filename) {
              + " The following options are available: " + optionsString);
         }
     } else {
-        controlApproach = CARABELLI_KALMAN_CARABELLI_CONTROLLER;
+        controlApproach = MLQR;
     }
 }
 
@@ -228,9 +228,9 @@ std::string ReceiverConfig::getControlApproachString() const {
 
 int ReceiverConfig::getControlApproachInt() const {
     switch(controlApproach){
-        case ReceiverConfig::ControlApproach::CARABELLI_KALMAN_CARABELLI_CONTROLLER:
+        case ReceiverConfig::ControlApproach::MLQR:
             return 0;
-        case ReceiverConfig::ControlApproach::CARABELLI_KALMAN_IST_CONTROLLER:
+        case ReceiverConfig::ControlApproach::ROBUST_IO:
             return 1;
         default:
             throw std::runtime_error("Unknown control approach: " + getControlApproachString());
