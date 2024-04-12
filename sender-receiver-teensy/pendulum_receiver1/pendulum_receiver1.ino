@@ -204,8 +204,8 @@ void initializeCartState() {
 
 void setApproachFromParameter(int parameter) {
   switch (parameter) {
-    case 1: approachUsed = CARABELLI_KALMAN_CARABELLI_CONTROLLER; break;
-    case 3: approachUsed = CARABELLI_KALMAN_IST_CONTROLLER; break;
+    case 0: approachUsed = CARABELLI_KALMAN_CARABELLI_CONTROLLER; break;
+    case 1: approachUsed = CARABELLI_KALMAN_IST_CONTROLLER; break;
   }
 }
 
@@ -224,7 +224,7 @@ void readInitializationValues() {
   // Expected Format:
   // I:motorMaxRPM;revolutionsPerTrack;doSwingUpAtStart;swingUpDistanceFactor;swingUpSpeedFactor;swingUpAccelerationFactor;approach\n
   // where doSwingUpAtStart in {0, 1}
-  // and approach in {1, 3} with 1: CARABELLI_KALMAN_CARABELLI_CONTROLLER, 3: CARABELLI_KALMAN_IST_CONTROLLER
+  // and approach in {0, 1} with 0: CARABELLI_KALMAN_CARABELLI_CONTROLLER, 1: CARABELLI_KALMAN_IST_CONTROLLER
   bool receivedInitValues = false;
   while (!receivedInitValues) {
     Serial.println("READY");
@@ -244,10 +244,6 @@ void readInitializationValues() {
         K_iqc(2) = Serial.readStringUntil(';').toFloat();
         K_iqc(3) = Serial.readStringUntil(';').toFloat();
         K_iqc_integrator = Serial.readStringUntil(';').toFloat();
-        // TODO: Reformat message on Linux:
-        // r_factor = Serial.readStringUntil(';').toFloat();
-        // q0_factor = Serial.readStringUntil(';').toFloat();
-        // sigmaSquare = Serial.readStringUntil(';').toFloat();
         setApproachFromParameter(Serial.readStringUntil(';').toInt());
 
         receivedInitValues = true;
@@ -257,7 +253,7 @@ void readInitializationValues() {
         // Echo received values to computer for validation:
         Serial.printf("Received init values: motor max RPM: %i, revolutions per track: %f, swing up at start: %i, "
                       "swing up distance factor: %f, swing up speed factor %f , swing up accel. factor: %f, "
-                      "K_iqc: [%f, %f, %f, %f], K_iqc_integrator: %f, r_factor: %f, q0_factor: %f, sigmaSquare: %f, approach: %s\n",
+                      "K_iqc: [%f, %f, %f, %f], K_iqc_integrator: %f, approach: %s\n",
                       newMotorMaxRPM, newRevolutionsPerTrack, doSwingUpAtStart, swingUpDistanceFactor, swingUpSpeedFactor, swingUpAccelerationFactor,
                       K_iqc(0), K_iqc(1), K_iqc(2), K_iqc(3), K_iqc_integrator, getUsedApproachString().c_str());
       }

@@ -46,11 +46,7 @@ private:
     unsigned long long packetCount = 0;
     unsigned long long bytesReceivedTotal = 0;
 
-    time_point<system_clock> lastPauseTime;
     bool startedBalancing = false;
-    unsigned int timeBetweenPausesMillis;
-    unsigned int pauseDurationMillis;
-    bool doPauses = false;
 
     int motorMaxRPM;
     double revolutionsPerTrack;
@@ -61,17 +57,13 @@ private:
     std::string kalmanAndControllerParamString;
 
 public:
-    PendulumReceiver(std::string serialDeviceName, std::string receiverHost, int receiverPort, bool doPauses,
-                     int timeBetweenPausesMillis, int pauseDurationMillis, int motorMaxRPM, double revolutionsPerTrack,
-                     float swingUpDistanceFactor, float swingUpSpeedFactor, float swingUpAccelerationFactor,
+    PendulumReceiver(std::string serialDeviceName, std::string receiverHost, int receiverPort, int motorMaxRPM,
+                     double revolutionsPerTrack, float swingUpDistanceFactor, float swingUpSpeedFactor,
+                     float swingUpAccelerationFactor,
                      ReceiverConfig::SwingUpBehavior swingUpBehavior = ReceiverConfig::SwingUpBehavior::NO_SWING_UP,
-                     std::string kalmanAndControllerParamString = "0.0;0.0;0.0;0.0;0.0;0.0;0.0;0.0;");
+                     std::string kalmanAndControllerParamString = "0.0;0.0;0.0;0.0;0.0;");
     void start();
     void stop();
-
-    bool isTimeForPause() const;
-
-    void sendPauseSignal();
 
     void startNewLogfile(std::string previousConfigName);
 
@@ -79,6 +71,5 @@ public:
 
     void handleEndSignal();
 };
-
 
 #endif //UDP_SEND_TOKEN_BUCKET_CLION_PENDULUMRECEIVER_H

@@ -34,10 +34,8 @@ int main(int argc, char *argv[]){
         }
 
         receiver = new PendulumReceiver(device, config.getReceiverAddress(), port,
-                                        config.isDoPauses(), config.getTimeBetweenPausesMillis(),
-                                        config.getPauseDurationMillis(), config.getMotorMaxRPM(),
-                                        config.getRevolutionsPerTrack(), config.getSwingUpDistanceFactor(),
-                                        config.getSwingUpSpeedFactor(), config.getSwingUpAccelerationFactor(),
+                                        config.getMotorMaxRPM(),config.getRevolutionsPerTrack(),
+                                        config.getSwingUpDistanceFactor(),config.getSwingUpSpeedFactor(), config.getSwingUpAccelerationFactor(),
                                         config.getSwingUpBehavior(), config.getKalmanAndControllerParameterString());
 
         std::cout << "Using config file: " << configFile << std::endl;

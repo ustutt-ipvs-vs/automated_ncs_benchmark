@@ -11,17 +11,11 @@
  *   "receiverAddress": "10.0.0.3",
  *   "pendulumType": "newPendulum",
  *   "serialDeviceName": "auto",
- *   "doPauses": true,
- *   "timeBetweenPausesMillis": 20000,
- *   "pauseDurationMillis": 800,
  *   "swingUpBehavior": "swingUpAtStart",
  *   "sailType": "sail14",
  *   "controllerKVector": [1.0, 2.0, 3.0, 4.0],
  *   "controllerIntegratorParam": 1.0,
- *   "RMatrixDiagonalValue": 1.0,
- *   "Q0MatrixDiagonalValue": 1.0,
- *   "sigmaSquare": 1.0,
- *   "controlApproach":"ist_kalman_ist_controller"
+ *   "controlApproach":"carabelli_kalman_carabelli_controller"
  * }
  *
  * The pendulum types available are:
@@ -43,11 +37,9 @@
  * Default is noSail.
  *
  * The controlApproach options are:
- * - istKalmanIstController: use the Kalman filter and the controller from IST
  * - carabelliKalmanCarabelliController: use the Kalman filter and the controller from Carabelli
- * - istKalmanCarabelliController: use the Kalman filter from IST and the controller from Carabelli
  * - carabelliKalmanIstController: use the Kalman filter from Carabelli and the controller from IST
- * Default is istKalmanIstController.
+ * Default is carabelliKalmanCarabelliController.
  *
  * The serialDeviceName can be set to "auto" to automatically find the a Teensy device.
  * It is also possible to specify the device name manually, e.g. "/dev/ttyACM0".
@@ -62,9 +54,7 @@ public:
     };
 
     enum ControlApproach {
-        IST_KALMAN_IST_CONTROLLER,
         CARABELLI_KALMAN_CARABELLI_CONTROLLER,
-        IST_KALMAN_CARABELLI_CONTROLLER,
         CARABELLI_KALMAN_IST_CONTROLLER
     };
 
@@ -77,9 +67,7 @@ private:
     };
 
     const std::vector<std::string> controlApproachStrings = {
-            "istKalmanIstController",
             "carabelliKalmanCarabelliController",
-            "istKalmanCarabelliController",
             "carabelliKalmanIstController"
     };
 
@@ -87,17 +75,11 @@ private:
     std::string pendulumType;
     std::string serialDeviceName;
     bool automaticallyFindSerialDevice;
-    bool doPauses;
-    int timeBetweenPausesMillis;
-    int pauseDurationMillis;
     enum SwingUpBehavior swingUpBehavior;
     std::string pendulumSailType;
 
     std::vector<float> controllerKVector;
     float controllerIntegratorParam;
-    float RMatrixDiagonalValue;
-    float Q0MatrixDiagonalValue;
-    float sigmaSquare;
     enum ControlApproach controlApproach;
 
 
@@ -113,12 +95,6 @@ public:
     ReceiverConfig(std::string filename);
 
     bool isAutomaticallyFindSerialDevice() const;
-
-    bool isDoPauses() const;
-
-    int getTimeBetweenPausesMillis() const;
-
-    int getPauseDurationMillis() const;
 
     int getMotorMaxRPM() const;
 
@@ -141,14 +117,7 @@ public:
 
     float getControllerIntegratorParam() const;
 
-    float getRMatrixDiagonalValue() const;
-
-    float getQ0MatrixDiagonalValue() const;
-
-    float getSigmaSquare() const;
-
-
-    ControlApproach getControlApproch() const;
+    ControlApproach getControlApproach() const;
 
     std::string getControlApproachString() const;
 
@@ -157,7 +126,7 @@ public:
     /**
      * Returns a string containing all the parameters that are used by the Kalman filter and the controller.
      * The string is formatted as follows:
-     * controllerKVector[0];controllerKVector[1];controllerKVector[2];controllerKVector[3];controllerIntegratorParam;RMatrixDiagonalValue;Q0MatrixDiagonalValue;sigmaSquare;
+     * controllerKVector[0];controllerKVector[1];controllerKVector[2];controllerKVector[3];controllerIntegratorParam;controlApproachInt;
      *
      * This string is used to transfer to initial config to the Teensy microcontroller on initialization.
      */

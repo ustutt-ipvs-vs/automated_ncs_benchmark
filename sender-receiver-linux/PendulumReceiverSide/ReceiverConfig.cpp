@@ -18,27 +18,12 @@ bool ReceiverConfig::isAutomaticallyFindSerialDevice() const {
     return automaticallyFindSerialDevice;
 }
 
-int ReceiverConfig::getTimeBetweenPausesMillis() const {
-    return timeBetweenPausesMillis;
-}
-
-int ReceiverConfig::getPauseDurationMillis() const {
-    return pauseDurationMillis;
-}
-
-bool ReceiverConfig::isDoPauses() const {
-    return doPauses;
-}
-
 std::string ReceiverConfig::toString() const {
     std::string result = "ReceiverConfig:\n";
     result += "receiverAddress: " + receiverAddress + "\n";
     result += "pendulumType: " + pendulumType + "\n";
     result += "serialDeviceName: " + serialDeviceName + "\n";
     result += "automaticallyFindSerialDevice: " + std::to_string(automaticallyFindSerialDevice) + "\n";
-    result += "doPauses: " + std::to_string(doPauses) + "\n";
-    result += "timeBetweenPausesMillis: " + std::to_string(timeBetweenPausesMillis) + "\n";
-    result += "pauseDurationMillis: " + std::to_string(pauseDurationMillis) + "\n";
     result += "swingUpBehavior: " + getSwingUpBehaviorString() + "\n";
     result += "sailType: " + pendulumSailType + "\n";
 
@@ -48,9 +33,6 @@ std::string ReceiverConfig::toString() const {
     }
     result += "]\n";
     result += "controllerIntegratorParam: " + std::to_string(controllerIntegratorParam) + "\n";
-    result += "RMatrixDiagonalValue: " + std::to_string(RMatrixDiagonalValue) + "\n";
-    result += "Q0MatrixDiagonalValue: " + std::to_string(Q0MatrixDiagonalValue) + "\n";
-    result += "sigmaSquare: " + std::to_string(sigmaSquare) + "\n";
     result += "controlApproach: " + getControlApproachString() + "\n";
 
     return result;
@@ -72,24 +54,6 @@ ReceiverConfig::ReceiverConfig(std::string filename) {
         serialDeviceName = "auto";
     }
     automaticallyFindSerialDevice = (serialDeviceName == "auto");
-
-    if(configJson.contains("doPauses")) {
-        doPauses = configJson["doPauses"];
-    } else {
-        doPauses = false;
-    }
-
-    if(configJson.contains("timeBetweenPausesMillis")) {
-        timeBetweenPausesMillis = configJson["timeBetweenPausesMillis"];
-    } else {
-        timeBetweenPausesMillis = 20'000;
-    }
-
-    if(configJson.contains("pauseDurationMillis")) {
-        pauseDurationMillis = configJson["pauseDurationMillis"];
-    } else {
-        pauseDurationMillis = 800;
-    }
 
     if(configJson.contains("swingUpBehavior")) {
         std::string swingUpBehaviorString = configJson["swingUpBehavior"];
@@ -134,32 +98,10 @@ ReceiverConfig::ReceiverConfig(std::string filename) {
         controllerIntegratorParam = 5.0322;
     }
 
-    if(configJson.contains("RMatrixDiagonalValue")) {
-        RMatrixDiagonalValue = configJson["RMatrixDiagonalValue"];
-    } else {
-        RMatrixDiagonalValue = 1.0;
-    }
-
-    if(configJson.contains("Q0MatrixDiagonalValue")) {
-        Q0MatrixDiagonalValue = configJson["Q0MatrixDiagonalValue"];
-    } else {
-        Q0MatrixDiagonalValue = 1.0;
-    }
-
-    if(configJson.contains("sigmaSquare")) {
-        sigmaSquare = configJson["sigmaSquare"];
-    } else {
-        sigmaSquare = 1.0;
-    }
-
     if(configJson.contains("controlApproach")) {
         std::string controlApproachString = configJson["controlApproach"];
-        if(controlApproachString == "istKalmanIstController"){
-            controlApproach = IST_KALMAN_IST_CONTROLLER;
-        } else if(controlApproachString == "carabelliKalmanCarabelliController"){
+        if(controlApproachString == "carabelliKalmanCarabelliController"){
             controlApproach = CARABELLI_KALMAN_CARABELLI_CONTROLLER;
-        } else if(controlApproachString == "istKalmanCarabelliController"){
-            controlApproach = IST_KALMAN_CARABELLI_CONTROLLER;
         } else if(controlApproachString == "carabelliKalmanIstController"){
             controlApproach = CARABELLI_KALMAN_IST_CONTROLLER;
         } else{
@@ -174,7 +116,7 @@ ReceiverConfig::ReceiverConfig(std::string filename) {
              + " The following options are available: " + optionsString);
         }
     } else {
-        controlApproach = IST_KALMAN_IST_CONTROLLER;
+        controlApproach = CARABELLI_KALMAN_CARABELLI_CONTROLLER;
     }
 }
 
@@ -266,32 +208,17 @@ float ReceiverConfig::getControllerIntegratorParam() const {
     return controllerIntegratorParam;
 }
 
-float ReceiverConfig::getRMatrixDiagonalValue() const {
-    return RMatrixDiagonalValue;
-}
-
-float ReceiverConfig::getQ0MatrixDiagonalValue() const {
-    return Q0MatrixDiagonalValue;
-}
-
-float ReceiverConfig::getSigmaSquare() const {
-    return sigmaSquare;
-}
-
 std::string ReceiverConfig::getKalmanAndControllerParameterString() {
     std::string result;
     for(float i : controllerKVector){
         result +=  std::to_string(i) + ";";
     }
     result += std::to_string(controllerIntegratorParam) + ";";
-    result += std::to_string(RMatrixDiagonalValue) + ";";
-    result += std::to_string(Q0MatrixDiagonalValue) + ";";
-    result += std::to_string(sigmaSquare) + ";";
     result += std::to_string(getControlApproachInt()) + ";";
     return result;
 }
 
-ReceiverConfig::ControlApproach ReceiverConfig::getControlApproch() const {
+ReceiverConfig::ControlApproach ReceiverConfig::getControlApproach() const {
     return controlApproach;
 }
 
@@ -301,14 +228,10 @@ std::string ReceiverConfig::getControlApproachString() const {
 
 int ReceiverConfig::getControlApproachInt() const {
     switch(controlApproach){
-        case ReceiverConfig::ControlApproach::IST_KALMAN_IST_CONTROLLER:
-            return 0;
         case ReceiverConfig::ControlApproach::CARABELLI_KALMAN_CARABELLI_CONTROLLER:
-            return 1;
-        case ReceiverConfig::ControlApproach::IST_KALMAN_CARABELLI_CONTROLLER:
-            return 2;
+            return 0;
         case ReceiverConfig::ControlApproach::CARABELLI_KALMAN_IST_CONTROLLER:
-            return 3;
+            return 1;
         default:
             throw std::runtime_error("Unknown control approach: " + getControlApproachString());
     }

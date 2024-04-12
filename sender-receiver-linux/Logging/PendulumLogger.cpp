@@ -76,16 +76,9 @@ nlohmann::json PendulumLogger::toJsonObject() {
             {"name",          name},
             {"timePointLogs", timepointLogs},
             {"actuatorLogs", actuatorLogs},
-            {"pauseLogs", pauseLogs},
             {"senderFeedbackLogs", senderFeedbackLogs}
     };
     return jsonObject;
-}
-
-void PendulumLogger::logPause(unsigned int durationMillis) {
-    time_point<system_clock> currentTime = system_clock::now();
-    PauseLogEntry entry(currentTime, durationMillis);
-    pauseLogs.emplace_back(entry);
 }
 
 void PendulumLogger::logSenderFeedback(std::string senderFeedbackString) {
@@ -112,7 +105,6 @@ void PendulumLogger::reset() {
     Logger::reset();
     timepointLogs.clear();
     actuatorLogs.clear();
-    pauseLogs.clear();
     senderFeedbackLogs.clear();
 }
 

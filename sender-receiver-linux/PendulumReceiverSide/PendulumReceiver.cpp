@@ -5,16 +5,12 @@
 #include "PendulumReceiver.h"
 
 PendulumReceiver::PendulumReceiver(std::string serialDeviceName, std::string receiverHost, int receiverPort,
-                                   bool doPauses, int timeBetweenPausesMillis, int pauseDurationMillis,
                                    int motorMaxRPM, double revolutionsPerTrack, float swingUpDistanceFactor,
                                    float swingUpSpeedFactor, float swingUpAccelerationFactor,
                                    ReceiverConfig::SwingUpBehavior swingUpBehavior,
                                    std::string kalmanAndControllerParamString){
     this->serialDeviceName = serialDeviceName;
     this->receiverAddress = inet_address(receiverHost, receiverPort);
-    this->doPauses = doPauses;
-    this->timeBetweenPausesMillis = timeBetweenPausesMillis;
-    this->pauseDurationMillis = pauseDurationMillis;
     this->motorMaxRPM = motorMaxRPM;
     this->revolutionsPerTrack = revolutionsPerTrack;
     this->swingUpBehavior = swingUpBehavior;
@@ -92,9 +88,6 @@ void PendulumReceiver::start() {
 
         logger->log(packetCount, bytesReceivedTotal, networkInput);
 
-        if(doPauses && isTimeForPause()){
-            sendPauseSignal();
-        }
         serialActuator.Write(networkInput);
 
         while (serialActuator.Available() > 0) {
@@ -107,7 +100,6 @@ void PendulumReceiver::start() {
 
                 if(!startedBalancing) {
                     startedBalancing = true;
-                    lastPauseTime = high_resolution_clock::now();
                 }
             } else if(serialInput.rfind("CT:GracePeriodEnded;") < serialInput.size()){
                 std::cout << "Grace period has ended. Resetting logger now." << std::endl;
@@ -152,24 +144,6 @@ void PendulumReceiver::handleEndSignal() {
     stop();
 }
 
-void PendulumReceiver::sendPauseSignal() {
-    // The pause signal has the form (for 800ms pause duration):
-    // PAUSE:800;
-    lastPauseTime = high_resolution_clock::now();
-    std::stringstream ss;
-    ss << "PAUSE:" << pauseDurationMillis << ";\n";
-    serialActuator.Write(ss.str());
-    logger->logPause(pauseDurationMillis);
-}
-
-bool PendulumReceiver::isTimeForPause() const {
-    if(!startedBalancing){
-        return false;
-    }
-    auto currentTime = high_resolution_clock::now();
-    return std::chrono::duration_cast<milliseconds>(currentTime - lastPauseTime).count() > timeBetweenPausesMillis;
-}
-
 void PendulumReceiver::stop() {
     stopReceiving = true;
     receiverSocket.close();
@@ -182,6 +156,3 @@ void PendulumReceiver::startNewLogfile(std::string previousConfigName) {
     logger->saveToFileAsync(); // Save asynchronously to avoid blocking the main thread
     logger = new PendulumLogger();
 }
-
-
-

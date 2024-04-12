@@ -215,17 +215,11 @@ with
   "receiverAddress": "10.0.1.3",
   "pendulumType": "oldPendulum",
   "serialDeviceName": "auto",
-  "doPauses": true,
-  "timeBetweenPausesMillis": 20000,
-  "pauseDurationMillis": 800,
   "swingUpBehavior": "crashAndSwingUpAtNewConfig",
   "sailType": "sail14",
   "controllerKVector": [1.0, 2.0, 3.0, 4.0],
   "controllerIntegratorParam": 1.0,
-  "RMatrixDiagonalValue": 1.0,
-  "Q0MatrixDiagonalValue": 1.0,
-  "sigmaSquare": 1.0,
-  "controlApproach":"ist_kalman_ist_controller"
+  "controlApproach":"carabelliKalmanCarabelliController"
 }
 ```
 
@@ -235,9 +229,6 @@ with
     - `oldPendulum`: The pendulum constructed by Ben Carabelli
     - `newPendulum`: The two pendulums constructed by David Augustat
 - `serialDeviceName`: Linux file which associated with the serial interface of the receiver Teensy. If you set it to `auto`, the computer tries to recognize a Teensy device automatically. Default value: `auto`
-- `doPauses`: Boolean (`true` or `false`) to determine whether the pendulum should pause periodically.+
-- `timeBetweenPausesMillis`: How much balancing time there should be between the pauses in milliseconds.
-- `pauseDurationMillis`: Length of the pauses in milliseconds.
 - `swingUpBehavior`: Determines if and when the pendulum should swing up itself. Default: `noSwingUp`. Possible options:
     - `swingUpAtStart`: Only swings up the pendulum at the start. If the pendulum crashes, it will stay crashed.
     - `swingUpAtNewConfigIfCrashed`: Swings up the pendulum at start and at the beginning of each new config, **if the pendulum has crashed before**. If the pendulum is already balancing at the start of a new config, it will not swing up.
@@ -251,11 +242,6 @@ with
     - `sail20`
 - `controllerKVector`: Vector of 4 floating point numbers. The IST controller uses this vector as the K vector. Default: `[3.6723, 13.5022, -74.6153, -19.8637]`
 - `controllerIntegratorParam`: Floating point number. The IST controller uses this value as the integrator parameter. Default: `5.0322`
-- `RMatrixDiagonalValue`: Floating point number. The IST Kalman filter uses this value as the diagonal value of the R matrix. Default: `1.0`
-- `Q0MatrixDiagonalValue`: Floating point number. The IST Kalman filter uses this value as the diagonal value of the Q0 matrix. Default: `1.0`
-- `sigmaSquare`: Floating point number. The IST Kalman filter uses this value to initialize `P_k_k_minus_1`. Default: `1.0`
-- `controlApproach`: String. Determines which control approach is used. Default: `istKalmanIstController`. Possible options:
-    - `istKalmanIstController`: use the Kalman filter and the controller from IST
+- `controlApproach`: String. Determines which control approach is used. Default: `carabelliKalmanCarabelliController`. Possible options:
     - `carabelliKalmanCarabelliController`: use the Kalman filter and the controller from Carabelli
-    - `istKalmanCarabelliController`: use the Kalman filter from IST and the controller from Carabelli
     - `carabelliKalmanIstController`: use the Kalman filter from Carabelli and the controller from IST

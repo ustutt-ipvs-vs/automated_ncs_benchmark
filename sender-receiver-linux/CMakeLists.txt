@@ -57,8 +57,6 @@ add_executable(pendulum_sender
         Logging/LogEntries/ActuatorLogEntry.h
         Scheduling/ConstantPriority.cpp
         Scheduling/ConstantPriority.h
-        Logging/LogEntries/PauseLogEntry.h
-        Logging/LogEntries/PauseLogEntry.cpp
         Logging/LogEntries/SenderFeedbackLogEntry.cpp
         Logging/LogEntries/SenderFeedbackLogEntry.h
         Scheduling/PriorityDeterminer.h
@@ -90,8 +88,6 @@ add_executable(pendulum_receiver
         nlohmann/json.hpp
         Logging/LogEntries/ActuatorLogEntry.cpp
         Logging/LogEntries/ActuatorLogEntry.h
-        Logging/LogEntries/PauseLogEntry.h
-        Logging/LogEntries/PauseLogEntry.cpp
         Logging/LogEntries/SenderFeedbackLogEntry.cpp
         Logging/LogEntries/SenderFeedbackLogEntry.h
         Scheduling/PriorityDeterminer.h
