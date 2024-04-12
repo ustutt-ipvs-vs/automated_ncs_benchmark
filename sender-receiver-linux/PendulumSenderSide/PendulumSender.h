@@ -39,13 +39,6 @@ private:
     uint64_t startTime;
     uint64_t lastLogTime = 0;
 
-    double currentRunAVG = 0;
-    int currentRunValues = 0;
-    int currentRunNr = 1;
-
-    double allRunsAVG = 0;
-    int allRuns = 0; 
-
     unsigned long long packetCount = 0;
     unsigned long long bytesSentTotal = 0;
     unsigned long long feedbackPacketsCount = 0;
@@ -74,6 +67,8 @@ private:
     uint64_t timeSinceEpochMillisec();
     std::string applyAngleBiasAndNetworkDelay(std::string payload, int networkDelay);
     void handleControlMessageFromTeensy();
+
+    double calculatePoleAngle(const std::string &payload) const;
 };
 
 
