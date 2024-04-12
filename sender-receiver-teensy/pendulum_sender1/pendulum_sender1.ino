@@ -92,10 +92,13 @@ void calculateTransmissionPeriod(){
     int currentEncoderValue = encoder.read();
     lastSensorPeekTime = currentTime;
 
-    compareValue = getHistoryMaxChange(currentEncoderValue);
+    
+    //compareValue = getHistoryMaxChangeOfCurrent(currentEncoderValue);
 
     samplesHistory[historyPosition] = currentEncoderValue;
     historyPosition = (historyPosition + 1) % historySize;
+    
+    compareValue = getHistoryMaxChange();
 
     previousEncoderValue = currentEncoderValue;
 
@@ -198,7 +201,7 @@ void checkAndHandleFeedback(){
 }
 
 
-int getHistoryMaxChange(int currentValue){
+int getHistoryMaxChangeOfCurrent(int currentValue){
   int maxChange = abs(samplesHistory[0] - currentValue);
   for(int i=1; i < historySize; i++){
     int change = abs(samplesHistory[i] - currentValue);
@@ -207,6 +210,23 @@ int getHistoryMaxChange(int currentValue){
     }
   }
   return maxChange;
+}
+
+int getHistoryMaxChange(){
+  int minValue = samplesHistory[0];
+  int maxValue = samplesHistory[0];
+
+  for(int i=1; i < historySize; i++) {
+    int currentValue = samplesHistory[i];
+    if(currentValue < minValue){
+      minValue = currentValue;
+    }
+    if(currentValue > maxValue){
+      maxValue = currentValue;
+    }
+  }
+  return maxValue - minValue;
+
 }
 
 
