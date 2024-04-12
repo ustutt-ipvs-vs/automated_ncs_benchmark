@@ -5,34 +5,6 @@ set(CMAKE_CXX_STANDARD 17)
 
 SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pthread")
 
-add_executable(cross_traffic
-        CrossTraffic/CrossTrafficSender.cpp
-        CrossTraffic/CrossTrafficSender.h
-        CrossTraffic/CrossTrafficSenderOrchestrator.cpp
-        CrossTraffic/CrossTrafficSenderOrchestrator.h
-        CrossTraffic/CrossTrafficMain.cpp
-        Scheduling/TokenBucket.hpp
-        Scheduling/TokenBucket.cpp
-        Logging/Logger.cpp
-        Logging/Logger.h
-        Logging/LogEntries/LogEntry.cpp
-        Logging/LogEntries/LogEntry.h
-        nlohmann/json.hpp
-        Logging/CrossTrafficLogger.cpp
-        Logging/CrossTrafficLogger.h
-        Logging/LogEntries/SchedulingInfoEntries/TokenBucketInfoEntry.cpp
-        Logging/LogEntries/SchedulingInfoEntries/TokenBucketInfoEntry.h
-        Scheduling/PriorityDeterminer.h
-        Scheduling/PriorityDeterminer.cpp
-        Logging/LogEntries/SchedulingInfoEntries/ConstantPrioInfoEntry.cpp
-        Logging/LogEntries/SchedulingInfoEntries/ConstantPrioInfoEntry.h
-        Scheduling/ConstantPriority.cpp
-        Scheduling/ConstantPriority.h
-        Scheduling/MultiPriorityTokenBucket.cpp
-        Scheduling/MultiPriorityTokenBucket.h
-        Parameters/Parameters.h
-)
-
 add_executable(pendulum_sender
         PendulumSenderSide/PendulumSender.cpp
         PendulumSenderSide/PendulumSender.h
@@ -104,9 +76,6 @@ add_executable(pendulum_receiver
         PendulumReceiverSide/ReceiverConfig.h
         Parameters/Parameters.h
         )
-
-
-target_link_libraries(cross_traffic sockpp)
 
 target_link_libraries(pendulum_sender sockpp)
 target_link_libraries(pendulum_sender CppLinuxSerial)

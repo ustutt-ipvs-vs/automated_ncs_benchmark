@@ -1,8 +1,7 @@
-# Pendulum Sender, Receiver and Cross-Traffic Sender for Linux
+# Pendulum Sender and Receiver for Linux
 This CMake project contains the code for following programs:
 - Sender component for the sensor-side single-board computer
 - Receiver component for the actuator-side single-board computer
-- Cross-traffic generator
 
 All the code is written in C++. The following libraries are used:
 - `sockpp` to open UDP sockets
@@ -62,12 +61,11 @@ To compile the different targets individually, you can also run instead of the l
 ```
 cmake --build . --target pendulum_sender
 cmake --build . --target pendulum_receiver
-cmake --build . --target cross_traffic
 ```
 
 ## Running the Executables
 ### Explanations
-The `pendulum_sender` and `cross_traffic` executable must be run with root privileges. Otherwise, the PCP value `7` is not allowed by the OS and PCP value `0` is used instead (without reporting an error).
+The `pendulum_sender` executable must be run with root privileges. Otherwise, the PCP value `7` is not allowed by the OS and PCP value `0` is used instead (without reporting an error).
 
 You need to make sure that the shared libraries (`sockpp` and `CppLinuxSerial`) can be found. For this purpose, you need to add the path of the libraries (usually `/usr/local/lib`) to the `LD_LIBRARY_PATH` variable:
 ```
@@ -80,13 +78,6 @@ First connect the Teensy to the single-board microcontroller via USB. Then run
 sudo su
 export LD_LIBRARY_PATH=/usr/local/lib:$LD_LIBRARY_PATH
 ./pendulum_sender
-```
-
-### Running Cross Traffic Sender
-```
-sudo su
-export LD_LIBRARY_PATH=/usr/local/lib:$LD_LIBRARY_PATH
-./cross_traffic
 ```
 
 ### Running Pendulum Receiver
