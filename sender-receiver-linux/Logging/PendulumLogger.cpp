@@ -1,7 +1,3 @@
-//
-// Created by david on 10.01.23.
-//
-
 #include "PendulumLogger.h"
 #include "LogEntries/SenderFeedbackLogEntry.h"
 #include <sstream>

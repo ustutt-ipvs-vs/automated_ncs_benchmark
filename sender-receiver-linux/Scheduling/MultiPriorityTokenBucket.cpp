@@ -1,7 +1,3 @@
-//
-// Created by david on 29.01.23.
-//
-
 #include "MultiPriorityTokenBucket.h"
 #include <chrono>
 #include "../Logging/LogEntries/SchedulingInfoEntries/TokenBucketInfoEntry.h"

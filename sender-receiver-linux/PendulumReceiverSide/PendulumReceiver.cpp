@@ -1,7 +1,3 @@
-//
-// Created by david on 11.01.23.
-//
-
 #include "PendulumReceiver.h"
 
 PendulumReceiver::PendulumReceiver(std::string serialDeviceName, std::string receiverHost, int receiverPort,

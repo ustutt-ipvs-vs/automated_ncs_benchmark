@@ -1,8 +1,3 @@
-
-//
-// Created by david on 10.01.23.
-//
-
 #include "PendulumSender.h"
 #include "../Logging/LogEntries/SchedulingInfoEntries/TokenBucketInfoEntry.h"
 #include "../Parameters/Parameters.h"

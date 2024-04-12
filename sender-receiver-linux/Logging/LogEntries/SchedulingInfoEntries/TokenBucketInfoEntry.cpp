@@ -1,7 +1,3 @@
-//
-// Created by david on 11.01.23.
-//
-
 #include "TokenBucketInfoEntry.h"
 
 double TokenBucketInfoEntry::getB() const {

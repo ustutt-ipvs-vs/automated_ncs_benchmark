@@ -1,7 +1,3 @@
-//
-// Created by david on 28.01.23.
-//
-
 #include "PriorityDeterminer.h"
 
 int PriorityDeterminer::toEthernetFrameSizeBytes(int payloadSizeBytes) {

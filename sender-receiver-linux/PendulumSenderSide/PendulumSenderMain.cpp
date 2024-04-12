@@ -1,7 +1,3 @@
-//
-// Created by david on 10.01.23.
-//
-
 #include <thread>
 #include "PendulumSender.h"
 #include "../Scheduling/ConstantPriority.h"

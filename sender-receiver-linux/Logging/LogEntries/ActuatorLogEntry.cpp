@@ -1,7 +1,3 @@
-//
-// Created by david on 19.01.23.
-//
-
 #include <sstream>
 #include "ActuatorLogEntry.h"
 

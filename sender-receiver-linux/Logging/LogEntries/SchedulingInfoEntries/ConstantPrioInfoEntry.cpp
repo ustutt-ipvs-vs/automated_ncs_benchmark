@@ -1,7 +1,3 @@
-//
-// Created by david on 24.01.23.
-//
-
 #include "ConstantPrioInfoEntry.h"
 
 int ConstantPrioInfoEntry::getPriority() const {

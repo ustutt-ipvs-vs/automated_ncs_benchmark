@@ -1,7 +1,3 @@
-//
-// Created by david on 24.01.23.
-//
-
 #include "ConstantPriority.h"
 #include "../Logging/LogEntries/SchedulingInfoEntries/ConstantPrioInfoEntry.h"
 

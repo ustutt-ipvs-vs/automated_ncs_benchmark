@@ -1,7 +1,3 @@
-//
-// Created by david on 26.01.23.
-//
-
 #include "SenderFeedbackLogEntry.h"
 
 const time_point<system_clock> &SenderFeedbackLogEntry::getTimePoint() const {

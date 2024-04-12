@@ -1,7 +1,3 @@
-//
-// Created by david on 10.01.23.
-//
-
 #include "CrossTrafficLogger.h"
 
 CrossTrafficLogger::CrossTrafficLogger(std::string name) : Logger(name) {}

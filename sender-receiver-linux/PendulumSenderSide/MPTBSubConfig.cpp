@@ -1,7 +1,3 @@
-//
-// Created by ipvsuser on 10/18/23.
-//
-
 #include "MPTBSubConfig.h"
 
 double MPTBSubConfig::getDurationMinutes() const {
