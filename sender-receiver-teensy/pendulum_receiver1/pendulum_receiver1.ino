@@ -4,7 +4,7 @@
 #include "CarabelliParameters.h"
 
 #include <BasicLinearAlgebra.h>
-using BLA::operator<<; // Required for printing matrices to Serial
+using BLA::operator<<;  // Required for printing matrices to Serial
 
 #define FeedbackSerial Serial1
 
@@ -65,7 +65,7 @@ int currentEncoderValue = 0;
 float currentAngularVelocity = 0;
 int currentLatencyMillis = 0;
 bool encoderInitialized = false;
-bool newEncoderValueAvailable = false; // set to true after every received value
+bool newEncoderValueAvailable = false;  // set to true after every received value
 
 unsigned long lastSequenceNumber = 0;
 
@@ -83,7 +83,7 @@ float getPoleAngleRad() {  // get encoder angle in radians
   return RAD_PER_ESTEP * angleSteps(currentEncoderValue);
 }
 
-float getAngularVelocityRadPerSecond(){
+float getAngularVelocityRadPerSecond() {
   return currentAngularVelocity;
 }
 
@@ -124,11 +124,11 @@ float poleAngle_p = 0.0;  // previous angle for angular velocity estimation
 
 float u_accel = 0.0;  // previous control input [m/s²]  NOT [msteps/s²]
 
-BLA::Matrix<4,1> K_iqc = {13.6723,   13.5022,  -74.6153,  -19.8637};
+BLA::Matrix<4, 1> K_iqc = { 13.6723, 13.5022, -74.6153, -19.8637 };
 
 float K_iqc_integrator = 5.0322;
 
-BLA::Matrix<4,1> x_k;
+BLA::Matrix<4, 1> x_k;
 
 enum approach {
   CARABELLI_KALMAN_CARABELLI_CONTROLLER,
@@ -156,7 +156,7 @@ bool isUpright = false;
 
 unsigned balancePeriod = 50;
 
- // CARABELLI APPROACH:
+// CARABELLI APPROACH:
 float Kxic = 0.25 * Kxc;  // integral gain (TODO: incorporate into system model)
 
 constexpr float f_kf = 0.9;  // factor for complementary filtering of kalman estimate with "raw" measurements
@@ -170,7 +170,7 @@ float fs = 1000.0 / balancePeriod;  // sampling frequency in Hz
 // Parameters for swing-up:
 uint32_t swingUpTimeLastDirSwitch = 0;
 int swingUpSampleNMinusOne, swingUpSampleNMinusTwo;
-int swingUpDistance = 0.105 * trackLengthSteps; // with small sail
+int swingUpDistance = 0.105 * trackLengthSteps;  // with small sail
 float swingUpSpeedFactor = 1.0;
 float swingUpAccelerationFactor = 1.0;
 uint32_t swingUpTimeLastPause = 0;
@@ -182,9 +182,9 @@ bool swingUpSignalReceived = false;
 
 bool gracePeriodEnded = false;
 
-void updateParametersForSamplingPeriod(unsigned samplingPeriod){
-  if(samplingPeriod == balancePeriod){
-    return; // Nothing to do, parameters already set correctly.
+void updateParametersForSamplingPeriod(unsigned samplingPeriod) {
+  if (samplingPeriod == balancePeriod) {
+    return;  // Nothing to do, parameters already set correctly.
   }
 
   balancePeriod = samplingPeriod;
@@ -192,7 +192,7 @@ void updateParametersForSamplingPeriod(unsigned samplingPeriod){
   fs = 1000.0 / balancePeriod;  // sampling frequency in Hz
 
   updateCarabelliParameters(samplingPeriod);
-  Kxic = 0.25 * Kxc; // integral gain (TODO: incorporate into system model)
+  Kxic = 0.25 * Kxc;  // integral gain (TODO: incorporate into system model)
 }
 
 void initializeCartState() {
@@ -202,22 +202,22 @@ void initializeCartState() {
   initTimer = 0;
 }
 
-void setApproachFromParameter(int parameter){
-  switch(parameter){
+void setApproachFromParameter(int parameter) {
+  switch (parameter) {
     case 1: approachUsed = CARABELLI_KALMAN_CARABELLI_CONTROLLER; break;
     case 3: approachUsed = CARABELLI_KALMAN_IST_CONTROLLER; break;
   }
 }
 
-String getUsedApproachString(){
-  switch(approachUsed){
+String getUsedApproachString() {
+  switch (approachUsed) {
     case CARABELLI_KALMAN_CARABELLI_CONTROLLER: return "CARABELLI_KALMAN_CARABELLI_CONTROLLER";
     case CARABELLI_KALMAN_IST_CONTROLLER: return "CARABELLI_KALMAN_IST_CONTROLLER";
   }
   return "";
 }
 
-void readInitializationValues(){
+void readInitializationValues() {
   int newMotorMaxRPM;
   float newRevolutionsPerTrack;
 
@@ -226,12 +226,12 @@ void readInitializationValues(){
   // where doSwingUpAtStart in {0, 1}
   // and approach in {1, 3} with 1: CARABELLI_KALMAN_CARABELLI_CONTROLLER, 3: CARABELLI_KALMAN_IST_CONTROLLER
   bool receivedInitValues = false;
-  while(!receivedInitValues){
+  while (!receivedInitValues) {
     Serial.println("READY");
     delay(500);
 
-    if(Serial.available() > 0){
-      if(Serial.readStringUntil(':').startsWith("I")){
+    if (Serial.available() > 0) {
+      if (Serial.readStringUntil(':').startsWith("I")) {
         newMotorMaxRPM = Serial.readStringUntil(';').toInt();
         newRevolutionsPerTrack = Serial.readStringUntil(';').toFloat();
         doSwingUpAtStart = Serial.readStringUntil(';').toInt();
@@ -256,19 +256,19 @@ void readInitializationValues(){
 
         // Echo received values to computer for validation:
         Serial.printf("Received init values: motor max RPM: %i, revolutions per track: %f, swing up at start: %i, "
-          "swing up distance factor: %f, swing up speed factor %f , swing up accel. factor: %f, "
-          "K_iqc: [%f, %f, %f, %f], K_iqc_integrator: %f, r_factor: %f, q0_factor: %f, sigmaSquare: %f, approach: %s\n", 
-        newMotorMaxRPM, newRevolutionsPerTrack, doSwingUpAtStart, swingUpDistanceFactor, swingUpSpeedFactor, swingUpAccelerationFactor,
-        K_iqc(0), K_iqc(1), K_iqc(2), K_iqc(3), K_iqc_integrator, getUsedApproachString().c_str());
+                      "swing up distance factor: %f, swing up speed factor %f , swing up accel. factor: %f, "
+                      "K_iqc: [%f, %f, %f, %f], K_iqc_integrator: %f, r_factor: %f, q0_factor: %f, sigmaSquare: %f, approach: %s\n",
+                      newMotorMaxRPM, newRevolutionsPerTrack, doSwingUpAtStart, swingUpDistanceFactor, swingUpSpeedFactor, swingUpAccelerationFactor,
+                      K_iqc(0), K_iqc(1), K_iqc(2), K_iqc(3), K_iqc_integrator, getUsedApproachString().c_str());
       }
-      Serial.read(); // Remove \n
+      Serial.read();  // Remove \n
     }
   }
 
   updateDriveGeometryParameters(newMotorMaxRPM, newRevolutionsPerTrack);
 }
 
-void updateDriveGeometryParameters(int newMotorMaxRPM, float newRevolutionsPerTrack){
+void updateDriveGeometryParameters(int newMotorMaxRPM, float newRevolutionsPerTrack) {
   // STEPPER PARAMETERS
   motorMaxRPM = newMotorMaxRPM;  // approx. 1s for track length
   motorPPS = (motorMaxRPM * motorPPR) / 60;
@@ -286,8 +286,8 @@ void updateDriveGeometryParameters(int newMotorMaxRPM, float newRevolutionsPerTr
   vMaxMeters = METER_PER_MSTEP * motorPPS;
   aMaxMeters = METER_PER_MSTEP * motorACC;
 
-  trackLengthSteps = REV_PER_TRACK * motorPPR;             // initial guess before homing
-  safePosSteps = safePosPercentage * trackLengthSteps;     // initial guess
+  trackLengthSteps = REV_PER_TRACK * motorPPR;           // initial guess before homing
+  safePosSteps = safePosPercentage * trackLengthSteps;   // initial guess
   stepsPerMeter = trackLengthSteps / trackLengthMeters;  // initial guess
 }
 
@@ -369,453 +369,452 @@ void updateRotaryEncoderValue() {
   // for example
   // S:-1204;50;1234;62345234;-1.308997;4\n
 
-  if(!(CartState == HOME || CartState == PERFORM_SWING_UP || CartState == BALANCE || CartState == WAIT_FOR_SWING_UP_SIGNAL)){
+  if (!(CartState == HOME || CartState == PERFORM_SWING_UP || CartState == BALANCE || CartState == WAIT_FOR_SWING_UP_SIGNAL)) {
     return;
   }
 
   // in swing-up phase angle values come through feedback serial link
   // and in all other phases angle values come from USB serial (via network):
   Stream* serialDevice;
-  if(sendEncoderValuesThroughFeedbackLink){
+  if (sendEncoderValuesThroughFeedbackLink) {
     serialDevice = &FeedbackSerial;
 
-    // Regularly read from USB serial buffer to avoid packets bloating the 
+    // Regularly read from USB serial buffer to avoid packets bloating the
     // buffer, which causes blockage at the Linux receiver:
-    while(Serial.available() > 0){
+    while (Serial.available() > 0) {
       Serial.read();
     }
   } else {
     serialDevice = &Serial;
   }
 
-    while (serialDevice->available() > 0) {
-      String input1 = serialDevice->readStringUntil(':');
-      if(input1.startsWith("DOSWINGUP")){
-        // Format: DOSWINGUP:1;
-        serialDevice->readStringUntil(';');
-        if(CartState == WAIT_FOR_SWING_UP_SIGNAL){
-          swingUpSignalReceived = true;
-        }
-        // Also reset control parameters as this is the beginning of a new config:
-        resetControlParameters();
-        gracePeriodEnded = false;
-        timeBalancingStarted = millis();
-      } else if(input1.startsWith("DOCRASHANDSWINGUP")){
-        // Format: DOCRASHANDSWINGUP:1;
-        serialDevice->readStringUntil(';');
-        // Also reset control parameters as this is the beginning of a new config:
-        resetControlParameters();
-        gracePeriodEnded = false;
-        CartState = HOME;
-      } else if(input1.startsWith("S")){
-        // normal sampling value:
-        currentEncoderValue = serialDevice->readStringUntil(';').toInt();
-        unsigned delaySinceLastSample = serialDevice->readStringUntil(';').toInt();
-        long sequenceNumber = serialDevice->readStringUntil(';').toInt();
-        long timestamp = serialDevice->readStringUntil(';').toInt();
-        currentAngularVelocity = serialDevice->readStringUntil(';').toFloat();
-        currentLatencyMillis = serialDevice->readStringUntil(';').toInt();
-
-        updateParametersForSamplingPeriod(delaySinceLastSample);
-        if(CartState == BALANCE){
-          sendFeedbackToSender(sequenceNumber, timestamp);
-        }
-        encoderInitialized = true;
-        newEncoderValueAvailable = true;
+  while (serialDevice->available() > 0) {
+    String input1 = serialDevice->readStringUntil(':');
+    if (input1.startsWith("DOSWINGUP")) {
+      // Format: DOSWINGUP:1;
+      serialDevice->readStringUntil(';');
+      if (CartState == WAIT_FOR_SWING_UP_SIGNAL) {
+        swingUpSignalReceived = true;
       }
+      // Also reset control parameters as this is the beginning of a new config:
+      resetControlParameters();
+      gracePeriodEnded = false;
+      timeBalancingStarted = millis();
+    } else if (input1.startsWith("DOCRASHANDSWINGUP")) {
+      // Format: DOCRASHANDSWINGUP:1;
+      serialDevice->readStringUntil(';');
+      // Also reset control parameters as this is the beginning of a new config:
+      resetControlParameters();
+      gracePeriodEnded = false;
+      CartState = HOME;
+    } else if (input1.startsWith("S")) {
+      // normal sampling value:
+      currentEncoderValue = serialDevice->readStringUntil(';').toInt();
+      unsigned delaySinceLastSample = serialDevice->readStringUntil(';').toInt();
+      long sequenceNumber = serialDevice->readStringUntil(';').toInt();
+      long timestamp = serialDevice->readStringUntil(';').toInt();
+      currentAngularVelocity = serialDevice->readStringUntil(';').toFloat();
+      currentLatencyMillis = serialDevice->readStringUntil(';').toInt();
 
-      serialDevice->readStringUntil('\n');  // read newline \n
+      updateParametersForSamplingPeriod(delaySinceLastSample);
+      if (CartState == BALANCE) {
+        sendFeedbackToSender(sequenceNumber, timestamp);
+      }
+      encoderInitialized = true;
+      newEncoderValueAvailable = true;
     }
+
+    serialDevice->readStringUntil('\n');  // read newline \n
   }
+}
 
-  void sendFeedbackToSender(unsigned long sequenceNumber, unsigned long timestamp){
-    // The Feedback is of the following form:
-    // sequenceNumber;Timestamp;\n
-    // for example
-    // FB:123;34523890;\n
+void sendFeedbackToSender(unsigned long sequenceNumber, unsigned long timestamp) {
+  // The Feedback is of the following form:
+  // sequenceNumber;Timestamp;\n
+  // for example
+  // FB:123;34523890;\n
 
-    FeedbackSerial.printf("FB:%i;%i;\n", sequenceNumber, timestamp);
-  }
+  FeedbackSerial.printf("FB:%i;%i;\n", sequenceNumber, timestamp);
+}
 
-  void sendSwingUpStartSignalToSender() {
-    FeedbackSerial.print("SS;\n");
-    Serial.println("Sending swing-up start signal to sender.");
-  }
+void sendSwingUpStartSignalToSender() {
+  FeedbackSerial.print("SS;\n");
+  Serial.println("Sending swing-up start signal to sender.");
+}
 
-  void sendSwingUpEndSignalToSender() {
-    FeedbackSerial.print("SE;\n");
-    Serial.println("Sending swing-up end signal to sender.");
-  }
+void sendSwingUpEndSignalToSender() {
+  FeedbackSerial.print("SE;\n");
+  Serial.println("Sending swing-up end signal to sender.");
+}
 
-  void resetControlParameters(){
-    Serial.println("Resetting control parameters");
+void resetControlParameters() {
+  Serial.println("Resetting control parameters");
 
-    // Carabelli approach:
-    k = 0;
-    xi_cart = 0.0;
-    x_cart = getCartPosMeter();
-    v_cart = 0.0;
-    x_pole = (float)RAD_PER_ESTEP * angleSteps(currentEncoderValue);
-    v_pole = 0.0;
-    u_accel = 0.0;
-    poleAngle_p = x_pole;
+  // Carabelli approach:
+  k = 0;
+  xi_cart = 0.0;
+  x_cart = getCartPosMeter();
+  v_cart = 0.0;
+  x_pole = (float)RAD_PER_ESTEP * angleSteps(currentEncoderValue);
+  v_pole = 0.0;
+  u_accel = 0.0;
+  poleAngle_p = x_pole;
 
-    // IST approach:
-    u_accel = 0.0;
-    x_k.Fill(0);
-    xi_cart = 0.0;
+  // IST approach:
+  u_accel = 0.0;
+  x_k.Fill(0);
+  xi_cart = 0.0;
+}
 
-  }
+void sendGracePeriodEndedSignals() {
+  delay(1);  // delay to separate from other Serial messages
+  String signal = "CT:GracePeriodEnded;";
+  Serial.println(signal);
+  Serial.send_now();
+  FeedbackSerial.println(signal);
+}
 
-  void sendGracePeriodEndedSignals(){
-    delay(1); // delay to separate from other Serial messages
-    String signal = "CT:GracePeriodEnded;";
-    Serial.println(signal);
-    Serial.send_now();
-    FeedbackSerial.println(signal);
-  }
+void updateUsingCarabelliKalmanAndLQR(float cartPos, float cartSpeed, float poleAngle, unsigned latency) {
+  float x_cart_p = x_cart;
+  float v_cart_p = v_cart;
+  float x_pole_p = x_pole;
+  float v_pole_p = v_pole;
 
-  void updateUsingCarabelliKalmanAndLQR(float cartPos, float cartSpeed, float poleAngle, unsigned latency){
-    float x_cart_p = x_cart;
-    float v_cart_p = v_cart;
-    float x_pole_p = x_pole;
-    float v_pole_p = v_pole;
+  xi_cart += cartPos * Ts;
 
-    xi_cart += cartPos * Ts;
+  /// KALMAN FILTER (steady-state) ///
 
-    /// KALMAN FILTER (steady-state) ///
+  x_cart = Lx11 * x_cart_p + Lx12 * v_cart_p + Lu1 * u_accel + Ly11 * cartPos + Ly12 * cartSpeed;
+  v_cart = Lx21 * x_cart_p + Lx22 * v_cart_p + Lu2 * u_accel + Ly21 * cartPos + Ly22 * cartSpeed;
+  x_pole = Lx33 * x_pole_p + Lx34 * v_pole_p + Lu3 * u_accel + Ly33 * poleAngle;
+  v_pole = Lx43 * x_pole_p + Lx44 * v_pole_p + Lu4 * u_accel + Ly43 * poleAngle;
 
-    x_cart = Lx11 * x_cart_p + Lx12 * v_cart_p + Lu1 * u_accel + Ly11 * cartPos + Ly12 * cartSpeed;
-    v_cart = Lx21 * x_cart_p + Lx22 * v_cart_p + Lu2 * u_accel + Ly21 * cartPos + Ly22 * cartSpeed;
-    x_pole = Lx33 * x_pole_p + Lx34 * v_pole_p + Lu3 * u_accel + Ly33 * poleAngle;
-    v_pole = Lx43 * x_pole_p + Lx44 * v_pole_p + Lu4 * u_accel + Ly43 * poleAngle;
+  x_cart = f_kf * x_cart + (1 - f_kf) * cartPos;
+  v_cart = f_kf * v_cart + (1 - f_kf) * cartSpeed;
+  x_pole = f_kf * x_pole + (1 - f_kf) * poleAngle;
+  v_pole = f_kf * v_pole + (1 - f_kf) * (poleAngle - poleAngle_p) * fs;
 
-    x_cart = f_kf * x_cart + (1 - f_kf) * cartPos;
-    v_cart = f_kf * v_cart + (1 - f_kf) * cartSpeed;
-    x_pole = f_kf * x_pole + (1 - f_kf) * poleAngle;
-    v_pole = f_kf * v_pole + (1 - f_kf) * (poleAngle - poleAngle_p) * fs;
+  poleAngle_p = poleAngle;
 
-    poleAngle_p = poleAngle;
+  /// Smith Predictor ///
 
-    /// Smith Predictor ///
-
-    // Apply Smith predictor to compensate for network delay on pole angle data:
-    updateSmithPredictorParameters(latency);
-    BLA::Matrix<4,1> x_k = {x_cart, v_cart, x_pole, v_pole};
-    x_k = LQRMatrixA * x_k + LQRMatrixB * u_accel;
-    // Note: We do NOT update x_cart and v_cart from x_k, since these values are retrieved locally and don't 
-    // have a network delay, i.e., no prediction necessary!
-    x_pole = x_k(2);
-    v_pole = x_k(3);
+  // Apply Smith predictor to compensate for network delay on pole angle data:
+  updateSmithPredictorParameters(latency);
+  BLA::Matrix<4, 1> x_k = { x_cart, v_cart, x_pole, v_pole };
+  x_k = LQRMatrixA * x_k + LQRMatrixB * u_accel;
+  // Note: We do NOT update x_cart and v_cart from x_k, since these values are retrieved locally and don't
+  // have a network delay, i.e., no prediction necessary!
+  x_pole = x_k(2);
+  v_pole = x_k(3);
 
 
-    /// CONTROLLER ///
+  /// CONTROLLER ///
 
-    u_accel = Kxc * x_cart + Kvc * v_cart + Kxp * x_pole + Kvp * v_pole;  // [m/s²]
-    u_accel += Kxic * xi_cart;
-  }
+  u_accel = Kxc * x_cart + Kvc * v_cart + Kxp * x_pole + Kvp * v_pole;  // [m/s²]
+  u_accel += Kxic * xi_cart;
+}
 
-  void updateKalmanUsingCarabelliUpdateLQRUsingIST(float cartPos, float cartSpeed, float poleAngle){
-    // Kalman filter from Carabelli
-    float x_cart_p = x_cart;
-    float v_cart_p = v_cart;
-    float x_pole_p = x_pole;
-    float v_pole_p = v_pole;
+void updateKalmanUsingCarabelliUpdateLQRUsingIST(float cartPos, float cartSpeed, float poleAngle) {
+  // Kalman filter from Carabelli
+  float x_cart_p = x_cart;
+  float v_cart_p = v_cart;
+  float x_pole_p = x_pole;
+  float v_pole_p = v_pole;
 
-    x_cart = Lx11 * x_cart_p + Lx12 * v_cart_p + Lu1 * u_accel + Ly11 * cartPos + Ly12 * cartSpeed;
-    v_cart = Lx21 * x_cart_p + Lx22 * v_cart_p + Lu2 * u_accel + Ly21 * cartPos + Ly22 * cartSpeed;
-    x_pole = Lx33 * x_pole_p + Lx34 * v_pole_p + Lu3 * u_accel + Ly33 * poleAngle;
-    v_pole = Lx43 * x_pole_p + Lx44 * v_pole_p + Lu4 * u_accel + Ly43 * poleAngle;
+  x_cart = Lx11 * x_cart_p + Lx12 * v_cart_p + Lu1 * u_accel + Ly11 * cartPos + Ly12 * cartSpeed;
+  v_cart = Lx21 * x_cart_p + Lx22 * v_cart_p + Lu2 * u_accel + Ly21 * cartPos + Ly22 * cartSpeed;
+  x_pole = Lx33 * x_pole_p + Lx34 * v_pole_p + Lu3 * u_accel + Ly33 * poleAngle;
+  v_pole = Lx43 * x_pole_p + Lx44 * v_pole_p + Lu4 * u_accel + Ly43 * poleAngle;
 
-    x_cart = f_kf * x_cart + (1 - f_kf) * cartPos;
-    v_cart = f_kf * v_cart + (1 - f_kf) * cartSpeed;
-    x_pole = f_kf * x_pole + (1 - f_kf) * poleAngle;
-    v_pole = f_kf * v_pole + (1 - f_kf) * (poleAngle - poleAngle_p) * fs;
-    BLA::Matrix<4,1> x_k_carabelli = {x_cart, v_cart, x_pole, v_pole};
+  x_cart = f_kf * x_cart + (1 - f_kf) * cartPos;
+  v_cart = f_kf * v_cart + (1 - f_kf) * cartSpeed;
+  x_pole = f_kf * x_pole + (1 - f_kf) * poleAngle;
+  v_pole = f_kf * v_pole + (1 - f_kf) * (poleAngle - poleAngle_p) * fs;
+  BLA::Matrix<4, 1> x_k_carabelli = { x_cart, v_cart, x_pole, v_pole };
 
-    poleAngle_p = poleAngle;
+  poleAngle_p = poleAngle;
 
-    // Controller from IST:
-    u_accel = (~K_iqc * x_k_carabelli)(0, 0);
-    xi_cart += cartPos * Ts; // integrator
-    u_accel += K_iqc_integrator * xi_cart;
-  }
+  // Controller from IST:
+  u_accel = (~K_iqc * x_k_carabelli)(0, 0);
+  xi_cart += cartPos * Ts;  // integrator
+  u_accel += K_iqc_integrator * xi_cart;
+}
 
-  void loop() {
-    // check limit switches
-    checkLimitSwitches();
-    updateRotaryEncoderValue();
+void loop() {
+  // check limit switches
+  checkLimitSwitches();
+  updateRotaryEncoderValue();
 
-    // state machine
-    switch (CartState) {
-      case INIT:  // start wandering unless already at limit...
-        if (initTimer >= initDelay) {
-          if (limitLeft || limitRight) {
-            Serial.println("<<< UNDEFINED >>>");
-            Serial.send_now();
-            CartState = UNDEFINED;
-          } else {
-            motor.setPosition(0);
-            rotate.overrideSpeed(-homingFactor);  // expect to drive left
-            Serial.println("<<< WANDER >>>");
-            Serial.send_now();
-            CartState = WANDER;
-          }
-        }
-        break;
-
-      case WANDER:  // expect to end up at the left end...
-        if (limitLeft) {
-          if (limitRight) {
-            Serial.println("<<< UNDEFINED >>>");
-            Serial.send_now();
-            CartState = UNDEFINED;
-            break;
-          }
-          returnPosition = -motor.getPosition();
-          motor.setPosition(0);
-          // fast return
-          rotate.stop();
-          motor.setTargetAbs(returnPosition);
-          driveto.move(motor);
-          // resume homing
-          rotate.rotateAsync(motor);
-          rotate.overrideSpeed(homingFactor);  // drive right
-          Serial.println("<<< HOME RIGHT >>>");
-          Serial.send_now();
-          CartState = HOME_RIGHT;
-        } else if (limitRight) {  // this should not happen in the current setup...
-          rotate.stop();
-          motor.setInverseRotation(true);  // unexpected direction
-          rotate.rotateAsync(motor);
-          rotate.overrideSpeed(-homingFactor);  // drive left
-          Serial.println("<<< HOME LEFT >>>");
-          Serial.send_now();
-          CartState = HOME_LEFT;
-        }
-        break;
-
-      case HOME_LEFT:  // wait for limitLeft (should not happen either, since WANDER will end up at left...)
-        if (limitLeft) {
-          returnPosition = -motor.getPosition();
-          motor.setPosition(0);
-          // fast return
-          rotate.stop();
-          motor.setTargetAbs(returnPosition);
-          driveto.move(motor);
-          // resume homing
-          rotate.rotateAsync(motor);
-          rotate.overrideSpeed(homingFactor);  // drive right
-          Serial.println("<<< HOME RIGHT >>>");
-          Serial.send_now();
-          CartState = HOME_RIGHT;
-        }
-        break;
-
-      case HOME_RIGHT:  // wait for limitRight
-        if (limitRight) {
-          trackLengthSteps = motor.getPosition();
-          rotate.stop();
-          safePosSteps = safePosPercentage * trackLengthSteps;
-          stepsPerMeter = trackLengthSteps / trackLengthMeters;
-          motor.setPosition(trackLengthSteps / 2);
-          motor.setTargetAbs(0);
-          driveto.move(motor);
-          CartState = REACH_HOME;
-        }
-        break;
-
-      case REACH_HOME:
-        Serial.printf("Track length: %d steps = %f m\n", trackLengthSteps, trackLengthMeters);
-        Serial.printf("Total revolutions: %f\n", (float)trackLengthSteps / motorPPR);
-        Serial.printf("Steps per m: %f\n", stepsPerMeter);
-        Serial.printf("Safe range: +/- %d steps = %f m\n", safePosSteps, safePosMeters);
-        Serial.printf("Maximum speed: %d steps/s = %f m/s\n", motorPPS, vMaxMeters);
-        Serial.printf("Maximum acceleration: %d steps/s² = %f m/s²\n", motorACC, aMaxMeters);
-        Serial.printf("Sampling period: %f s\n", Ts);
-        Serial.printf("Sampling frequency: %f Hz\n", fs);
-        Serial.println("<<< HOME >>>");
-        Serial.send_now();
-        CartState = HOME;
-        break;
-      case HOME:  // at home
-        if(!doSwingUpAtStart){
-          if (encoderInitialized && encoderTimer >= encoderPeriod) {
-            encoderTimer -= encoderPeriod;
-            int encoderAbs = currentEncoderValue;
-            int encoderRel = angleSteps(encoderAbs);
-            bool wasUpright = isUpright;
-            isUpright = (abs(encoderRel) < 20);
-            if (isUpright && wasUpright) {
-              isUpright = false;
-              resetControlParameters();
-              rotate.rotateAsync(motor);
-              rotate.overrideAcceleration(0);
-              rotate.overrideSpeed(0);
-              Serial.println("<<< BALANCE >>>");
-              Serial.send_now();
-              CartState = BALANCE;
-              timeBalancingStarted = millis();
-            } else
-              Serial.printf("Encoder_Test: %d -> angle = %d steps = %f°\n", encoderAbs, encoderRel, RAD_TO_DEG * RAD_PER_ESTEP * encoderRel);
-            Serial.send_now();
-          }
-        } else {
-          rotate.stop();
-          delay(4000);
-          resetControlParameters();
-
-          motor.setMaxSpeed((double)motorPPS * swingUpSpeedFactor).setAcceleration((double) motorACC * swingUpAccelerationFactor);
-
-          sendEncoderValuesThroughFeedbackLink = true;
-          sendSwingUpStartSignalToSender();
-          CartState = PERFORM_SWING_UP;
-        }
-        break;
-
-      case PERFORM_SWING_UP:
-        // Cancel if limit switch gets hit:
+  // state machine
+  switch (CartState) {
+    case INIT:  // start wandering unless already at limit...
+      if (initTimer >= initDelay) {
         if (limitLeft || limitRight) {
-          rotate.overrideAcceleration(1);
-          rotate.stop();
-          if (limitLeft && limitRight) {
-            Serial.println("<<< UNDEFINED >>>");
-            CartState = UNDEFINED;
-          } else {
-            motor.setTargetRel((limitLeft ? 1 : -1) * (int)motorPPR);
-            driveto.move(motor);
-            initializeCartState();
-          }
+          Serial.println("<<< UNDEFINED >>>");
+          Serial.send_now();
+          CartState = UNDEFINED;
+        } else {
+          motor.setPosition(0);
+          rotate.overrideSpeed(-homingFactor);  // expect to drive left
+          Serial.println("<<< WANDER >>>");
+          Serial.send_now();
+          CartState = WANDER;
+        }
+      }
+      break;
+
+    case WANDER:  // expect to end up at the left end...
+      if (limitLeft) {
+        if (limitRight) {
+          Serial.println("<<< UNDEFINED >>>");
+          Serial.send_now();
+          CartState = UNDEFINED;
           break;
         }
+        returnPosition = -motor.getPosition();
+        motor.setPosition(0);
+        // fast return
+        rotate.stop();
+        motor.setTargetAbs(returnPosition);
+        driveto.move(motor);
+        // resume homing
+        rotate.rotateAsync(motor);
+        rotate.overrideSpeed(homingFactor);  // drive right
+        Serial.println("<<< HOME RIGHT >>>");
+        Serial.send_now();
+        CartState = HOME_RIGHT;
+      } else if (limitRight) {  // this should not happen in the current setup...
+        rotate.stop();
+        motor.setInverseRotation(true);  // unexpected direction
+        rotate.rotateAsync(motor);
+        rotate.overrideSpeed(-homingFactor);  // drive left
+        Serial.println("<<< HOME LEFT >>>");
+        Serial.send_now();
+        CartState = HOME_LEFT;
+      }
+      break;
 
-        // Swing up:
-        if (newEncoderValueAvailable) {
-          newEncoderValueAvailable = false;
-          ++k;
+    case HOME_LEFT:  // wait for limitLeft (should not happen either, since WANDER will end up at left...)
+      if (limitLeft) {
+        returnPosition = -motor.getPosition();
+        motor.setPosition(0);
+        // fast return
+        rotate.stop();
+        motor.setTargetAbs(returnPosition);
+        driveto.move(motor);
+        // resume homing
+        rotate.rotateAsync(motor);
+        rotate.overrideSpeed(homingFactor);  // drive right
+        Serial.println("<<< HOME RIGHT >>>");
+        Serial.send_now();
+        CartState = HOME_RIGHT;
+      }
+      break;
 
-          int swingUpSampleN = currentEncoderValue;
+    case HOME_RIGHT:  // wait for limitRight
+      if (limitRight) {
+        trackLengthSteps = motor.getPosition();
+        rotate.stop();
+        safePosSteps = safePosPercentage * trackLengthSteps;
+        stepsPerMeter = trackLengthSteps / trackLengthMeters;
+        motor.setPosition(trackLengthSteps / 2);
+        motor.setTargetAbs(0);
+        driveto.move(motor);
+        CartState = REACH_HOME;
+      }
+      break;
 
-          // Check if pendulum is upright and then go into balancing mode:
-          int upRightThreshold = 40;
-          int maxChangeLastTwoSamples = 15;
-          if (abs(angleSteps(swingUpSampleN)) < upRightThreshold 
-            && abs(angleSteps(swingUpSampleNMinusOne)) < upRightThreshold 
-            && abs(angleSteps(swingUpSampleNMinusTwo)) < upRightThreshold 
-            && abs(swingUpSampleN - swingUpSampleNMinusOne) + abs(swingUpSampleNMinusOne - swingUpSampleNMinusTwo) < maxChangeLastTwoSamples) {
-            Serial.println("Going to balance mode");
-
-            // Restore motor maximum values:
-            motor.setMaxSpeed(motorPPS).setAcceleration(motorACC);
-
-            // Initialize parameters and motor for balancing:
+    case REACH_HOME:
+      Serial.printf("Track length: %d steps = %f m\n", trackLengthSteps, trackLengthMeters);
+      Serial.printf("Total revolutions: %f\n", (float)trackLengthSteps / motorPPR);
+      Serial.printf("Steps per m: %f\n", stepsPerMeter);
+      Serial.printf("Safe range: +/- %d steps = %f m\n", safePosSteps, safePosMeters);
+      Serial.printf("Maximum speed: %d steps/s = %f m/s\n", motorPPS, vMaxMeters);
+      Serial.printf("Maximum acceleration: %d steps/s² = %f m/s²\n", motorACC, aMaxMeters);
+      Serial.printf("Sampling period: %f s\n", Ts);
+      Serial.printf("Sampling frequency: %f Hz\n", fs);
+      Serial.println("<<< HOME >>>");
+      Serial.send_now();
+      CartState = HOME;
+      break;
+    case HOME:  // at home
+      if (!doSwingUpAtStart) {
+        if (encoderInitialized && encoderTimer >= encoderPeriod) {
+          encoderTimer -= encoderPeriod;
+          int encoderAbs = currentEncoderValue;
+          int encoderRel = angleSteps(encoderAbs);
+          bool wasUpright = isUpright;
+          isUpright = (abs(encoderRel) < 20);
+          if (isUpright && wasUpright) {
+            isUpright = false;
             resetControlParameters();
             rotate.rotateAsync(motor);
             rotate.overrideAcceleration(0);
             rotate.overrideSpeed(0);
             Serial.println("<<< BALANCE >>>");
             Serial.send_now();
-            timeBalancingStarted = millis();
             CartState = BALANCE;
-            break;
-          }
-
-          bool isTurningPoint = (swingUpSampleNMinusOne - swingUpSampleNMinusTwo) * (swingUpSampleN - swingUpSampleNMinusOne) <= 0;
-          if ((millis() - swingUpTimeLastDirSwitch > 300 && isTurningPoint)) {
-
-            swingUpDistance = -swingUpDistance;  // Change direction of cart
-
-            motor.setTargetAbs(swingUpDistance);
-            driveto.move(motor);
-
-            swingUpTimeLastDirSwitch = millis();
-          }
-          swingUpSampleNMinusTwo = swingUpSampleNMinusOne;
-          swingUpSampleNMinusOne = swingUpSampleN;
+            timeBalancingStarted = millis();
+          } else
+            Serial.printf("Encoder_Test: %d -> angle = %d steps = %f°\n", encoderAbs, encoderRel, RAD_TO_DEG * RAD_PER_ESTEP * encoderRel);
+          Serial.send_now();
         }
+      } else {
+        rotate.stop();
+        delay(4000);
+        resetControlParameters();
 
-        // If not successful after certain time, give a pause to restore sync between motor and pendulum movement:
-        if (millis() - swingUpTimeLastPause > 15000) {
-          Serial.println("Swing-up Pause");
-          rotate.overrideAcceleration(0);
-          rotate.overrideSpeed(0);
-          delay(2000);
-          swingUpTimeLastPause = millis();
+        motor.setMaxSpeed((double)motorPPS * swingUpSpeedFactor).setAcceleration((double)motorACC * swingUpAccelerationFactor);
+
+        sendEncoderValuesThroughFeedbackLink = true;
+        sendSwingUpStartSignalToSender();
+        CartState = PERFORM_SWING_UP;
+      }
+      break;
+
+    case PERFORM_SWING_UP:
+      // Cancel if limit switch gets hit:
+      if (limitLeft || limitRight) {
+        rotate.overrideAcceleration(1);
+        rotate.stop();
+        if (limitLeft && limitRight) {
+          Serial.println("<<< UNDEFINED >>>");
+          CartState = UNDEFINED;
+        } else {
+          motor.setTargetRel((limitLeft ? 1 : -1) * (int)motorPPR);
+          driveto.move(motor);
+          initializeCartState();
         }
         break;
+      }
 
-      case BALANCE:  // balancing loop
-        if (limitLeft || limitRight) {
+      // Swing up:
+      if (newEncoderValueAvailable) {
+        newEncoderValueAvailable = false;
+        ++k;
+
+        int swingUpSampleN = currentEncoderValue;
+
+        // Check if pendulum is upright and then go into balancing mode:
+        int upRightThreshold = 40;
+        int maxChangeLastTwoSamples = 15;
+        if (abs(angleSteps(swingUpSampleN)) < upRightThreshold
+            && abs(angleSteps(swingUpSampleNMinusOne)) < upRightThreshold
+            && abs(angleSteps(swingUpSampleNMinusTwo)) < upRightThreshold
+            && abs(swingUpSampleN - swingUpSampleNMinusOne) + abs(swingUpSampleNMinusOne - swingUpSampleNMinusTwo) < maxChangeLastTwoSamples) {
+          Serial.println("Going to balance mode");
+
+          // Restore motor maximum values:
+          motor.setMaxSpeed(motorPPS).setAcceleration(motorACC);
+
+          // Initialize parameters and motor for balancing:
+          resetControlParameters();
+          rotate.rotateAsync(motor);
+          rotate.overrideAcceleration(0);
+          rotate.overrideSpeed(0);
+          Serial.println("<<< BALANCE >>>");
+          Serial.send_now();
+          timeBalancingStarted = millis();
+          CartState = BALANCE;
+          break;
+        }
+
+        bool isTurningPoint = (swingUpSampleNMinusOne - swingUpSampleNMinusTwo) * (swingUpSampleN - swingUpSampleNMinusOne) <= 0;
+        if ((millis() - swingUpTimeLastDirSwitch > 300 && isTurningPoint)) {
+
+          swingUpDistance = -swingUpDistance;  // Change direction of cart
+
+          motor.setTargetAbs(swingUpDistance);
+          driveto.move(motor);
+
+          swingUpTimeLastDirSwitch = millis();
+        }
+        swingUpSampleNMinusTwo = swingUpSampleNMinusOne;
+        swingUpSampleNMinusOne = swingUpSampleN;
+      }
+
+      // If not successful after certain time, give a pause to restore sync between motor and pendulum movement:
+      if (millis() - swingUpTimeLastPause > 15000) {
+        Serial.println("Swing-up Pause");
+        rotate.overrideAcceleration(0);
+        rotate.overrideSpeed(0);
+        delay(2000);
+        swingUpTimeLastPause = millis();
+      }
+      break;
+
+    case BALANCE:  // balancing loop
+      if (limitLeft || limitRight) {
+        rotate.overrideAcceleration(1);
+        rotate.stop();
+        if (limitLeft && limitRight) {
+          Serial.println("<<< UNDEFINED >>>");
+          CartState = UNDEFINED;
+        } else {
+          motor.setTargetRel((limitLeft ? 1 : -1) * (int)motorPPR);
+          driveto.move(motor);
+          initializeCartState();
+        }
+        break;
+      }
+
+      if (newEncoderValueAvailable) {
+        newEncoderValueAvailable = false;
+        ++k;
+
+        int32_t cartSteps = motor.getPosition();
+
+        if (abs(cartSteps) >= safePosSteps) {
           rotate.overrideAcceleration(1);
           rotate.stop();
-          if (limitLeft && limitRight) {
-            Serial.println("<<< UNDEFINED >>>");
-            CartState = UNDEFINED;
-          } else {
-            motor.setTargetRel((limitLeft ? 1 : -1) * (int)motorPPR);
+          if (millis() - timeBalancingStarted <= balancingGracePeriodMillis) {
+            delay(2000);
+            motor.setTargetAbs(0);
             driveto.move(motor);
-            initializeCartState();
+            Serial.write("Balancing failed within beginning period. Swinging up again.");
+            delay(4000);  // Wait for pendulum to loose some energy (overshoots otherwise).
+            CartState = HOME;
+          } else {
+            CartState = WAIT_FOR_SWING_UP_SIGNAL;
+            Serial.println("Crashed. Waiting for swing-up signal.");
           }
           break;
         }
 
-        if (newEncoderValueAvailable) {
-          newEncoderValueAvailable = false;
-          ++k;
-
-          int32_t cartSteps = motor.getPosition();
-
-          if (abs(cartSteps) >= safePosSteps) {
-            rotate.overrideAcceleration(1);
-            rotate.stop();
-            if(millis() - timeBalancingStarted <= balancingGracePeriodMillis){
-              delay(2000);
-              motor.setTargetAbs(0);
-              driveto.move(motor);
-              Serial.write("Balancing failed within beginning period. Swinging up again.");
-              delay(4000); // Wait for pendulum to loose some energy (overshoots otherwise).
-              CartState = HOME;
-            } else{
-              CartState = WAIT_FOR_SWING_UP_SIGNAL;
-              Serial.println("Crashed. Waiting for swing-up signal.");
-            }
-            break;
+        if (!gracePeriodEnded && millis() - timeBalancingStarted > balancingGracePeriodMillis) {
+          if (sendEncoderValuesThroughFeedbackLink) {
+            sendEncoderValuesThroughFeedbackLink = false;
+            sendSwingUpEndSignalToSender();
           }
+          gracePeriodEnded = true;
+          sendGracePeriodEndedSignals();
+        }
 
-          if(!gracePeriodEnded && millis() - timeBalancingStarted > balancingGracePeriodMillis){
-            if(sendEncoderValuesThroughFeedbackLink){
-              sendEncoderValuesThroughFeedbackLink = false;
-              sendSwingUpEndSignalToSender();
-            }
-            gracePeriodEnded = true;
-            sendGracePeriodEndedSignals();
-          }
+        float cartPos = METER_PER_MSTEP * cartSteps;
+        float cartSpeed = getCartSpeedMeter();
+        float poleAngle = getPoleAngleRad();
 
-          float cartPos = METER_PER_MSTEP * cartSteps;
-          float cartSpeed = getCartSpeedMeter();
-          float poleAngle = getPoleAngleRad();
-
-         if (approachUsed == CARABELLI_KALMAN_CARABELLI_CONTROLLER){
+        if (approachUsed == CARABELLI_KALMAN_CARABELLI_CONTROLLER) {
           updateUsingCarabelliKalmanAndLQR(cartPos, cartSpeed, poleAngle, currentLatencyMillis);
-        } else if (approachUsed == CARABELLI_KALMAN_IST_CONTROLLER){
+        } else if (approachUsed == CARABELLI_KALMAN_IST_CONTROLLER) {
           updateKalmanUsingCarabelliUpdateLQRUsingIST(cartPos, cartSpeed, poleAngle);
-        } 
+        }
 
-          u_accel = constrain(u_accel, -aMaxMeters, aMaxMeters);  // clamp to admissible range
+        u_accel = constrain(u_accel, -aMaxMeters, aMaxMeters);  // clamp to admissible range
 
-          float target_speed = cartSpeed + u_accel * Ts;                    // [m/s]
-          target_speed = constrain(target_speed, -vMaxMeters, vMaxMeters);  // clamp to admissible range
+        float target_speed = cartSpeed + u_accel * Ts;                    // [m/s]
+        target_speed = constrain(target_speed, -vMaxMeters, vMaxMeters);  // clamp to admissible range
 
-          u_accel = (target_speed - cartSpeed) * fs;  // correct acceleration for speed clamping
+        u_accel = (target_speed - cartSpeed) * fs;  // correct acceleration for speed clamping
 
-          float accel_factor = abs(u_accel) / aMaxMeters;  // (factor must be positive, target_speed determines sign)
-          float speed_factor = target_speed / vMaxMeters;
+        float accel_factor = abs(u_accel) / aMaxMeters;  // (factor must be positive, target_speed determines sign)
+        float speed_factor = target_speed / vMaxMeters;
 
 
-          rotate.overrideAcceleration(accel_factor);
-          rotate.overrideSpeed(speed_factor);
+        rotate.overrideAcceleration(accel_factor);
+        rotate.overrideSpeed(speed_factor);
 
-        if(!sendEncoderValuesThroughFeedbackLink){
+        if (!sendEncoderValuesThroughFeedbackLink) {
           Serial.printf("log:%u;%f;%f;%f;%f;%f;%f;%f;%f;%f\n", k,
                         cartPos, cartSpeed, poleAngle,
                         x_cart, v_cart, x_pole, v_pole,
@@ -825,29 +824,29 @@ void updateRotaryEncoderValue() {
       }
       break;
 
-      case WAIT_FOR_SWING_UP_SIGNAL:
-        // This state is entered after a crash. The controller can send a swing-up signal via serial to make
-        // the pendulum swing up again.
-        if(swingUpSignalReceived){
-          Serial.println("Do-Swing-up signal received.");
-          CartState = HOME;
-          swingUpSignalReceived = false;
-        }
-      
-      case UNDEFINED:  // don't know which direction to take
-        break;
-
-      default:
-        CartState = UNDEFINED;
-    }
-
-    // LED heartbeat
-    if (blinkTimer >= blinkPeriod) {
-      blinkTimer -= blinkPeriod;
-      digitalWriteFast(LED_BUILTIN, !digitalReadFast(LED_BUILTIN));  // toggle built-in LED
-      if (CartState == UNDEFINED) {                                  // toggle warning LEDs
-        digitalWriteFast(pinLedGreen, !digitalReadFast(pinLedGreen));
-        digitalWriteFast(pinLedRed, !digitalReadFast(pinLedRed));
+    case WAIT_FOR_SWING_UP_SIGNAL:
+      // This state is entered after a crash. The controller can send a swing-up signal via serial to make
+      // the pendulum swing up again.
+      if (swingUpSignalReceived) {
+        Serial.println("Do-Swing-up signal received.");
+        CartState = HOME;
+        swingUpSignalReceived = false;
       }
+
+    case UNDEFINED:  // don't know which direction to take
+      break;
+
+    default:
+      CartState = UNDEFINED;
+  }
+
+  // LED heartbeat
+  if (blinkTimer >= blinkPeriod) {
+    blinkTimer -= blinkPeriod;
+    digitalWriteFast(LED_BUILTIN, !digitalReadFast(LED_BUILTIN));  // toggle built-in LED
+    if (CartState == UNDEFINED) {                                  // toggle warning LEDs
+      digitalWriteFast(pinLedGreen, !digitalReadFast(pinLedGreen));
+      digitalWriteFast(pinLedRed, !digitalReadFast(pinLedRed));
     }
   }
+}
