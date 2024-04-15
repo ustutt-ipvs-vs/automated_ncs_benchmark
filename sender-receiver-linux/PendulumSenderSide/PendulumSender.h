@@ -37,7 +37,6 @@ private:
     float samplingPeriodSensitivityOffset;
 
     uint64_t startTime;
-    uint64_t lastLogTime = 0;
 
     unsigned long long packetCount = 0;
     unsigned long long bytesSentTotal = 0;

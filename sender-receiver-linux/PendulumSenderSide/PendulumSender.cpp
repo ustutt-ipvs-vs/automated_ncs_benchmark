@@ -137,12 +137,7 @@ void PendulumSender::sendPacket(std::string payload) {
     packetCount++;
     bytesSentTotal += paddedPayload.size();
 
-    // Limit logging rate
-    uint64_t currentTime = timeSinceEpochMillisec();
-    if(currentTime - lastLogTime >= RESTRICT_LOGGING_TO_MS){
-        lastLogTime = currentTime;
-        logger->log(packetCount, bytesSentTotal, payload, priorityDeterminer->getSchedulingInfoEntry());
-    }
+    logger->log(packetCount, bytesSentTotal, payload, priorityDeterminer->getSchedulingInfoEntry());
 
     if (packetCount % 10 == 0) {
         double poleAngle = calculatePoleAngle(payload);
