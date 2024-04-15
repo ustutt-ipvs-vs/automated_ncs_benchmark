@@ -1,7 +1,7 @@
 #define ENCODER_OPTIMIZE_INTERRUPTS
 #include <Encoder.h>
 #include <TeensyStep.h>
-#include "CarabelliParameters.h"
+#include "KalmanAndMLQRParameters.h"
 
 #include <BasicLinearAlgebra.h>
 using BLA::operator<<;  // Required for printing matrices to Serial
@@ -112,7 +112,7 @@ int returnPosition = 0;
 
 unsigned k = 0;
 
-// Carabelli approach variables:
+// General and mLQR approach variables:
 float xi_cart = 0.0;  // cart position integral [m·s]
 
 float x_cart = 0.0;  // cart position [m]               NOT [msteps]
@@ -131,9 +131,9 @@ float K_iqc_integrator = 5.0322;
 BLA::Matrix<4, 1> x_k;
 
 enum approach {
-  CARABELLI_KALMAN_CARABELLI_CONTROLLER,
-  CARABELLI_KALMAN_IST_CONTROLLER
-} approachUsed = CARABELLI_KALMAN_CARABELLI_CONTROLLER;
+  MLQR,
+  ROBUST_IO
+} approachUsed = MLQR;
 
 bool limitLeft;
 bool limitRight;
@@ -156,7 +156,6 @@ bool isUpright = false;
 
 unsigned balancePeriod = 50;
 
-// CARABELLI APPROACH:
 float Kxic = 0.25 * Kxc;  // integral gain (TODO: incorporate into system model)
 
 constexpr float f_kf = 0.9;  // factor for complementary filtering of kalman estimate with "raw" measurements
@@ -191,7 +190,7 @@ void updateParametersForSamplingPeriod(unsigned samplingPeriod) {
   Ts = balancePeriod / 1000.0;  // sampling period in seconds
   fs = 1000.0 / balancePeriod;  // sampling frequency in Hz
 
-  updateCarabelliParameters(samplingPeriod);
+  updateKalmanAndMLQRParameters(samplingPeriod);
   Kxic = 0.25 * Kxc;  // integral gain (TODO: incorporate into system model)
 }
 
@@ -204,15 +203,15 @@ void initializeCartState() {
 
 void setApproachFromParameter(int parameter) {
   switch (parameter) {
-    case 0: approachUsed = CARABELLI_KALMAN_CARABELLI_CONTROLLER; break;
-    case 1: approachUsed = CARABELLI_KALMAN_IST_CONTROLLER; break;
+    case 0: approachUsed = MLQR; break;
+    case 1: approachUsed = ROBUST_IO; break;
   }
 }
 
 String getUsedApproachString() {
   switch (approachUsed) {
-    case CARABELLI_KALMAN_CARABELLI_CONTROLLER: return "CARABELLI_KALMAN_CARABELLI_CONTROLLER";
-    case CARABELLI_KALMAN_IST_CONTROLLER: return "CARABELLI_KALMAN_IST_CONTROLLER";
+    case MLQR: return "MLQR";
+    case ROBUST_IO: return "ROBUST_IO";
   }
   return "";
 }
@@ -224,7 +223,7 @@ void readInitializationValues() {
   // Expected Format:
   // I:motorMaxRPM;revolutionsPerTrack;doSwingUpAtStart;swingUpDistanceFactor;swingUpSpeedFactor;swingUpAccelerationFactor;approach\n
   // where doSwingUpAtStart in {0, 1}
-  // and approach in {0, 1} with 0: CARABELLI_KALMAN_CARABELLI_CONTROLLER, 1: CARABELLI_KALMAN_IST_CONTROLLER
+  // and approach in {0, 1} with 0: MLQR, 1: ROBUST_IO
   bool receivedInitValues = false;
   while (!receivedInitValues) {
     Serial.println("READY");
@@ -446,7 +445,7 @@ void sendSwingUpEndSignalToSender() {
 void resetControlParameters() {
   Serial.println("Resetting control parameters");
 
-  // Carabelli approach:
+  // General and mLQR:
   k = 0;
   xi_cart = 0.0;
   x_cart = getCartPosMeter();
@@ -456,7 +455,7 @@ void resetControlParameters() {
   u_accel = 0.0;
   poleAngle_p = x_pole;
 
-  // IST approach:
+  // RobustIO approach:
   u_accel = 0.0;
   x_k.Fill(0);
   xi_cart = 0.0;
@@ -470,7 +469,7 @@ void sendGracePeriodEndedSignals() {
   FeedbackSerial.println(signal);
 }
 
-void updateUsingCarabelliKalmanAndLQR(float cartPos, float cartSpeed, float poleAngle, unsigned latency) {
+void updateUsingMLQR(float cartPos, float cartSpeed, float poleAngle, unsigned latency) {
   float x_cart_p = x_cart;
   float v_cart_p = v_cart;
   float x_pole_p = x_pole;
@@ -510,8 +509,8 @@ void updateUsingCarabelliKalmanAndLQR(float cartPos, float cartSpeed, float pole
   u_accel += Kxic * xi_cart;
 }
 
-void updateKalmanUsingCarabelliUpdateLQRUsingIST(float cartPos, float cartSpeed, float poleAngle) {
-  // Kalman filter from Carabelli
+void updateUsingRobustIO(float cartPos, float cartSpeed, float poleAngle) {
+  // Kalman filter
   float x_cart_p = x_cart;
   float v_cart_p = v_cart;
   float x_pole_p = x_pole;
@@ -526,12 +525,12 @@ void updateKalmanUsingCarabelliUpdateLQRUsingIST(float cartPos, float cartSpeed,
   v_cart = f_kf * v_cart + (1 - f_kf) * cartSpeed;
   x_pole = f_kf * x_pole + (1 - f_kf) * poleAngle;
   v_pole = f_kf * v_pole + (1 - f_kf) * (poleAngle - poleAngle_p) * fs;
-  BLA::Matrix<4, 1> x_k_carabelli = { x_cart, v_cart, x_pole, v_pole };
+  BLA::Matrix<4, 1> x_k_local = { x_cart, v_cart, x_pole, v_pole };
 
   poleAngle_p = poleAngle;
 
-  // Controller from IST:
-  u_accel = (~K_iqc * x_k_carabelli)(0, 0);
+  // RobustIO Controller:
+  u_accel = (~K_iqc * x_k_local)(0, 0);
   xi_cart += cartPos * Ts;  // integrator
   u_accel += K_iqc_integrator * xi_cart;
 }
@@ -790,10 +789,10 @@ void loop() {
         float cartSpeed = getCartSpeedMeter();
         float poleAngle = getPoleAngleRad();
 
-        if (approachUsed == CARABELLI_KALMAN_CARABELLI_CONTROLLER) {
-          updateUsingCarabelliKalmanAndLQR(cartPos, cartSpeed, poleAngle, currentLatencyMillis);
-        } else if (approachUsed == CARABELLI_KALMAN_IST_CONTROLLER) {
-          updateKalmanUsingCarabelliUpdateLQRUsingIST(cartPos, cartSpeed, poleAngle);
+        if (approachUsed == MLQR) {
+          updateUsingMLQR(cartPos, cartSpeed, poleAngle, currentLatencyMillis);
+        } else if (approachUsed == ROBUST_IO) {
+          updateUsingRobustIO(cartPos, cartSpeed, poleAngle);
         }
 
         u_accel = constrain(u_accel, -aMaxMeters, aMaxMeters);  // clamp to admissible range
