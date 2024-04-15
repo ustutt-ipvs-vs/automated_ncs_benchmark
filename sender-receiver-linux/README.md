@@ -61,28 +61,10 @@ cmake --build . --target pendulum_sender
 cmake --build . --target pendulum_receiver
 ```
 
-## Running the Executables
-### Explanations
-The `pendulum_sender` executable must be run with root privileges. Otherwise, the PCP value `7` is not allowed by the OS and PCP value `0` is used instead (without reporting an error).
-
+## Make Sure Dependencies are Found
 You need to make sure that the shared libraries (`sockpp` and `CppLinuxSerial`) can be found. For this purpose, you need to add the path of the libraries (usually `/usr/local/lib`) to the `LD_LIBRARY_PATH` variable:
 ```
 export LD_LIBRARY_PATH=/usr/local/lib:$LD_LIBRARY_PATH
-```
-
-### Running Pendulum Sender
-First connect the Teensy to the single-board microcontroller via USB. Then run
-```
-sudo su
-export LD_LIBRARY_PATH=/usr/local/lib:$LD_LIBRARY_PATH
-./pendulum_sender
-```
-
-### Running Pendulum Receiver
-First connect the Teensy to the single-board microcontroller via USB. Then run
-```
-export LD_LIBRARY_PATH=/usr/local/lib:$LD_LIBRARY_PATH
-./pendulum_sender
 ```
 
 ## Note About Connecting Teensy via USB

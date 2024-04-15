@@ -17,11 +17,6 @@
  * Option 2: Run a sequence of MPTB sub-configs from a JSON config file. An example config file can be found in
  * "exampleSenderSequenceConfig.json".
  * ./pendulum_sender s <filename>
- *
- * Running the program as sudo (required for priority 7 to work):
- * $ sudo su
- * $ export LD_LIBRARY_PATH=/usr/local/lib:$LD_LIBRARY_PATH
- * $ ./pendulum_sender [arguments]
  */
 
 std::string device = "/dev/ttyACM0";
