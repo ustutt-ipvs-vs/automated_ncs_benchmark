@@ -1,7 +1,10 @@
 # julia 1.1.0
+
 module PlantModels
 
-using LQRUtils, LinearAlgebra
+include("./LQRUtils.jl")
+
+using .LQRUtils, LinearAlgebra
 
 export ControlSystem, PlantModel, Simple1D, Simple2D, InvertedPendulum
 

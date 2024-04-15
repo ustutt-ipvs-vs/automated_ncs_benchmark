@@ -1,7 +1,8 @@
-(@__DIR__) in LOAD_PATH || push!(LOAD_PATH, @__DIR__)
+include("./LQRUtils.jl")
+include("./PlantModels.jl")
 
-using LQRUtils
-using PlantModels
+using .LQRUtils
+using .PlantModels
 using LinearAlgebra
 
 # Open the file for writing
