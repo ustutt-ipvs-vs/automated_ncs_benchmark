@@ -15,9 +15,7 @@ All the code is written in C++. The following libraries are used:
 ### Installing CMake
 Unfortunately, the APT repository only has an outdated version of CMake at the time of writing. Therefore, `sudo apt install cmake` doesn't work.
 
-Instead, use one of the two options:
-- Install via Snap:  `sudo snap install cmake --classic`
-- Install executable from https://cmake.org/download/
+Instead, install executable from https://cmake.org/download/ .
 
 To use CMake, you need to install `build-essential` too:
 ```

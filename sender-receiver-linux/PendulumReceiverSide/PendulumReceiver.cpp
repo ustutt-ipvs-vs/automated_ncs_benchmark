@@ -37,12 +37,13 @@ void PendulumReceiver::start() {
     // Send Teensy drive geometry parameters:
     std::cout << "Sending drive geometry parameters: motor max RPM: " << motorMaxRPM << ", revolutions per track: "
         << revolutionsPerTrack << std::endl;
-    // Create string of form "I:motorMaxRPM;revolutionsPerTrack;swingUpAtStart\n"
 
     uint8_t swingUpAtStart = swingUpBehavior == ReceiverConfig::SwingUpBehavior::SWING_UP_AT_START
             || swingUpBehavior == ReceiverConfig::SwingUpBehavior::CRASH_AND_SWING_UP_AT_NEW_CONFIG
             || swingUpBehavior == ReceiverConfig::SwingUpBehavior::SWING_UP_AT_NEW_CONFIG_IF_CRASHED;
 
+    // Create string of the form
+    // "I:motorMaxRPM;revolutionsPerTrack;doSwingUpAtStart;swingUpDistanceFactor;swingUpSpeedFactor;swingUpAccelerationFactor;K_1;K_2;K_3;K_4;K_integrator;approach\n"
     std::string teensyInitParams = "I:"
             + std::to_string(motorMaxRPM) + ";"
             + std::to_string(revolutionsPerTrack) + ";"

@@ -10,9 +10,10 @@ void PendulumLogger::log(unsigned long long packetCount, unsigned long long byte
     time_point<system_clock> currentTime = system_clock::now();
 
     // The sample value string is of the following form:
-    // S:encoderValue;samplingPeriodMillis;sequenceNumber;currentTime;\n
+    // encoderValue;samplingPeriodMillis;sequenceNumber;currentTime;angularVelocity;networkDelayMillis\n
+    // where the sampling period is in milliseconds and the angular velocity is in radians per second.
     // for example
-    // S:-1204;50;1234;62345234;\n
+    // S:-1204;50;1234;62345234;-1.308997;4\n
     int pendulumSensorValue, samplingPeriodMillis;
     std::stringstream stringStream(payload);
     stringStream.ignore(2); // skip 'S:'

@@ -7,9 +7,6 @@
 #include "PendulumReceiver.h"
 #include "../SerialPortScan/TeensyPortDetector.h"
 
-std::string device = "/dev/ttyACM0";
-
-std::string host = "10.0.1.2";
 int port = 3000;
 
 PendulumReceiver* receiver;
@@ -27,6 +24,8 @@ int main(int argc, char *argv[]){
     if(argc >= 2) {
         std::string configFile = argv[1];
         ReceiverConfig config(configFile);
+
+        std::string device;
         if(config.isAutomaticallyFindSerialDevice()){
             device = TeensyPortDetector::findTeensySerialDevice();
         } else{

@@ -221,7 +221,7 @@ void readInitializationValues() {
   float newRevolutionsPerTrack;
 
   // Expected Format:
-  // I:motorMaxRPM;revolutionsPerTrack;doSwingUpAtStart;swingUpDistanceFactor;swingUpSpeedFactor;swingUpAccelerationFactor;approach\n
+  // I:motorMaxRPM;revolutionsPerTrack;doSwingUpAtStart;swingUpDistanceFactor;swingUpSpeedFactor;swingUpAccelerationFactor;K_1;K_2;K_3;K_4;K_integrator;approach\n
   // where doSwingUpAtStart in {0, 1}
   // and approach in {0, 1} with 0: MLQR, 1: ROBUST_IO
   bool receivedInitValues = false;

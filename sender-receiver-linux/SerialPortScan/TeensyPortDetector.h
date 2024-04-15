@@ -21,5 +21,4 @@ private:
     static std::string runShellCommand(const std::string &command);
 };
 
-
 #endif //SENDER_RECEIVER_LINUX_TEENSYPORTDETECTOR_H

@@ -50,9 +50,9 @@ private:
 public:
     PendulumSender(PriorityDeterminer* priorityDeterminer, std::string serialDeviceName, std::string receiverHost,
                    int receiverPort, int teensyHistorySize, std::vector<int> teensySamplingPeriods,
-                   float samplingPeriodSensitivityFactor = 1.0, float samplingPeriodSensitivityOffset = 0.0,
-                   std::function<void()> regularCallback = nullptr, std::string logFilePrefix = "pendulumsender",
-                   int angleBias = 0, std::vector<int> networkDelaysPerPrio = std::vector<int>(8, 0));
+                   float samplingPeriodSensitivityFactor, float samplingPeriodSensitivityOffset,
+                   std::function<void()> regularCallback, std::string logFilePrefix, int angleBias,
+                   std::vector<int> networkDelaysPerPrio);
     void start();
     void stop();
     void swapPriorityDeterminer(PriorityDeterminer* newPriorityDeterminer, std::string logFilePrefix);

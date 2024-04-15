@@ -109,5 +109,4 @@ public:
 
 };
 
-
 #endif //SENDER_RECEIVER_LINUX_SENDERCONFIG_H
