@@ -19,6 +19,12 @@ long sequenceNumber = 1;
 long lastReceivedSequenceNumber = 0;
 long packetsLostTotal = 0;
 
+enum sendTriggeringApproaches {
+  SLIDING_WINDOW,
+  SIMPLE_THRESHOLD
+} sendTriggeringApproach = SLIDING_WINDOW;
+
+// SLIDING_WINDOW:
 int historySize = 0;
 int* samplesHistory;  // Acts as ring buffer
 #define NUM_SAMPLING_PERIODS 10
@@ -26,6 +32,9 @@ int samplingPeriodsMillis[NUM_SAMPLING_PERIODS];
 float sensitivityFactor = 1.0;
 float sensitivityOffset = 0.0;
 int historyPosition = 0;
+
+// SIMPLE_THRESHOLD
+float angleTransmissionThreshold; // in degrees
 
 double angleSpeed;
 
@@ -47,8 +56,13 @@ void setup() {
 }
 
 void readInitializationValues() {
-  // Expected Format:
-  // H:sensitivityFactor;sensitivityOffset;historySize;period1;period2;period3;period4;period5;period6;period7;period8;period9;period10;\n
+  // Expected Format: 
+  // For SLIDING_WINDOW approach:
+  // H:0;sensitivityFactor;sensitivityOffset;historySize;period1;period2;period3;period4;period5;period6;period7;period8;period9;period10;\n
+  //
+  // For SIMPLE_THRESHOLD approach:
+  // H:1;angleTransmissionThreshold;\n
+
   bool receivedHistorySize = false;
   while (!receivedHistorySize) {
     Serial.println("READY");
@@ -56,23 +70,39 @@ void readInitializationValues() {
 
     if (Serial.available() > 0) {
       if (Serial.readStringUntil(':').startsWith("H")) {
-        sensitivityFactor = Serial.readStringUntil(';').toInt();
-        sensitivityOffset = Serial.readStringUntil(';').toInt();
-        historySize = Serial.readStringUntil(';').toInt();
-        for (int i = 0; i < NUM_SAMPLING_PERIODS; i++) {
-          samplingPeriodsMillis[i] = Serial.readStringUntil(';').toInt();
+        int approachInt = Serial.readStringUntil(';').toInt();
+        if(approachInt == 0){
+          sendTriggeringApproach = SLIDING_WINDOW;
+        } else if(approachInt == 1){
+          sendTriggeringApproach = SIMPLE_THRESHOLD;
+        } else {
+          Serial.println("Invalid approach provided");
         }
-        receivedHistorySize = true;
-        samplesHistory = new int[historySize];
+        if(sendTriggeringApproach == SLIDING_WINDOW){
+          sensitivityFactor = Serial.readStringUntil(';').toFloat();
+          sensitivityOffset = Serial.readStringUntil(';').toFloat();
+          historySize = Serial.readStringUntil(';').toInt();
+          for (int i = 0; i < NUM_SAMPLING_PERIODS; i++) {
+            samplingPeriodsMillis[i] = Serial.readStringUntil(';').toInt();
+          }
+          receivedHistorySize = true;
+          samplesHistory = new int[historySize];
 
-        // Echo received values to computer for validation:
-        Serial.printf("Received history size: %i\n", historySize);
-        Serial.print("Received Sampling Periods: ");
-        for (int i = 0; i < NUM_SAMPLING_PERIODS; i++) {
-          Serial.printf("%i, ", samplingPeriodsMillis[i]);
+          // Echo received values to computer for validation:
+          Serial.println("Approach: SLIDING_WINDOW");
+          Serial.printf("Received history size: %i\n", historySize);
+          Serial.print("Received Sampling Periods: ");
+          for (int i = 0; i < NUM_SAMPLING_PERIODS; i++) {
+            Serial.printf("%i, ", samplingPeriodsMillis[i]);
+          }
+          Serial.println();
+          Serial.printf("Received sensitivity factor:%f, offset: %f\n", sensitivityFactor, sensitivityOffset);
+        } else if(sendTriggeringApproach == SIMPLE_THRESHOLD){
+          angleTransmissionThreshold = Serial.readStringUntil(';').toFloat();
+
+          Serial.println("Approach: SIMPLE_THRESHOLD");
+          Serial.printf("Received threshold: %f°\n", angleTransmissionThreshold);
         }
-        Serial.println();
-        Serial.printf("Received sensitivity factor:%f, offset: %f\n", sensitivityFactor, sensitivityOffset);
       }
       Serial.read();  // Remove \n
     }
@@ -80,9 +110,15 @@ void readInitializationValues() {
 }
 
 void loop() {
-  calculateTransmissionPeriod();
-  sendSampleIfDelayOver();
-
+  switch(sendTriggeringApproach){
+    case SLIDING_WINDOW:
+      calculateTransmissionPeriod();
+      sendSampleIfDelayOver();
+      break;
+    case SIMPLE_THRESHOLD:
+      sendSampleIfAngleThresholdExceeded();
+      break;
+  }
   checkAndHandleFeedback();
 }
 
@@ -128,18 +164,38 @@ void calculateTransmissionPeriod() {
 
 void sendSampleIfDelayOver() {
   unsigned long currentTime = millis();
-  float angularVelocity = getAngularVelocity();
   if (lastTransmissionTime + transmissionPeriodMillis <= currentTime) {
-    // The sample value string is of the following form:
-    // S:encoderValue;samplingPeriodMillis;sequenceNumber;currentTime;angularVelocity;latencyMillis\n
-    // for example
-    // S:-1204;50;1234;62345234;-1.308997;0\n
-    // The latency (set to 0) is just a placeholder and will be replaced by the Linux sender component.
-    sensorValueSerial->printf("S:%i;%u;%i;%u;%f;0;\n", encoder.read(), transmissionPeriodMillis, sequenceNumber, currentTime, angularVelocity);
-    Serial.send_now();
-    lastTransmissionTime = currentTime;
-    sequenceNumber++;
+    sendSample();
   }
+}
+
+void sendSampleIfAngleThresholdExceeded(){
+  unsigned long currentTime = millis();
+  if (lastSensorPeekTime + sensorPeekPeriodMillis <= currentTime) { // Only check sensor once every peek period
+    lastSensorPeekTime = currentTime;
+
+    int encoderValue = encoder.read();
+    encoderValue = ((encoderValue % 2400) + 2400) % 2400; // Make sure encoderValue is in [0, 2400)
+    const double DEG_PER_ESTEP = 360.0 / 2400.0;
+    double poleAngle = DEG_PER_ESTEP * (encoderValue-1200);
+    if(abs(poleAngle) > angleTransmissionThreshold){
+      sendSample();
+    }
+  }
+}
+
+void sendSample() {
+  unsigned long currentTime = millis();
+  float angularVelocity = getAngularVelocity();
+  // The sample value string is of the following form:
+  // S:encoderValue;samplingPeriodMillis;sequenceNumber;currentTime;angularVelocity;latencyMillis\n
+  // for example
+  // S:-1204;50;1234;62345234;-1.308997;0\n
+  // The latency (set to 0) is just a placeholder and will be replaced by the Linux sender component.
+  sensorValueSerial->printf("S:%i;%u;%i;%u;%f;0;\n", encoder.read(), transmissionPeriodMillis, sequenceNumber, currentTime, angularVelocity);
+  Serial.send_now();
+  lastTransmissionTime = currentTime;
+  sequenceNumber++;
 }
 
 float getAngularVelocity() {
