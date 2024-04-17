@@ -12,8 +12,9 @@
  *   "thresholds": [0, -200, -400],
  *   "prioMapping": [0, 1, 2, 7],
  *   "costs": [1, 1, 1, 0],
- *   "historySize": 100,
  *   "bias": 0,
+ *   "sendTriggeringApproach": "slidingWindow",
+ *   "historySize": 100,
  *   "samplingPeriods": [100, 90, 80, 70, 60, 50, 40, 30, 20, 10],
  *   "samplingPeriodSensitivityFactor": 0.5,
  *   "samplingPeriodSensitivityOffset": 2.0,
@@ -24,6 +25,7 @@
  * }
  *
  *  The default values are, if not specified otherwise:
+ *  sendTriggeringApproach = "slidingWindow"
  *  historySize = 100
  *  bias = 0
  *  samplingPeriods = [100, 90, 80, 70, 60, 50, 40, 30, 20, 10]
@@ -35,6 +37,11 @@
  *
  * The serialDeviceName can be set to "auto" to automatically find the a Teensy device.
  * It is also possible to specify the device name manually, e.g. "/dev/ttyACM0".
+ *
+ * If sendTriggeringApproach is set to "simpleThreshold", the following parameters are required:
+ * "angleTransmissionThreshold": 1.23
+ * where the number is the angle in degrees. The parameters "historySize", "samplingPeriods",
+ * "samplingPeriodSensitivityFactor", and "samplingPeriodSensitivityOffset" are not required in this case.
  * */
 
 #ifndef SENDER_RECEIVER_LINUX_SENDERCONFIG_H

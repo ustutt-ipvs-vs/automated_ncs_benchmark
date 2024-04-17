@@ -106,11 +106,19 @@ The sender and receiver can be started with various parameter options:
   "thresholds": [0, -200, -400],
   "prioMapping": [0, 1, 2, 7],
   "costs": [1, 1, 1, 0],
-  "historySize": 100,
   "bias": 0,
+  
+  /* Option 1: slidingWindow: */
+  "sendTriggeringApproach": "slidingWindow",
+  "historySize": 100,
   "samplingPeriods": [100, 90, 80, 70, 60, 50, 40, 30, 20, 10],
   "samplingPeriodSensitivityFactor": 1.0,
   "samplingPeriodSensitivityOffset": 0.0,
+  
+  /* Option 2: simpleThreshold: */
+  "sendTriggeringApproach": "simpleThreshold",
+  "angleTransmissionThreshold": 1.23,
+  
   "initialPriorityClass": 0,
   "serialDeviceName": "auto",
   "receiverAddress": "10.0.1.3",
@@ -125,8 +133,13 @@ with
 - `thresholds`: Array of thresholds (floating point numbers) for the priority classes. The lowest threhold `- infinity` is ommited from the array.
 - `prioMapping`: Array specifying the mapping from the thresholds to the priority classes (integers 0-7).
 - `costs`: Array of costs associated with the priority classes. First element associated with best priority class.
-- `historySize`: Number of samples kept in the sensor history to determine the maximum absolute angle change.
 - `bias` Bias as an integer value. Is *added* to the raw sensor value before sending it to the receiver. Default value: `0`
+- `sendTriggeringApproach`: String. Determines the approach to trigger the sending of a new sensor value. Default: `slidingWindow`. Possible options:
+    - `slidingWindow`: Uses a sliding window to determine the maximum absolute angle change. The sampling period is determined by the maximum absolute angle change.
+      For this approach, the following parameters are required: `historySize`, `samplingPeriods`, `samplingPeriodSensitivityFactor`, `samplingPeriodSensitivityOffset`.
+    - `simpleThreshold`: Uses a simple threshold. Whenever the absolute angle value exceeds the threshold, a new sensor value is sent.
+        For this approach, the following parameter is required: `angleTransmissionThreshold`.
+- `historySize`: Number of samples kept in the sensor history to determine the maximum absolute angle change.
 - `samplingPeriods`: Array of 10 sampling periods in milliseconds, where the first element corresponds to the smallest change and the 10th element corresponds to the largest maximum absolute angle change.
 - `initialPriorityClass`: Priority class used at start ()
 - `samplingPeriodSensitivityFactor`: Factor by which the maximum absolute angle change is multiplied to determine sampling period. Default value: `1.0`
@@ -162,11 +175,19 @@ This config allows to run multiple MPTB configurations one after another without
       "costs": [2, 1, 0]
     }
   ],
+
+  /* Option 1: slidingWindow: */
+  "sendTriggeringApproach": "slidingWindow",
   "historySize": 100,
-  "bias": 0,
   "samplingPeriods": [100, 90, 80, 70, 60, 50, 40, 30, 20, 10],
   "samplingPeriodSensitivityFactor": 1.0,
   "samplingPeriodSensitivityOffset": 0.0,
+
+  /* Option 2: simpleThreshold: */
+  "sendTriggeringApproach": "simpleThreshold",
+  "angleTransmissionThreshold": 1.23,
+  
+  "bias": 0,
   "serialDeviceName": "auto",
   "receiverAddress": "10.0.1.5",
   "networkDelaysPerPrio": [2, 4, 6, 8, 10, 12, 14, 16]
