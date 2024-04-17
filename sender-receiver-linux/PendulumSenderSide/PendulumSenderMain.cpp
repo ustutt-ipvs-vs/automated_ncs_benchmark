@@ -24,21 +24,13 @@ std::string device = "/dev/ttyACM0";
 std::string host;
 int port = 3000;
 
-// Number of samples that Teensy keeps in its history buffer to determine sampling period.
-// Gets transmitted to the sender Teensy at initialization.
-int teensyHistorySize;
-
 // Teensy angle bias of the raw sensor value (2400 steps per revolution)
 // this value gets added to the raw sensor value before it is sent to the receiver
 int teensyAngleBias;
 
-// Different sampling periods used by the Teensy sender in milliseconds:
-std::vector<int> teensySamplingPeriods;
-
-float samplingPeriodSensitivityFactor;
-float samplingPeriodSensitivityOffset;
-
 std::vector<int> networkDelaysPerPrio;
+
+std::string teensyInitializationString;
 
 PendulumSender *sender;
 
@@ -70,8 +62,7 @@ int main(int argc, char *argv[]) {
         PriorityDeterminer *determiner;
         determiner = generateDeterminerFromCommandLineArguments(argc, argv);
 
-        sender = new PendulumSender(determiner, device, host, port, teensyHistorySize, teensySamplingPeriods,
-                                    samplingPeriodSensitivityFactor, samplingPeriodSensitivityOffset,
+        sender = new PendulumSender(determiner, device, host, port, teensyInitializationString,
                                     nullptr, "pendulumsender", teensyAngleBias, networkDelaysPerPrio);
         sender->start();
     }
@@ -107,11 +98,8 @@ void runMptbSequence(int argc, char *const *argv){
     SenderMultiConfig config(filename);
 
     host = config.getReceiverAddress();
-    teensyHistorySize = config.getHistorySize();
     teensyAngleBias = config.getBias();
-    teensySamplingPeriods = config.getSamplingPeriods();
-    samplingPeriodSensitivityFactor = config.getSamplingPeriodSensitivityFactor();
-    samplingPeriodSensitivityOffset = config.getSamplingPeriodSensitivityOffset();
+    teensyInitializationString = config.getTeensyInitializationString();
 
     if(config.isAutomaticallyFindSerialDevice()){
         std::cout << "Automatically finding serial device..." << std::endl;
@@ -149,9 +137,8 @@ void runMptbSequence(int argc, char *const *argv){
 
     PriorityDeterminer *determiner = getIthSubconfigMptbDeterminer(0, config);
     sender = new PendulumSender(determiner, device, host, port,
-                                teensyHistorySize, teensySamplingPeriods,
-                                samplingPeriodSensitivityFactor, samplingPeriodSensitivityOffset,
-                                regularCallback, "pendulumsender_" + config.getMptbSubConfigs().at(0).getName(),
+                                teensyInitializationString, regularCallback,
+                                "pendulumsender_" + config.getMptbSubConfigs().at(0).getName(),
                                 teensyAngleBias, config.getNetworkDelaysPerPrio());
     sender->start();
 }
@@ -176,11 +163,8 @@ PriorityDeterminer *generateDeterminerFromCommandLineArguments(int argc, char *c
                                                   config.getCosts(), config.getPrioMapping());
 
         host = config.getReceiverAddress();
-        teensyHistorySize = config.getHistorySize();
         teensyAngleBias = config.getBias();
-        teensySamplingPeriods = config.getSamplingPeriods();
-        samplingPeriodSensitivityFactor = config.getSamplingPeriodSensitivityFactor();
-        samplingPeriodSensitivityOffset = config.getSamplingPeriodSensitivityOffset();
+        teensyInitializationString = config.getTeensyInitializationString();
         networkDelaysPerPrio = config.getNetworkDelaysPerPrio();
 
         if(config.isAutomaticallyFindSerialDevice()){

@@ -59,19 +59,24 @@
 #include <vector>
 #include <string>
 #include "MPTBSubConfig.h"
+#include "../Parameters/Parameters.h"
 
 class SenderMultiConfig {
 private:
     std::vector<MPTBSubConfig> mptbSubConfigs;
 
     // Teensy parameters:
-    int historySize;
     int bias;
+    std::string serialDeviceName;
+    bool automaticallyFindSerialDevice;
+    SendTriggeringApproach sendTriggeringApproach;
+    // SLIDING_WINDOW parameters:
+    int historySize;
     std::vector<int> samplingPeriods;
     float samplingPeriodSensitivityFactor;
     float samplingPeriodSensitivityOffset;
-    std::string serialDeviceName;
-    bool automaticallyFindSerialDevice;
+    // SIMPLE_THRESHOLD parameters:
+    float angleTransmissionThreshold;
 
     // Network parameters:
     std::string receiverAddress;
@@ -101,6 +106,14 @@ public:
     const std::vector<MPTBSubConfig> &getMptbSubConfigs() const;
 
     const std::vector<int> &getNetworkDelaysPerPrio() const;
+
+    SendTriggeringApproach getSendTriggeringApproach() const;
+
+    float getAngleTransmissionThreshold() const;
+
+    std::string getTeensyInitializationString();
+
+
 
 };
 

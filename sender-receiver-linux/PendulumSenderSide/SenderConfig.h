@@ -43,6 +43,7 @@
 
 #include <vector>
 #include <string>
+#include "../Parameters/Parameters.h"
 
 class SenderConfig {
 private:
@@ -58,14 +59,17 @@ private:
     std::vector<int> networkDelaysPerPrio;
 
     // Teensy parameters:
+    int bias;
+    std::string serialDeviceName;
+    bool automaticallyFindSerialDevice;
+    SendTriggeringApproach sendTriggeringApproach;
+    // SLIDING_WINDOW parameters:
     int historySize;
     std::vector<int> samplingPeriods;
     float samplingPeriodSensitivityFactor;
     float samplingPeriodSensitivityOffset;
-
-    int bias;
-    std::string serialDeviceName;
-    bool automaticallyFindSerialDevice;
+    // SIMPLE_THRESHOLD parameters:
+    float angleTransmissionThreshold;
 
     // Network parameters:
     std::string receiverAddress;
@@ -106,6 +110,12 @@ public:
     int getInitialPriorityClass() const;
 
     std::string toString() const;
+
+    SendTriggeringApproach getSendTriggeringApproach() const;
+
+    float getAngleTransmissionThreshold() const;
+
+    std::string getTeensyInitializationString();
 
 };
 

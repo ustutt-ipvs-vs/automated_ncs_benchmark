@@ -51,32 +51,54 @@ SenderConfig::SenderConfig(std::string filename) {
         networkDelaysPerPrio = std::vector<int>(8, 0); // default value
     }
 
-    if (configJson.contains("historySize")) {
-        historySize = configJson["historySize"];
-    } else {
-        historySize = 100; // default value
-    }
     if (configJson.contains("bias")) {
         bias = configJson["bias"];
     } else {
         bias = 0; // default value
     }
-    if (configJson.contains("samplingPeriods")) {
-        samplingPeriods = configJson["samplingPeriods"].get<std::vector<int>>();
+
+    if(configJson["sendTriggeringApproach"] == "slidingWindow") {
+        sendTriggeringApproach = SLIDING_WINDOW;
+    } else if(configJson["sendTriggeringApproach"] == "simpleThreshold") {
+        sendTriggeringApproach = SIMPLE_THRESHOLD;
     } else {
-        samplingPeriods = {100, 90, 80, 70, 60, 50, 40, 30, 20, 10}; // default value
+        throw std::runtime_error("sendTriggeringApproach must be either SLIDING_WINDOW or SIMPLE_THRESHOLD");
     }
 
-    if (configJson.contains("samplingPeriodSensitivityFactor")) {
-        samplingPeriodSensitivityFactor = configJson["samplingPeriodSensitivityFactor"];
-    } else {
-        samplingPeriodSensitivityFactor = 1.0; // default value
-    }
+    if(sendTriggeringApproach == SLIDING_WINDOW){
+        if (configJson.contains("historySize")) {
+            historySize = configJson["historySize"];
+        } else {
+            historySize = 100; // default value
+        }
 
-    if (configJson.contains("samplingPeriodSensitivityOffset")) {
-        samplingPeriodSensitivityOffset = configJson["samplingPeriodSensitivityOffset"];
-    } else {
-        samplingPeriodSensitivityOffset = 0.0; // default value
+        if(historySize < 0){
+            throw std::runtime_error("historySize must be at least 0");
+        }
+
+        if (configJson.contains("samplingPeriods")) {
+            samplingPeriods = configJson["samplingPeriods"].get<std::vector<int>>();
+        } else {
+            samplingPeriods = {100, 90, 80, 70, 60, 50, 40, 30, 20, 10}; // default value
+        }
+
+        if (configJson.contains("samplingPeriodSensitivityFactor")) {
+            samplingPeriodSensitivityFactor = configJson["samplingPeriodSensitivityFactor"];
+        } else {
+            samplingPeriodSensitivityFactor = 1.0; // default value
+        }
+
+        if (configJson.contains("samplingPeriodSensitivityOffset")) {
+            samplingPeriodSensitivityOffset = configJson["samplingPeriodSensitivityOffset"];
+        } else {
+            samplingPeriodSensitivityOffset = 0.0; // default value
+        }
+    } else { // SIMPLE_THRESHOLD
+        if (configJson.contains("angleTransmissionThreshold")) {
+            angleTransmissionThreshold = configJson["angleTransmissionThreshold"];
+        } else {
+            throw std::runtime_error("angleTransmissionThreshold must be specified for SIMPLE_THRESHOLD approach");
+        }
     }
 
     if (configJson.contains("initialPriorityClass")) {
@@ -96,10 +118,6 @@ SenderConfig::SenderConfig(std::string filename) {
 
     if(numThresholds < 1) {
         throw std::runtime_error("numThresholds must be at least 1");
-    }
-
-    if(historySize < 0){
-        throw std::runtime_error("historySize must be at least 0");
     }
 
     if (thresholds.size() != numThresholds) {
@@ -164,15 +182,23 @@ std::string SenderConfig::toString() const {
     }
     result += "\n";
 
-    result += "historySize: " + std::to_string(historySize) + "\n";
     result += "bias: " + std::to_string(bias) + "\n";
-    result += "samplingPeriods: ";
-    for(int period : samplingPeriods){
-        result += std::to_string(period) + " ";
+
+    if(sendTriggeringApproach == SLIDING_WINDOW) {
+        result += "sendTriggeringApproach: SLIDING_WINDOW\n";
+        result += "historySize: " + std::to_string(historySize) + "\n";
+        result += "samplingPeriodSensitivityFactor: " + std::to_string(samplingPeriodSensitivityFactor) + "\n";
+        result += "samplingPeriodSensitivityOffset: " + std::to_string(samplingPeriodSensitivityOffset) + "\n";
+        result += "samplingPeriods: ";
+        for(int period : samplingPeriods){
+            result += std::to_string(period) + " ";
+        }
+        result += "\n";
+    } else { // SIMPLE_THRESHOLD
+        result += "sendTriggeringApproach: SIMPLE_THRESHOLD\n";
+        result += "angleTransmissionThreshold: " + std::to_string(angleTransmissionThreshold) + "\n";
     }
-    result += "\n";
-    result += "samplingPeriodSensitivityFactor: " + std::to_string(samplingPeriodSensitivityFactor) + "\n";
-    result += "samplingPeriodSensitivityOffset: " + std::to_string(samplingPeriodSensitivityOffset) + "\n";
+
     result += "serialDeviceName: " + serialDeviceName + "\n";
     result += "automaticallyFindSerialDevice: " + std::to_string(automaticallyFindSerialDevice) + "\n";
     result += "receiverAddress: " + receiverAddress + "\n";
@@ -193,4 +219,32 @@ float SenderConfig::getSamplingPeriodSensitivityOffset() const {
 
 const std::vector<int> &SenderConfig::getNetworkDelaysPerPrio() const {
     return networkDelaysPerPrio;
+}
+
+SendTriggeringApproach SenderConfig::getSendTriggeringApproach() const {
+    return sendTriggeringApproach;
+}
+
+float SenderConfig::getAngleTransmissionThreshold() const {
+    return angleTransmissionThreshold;
+}
+
+std::string SenderConfig::getTeensyInitializationString() {
+    std::string teensyInitParams = "H:";
+    if(sendTriggeringApproach == SLIDING_WINDOW) {
+        // Create string of form "H:0;sensitivityFactor;sensitivityOffset;historySize;period1;period2;period3;...\n"
+        teensyInitParams += "0;" // 0 encodes the SLIDING_WINDOW approach
+                           + std::to_string(samplingPeriodSensitivityFactor) + ";"
+                           + std::to_string(samplingPeriodSensitivityOffset) + ";"
+                           + std::to_string(historySize) + ";";
+        for (int period : samplingPeriods) {
+            teensyInitParams += std::to_string(period) + ";";
+        }
+    } else {
+        // Create string of form "H:1;angleTransmissionThreshold;\n"
+        teensyInitParams += "1;" // 1 encodes the SIMPLE_THRESHOLD approach
+                           + std::to_string(angleTransmissionThreshold) + ";";
+    }
+    teensyInitParams += "\n";
+    return teensyInitParams;
 }

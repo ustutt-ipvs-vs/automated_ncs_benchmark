@@ -6,4 +6,9 @@ const int SAMPLE_SIZE = 64;
 // 78B = SAMPLE_SIZE payload + 14B Ethernet header + 4B VLAN tag + 20B IP header + 8B UDP header
 const int FRAME_SIZE_OF_SAMPLE = SAMPLE_SIZE + 14 + 4 + 20 + 8;
 
+enum SendTriggeringApproach {
+    SLIDING_WINDOW,
+    SIMPLE_THRESHOLD
+};
+
 #endif //SENDER_RECEIVER_LINUX_PARAMETERS_H

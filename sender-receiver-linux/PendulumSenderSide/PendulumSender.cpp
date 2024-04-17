@@ -7,11 +7,9 @@
 const int RESTRICT_LOGGING_TO_MS = 50;
 
 PendulumSender::PendulumSender(PriorityDeterminer* priorityDeterminer, std::string serialDeviceName,
-                               std::string receiverHost, int receiverPort, int teensyHistorySize,
-                               std::vector<int> teensySamplingPeriods,
-                               float samplingPeriodSensitivityFactor, float samplingPeriodSensitivityOffset,
-                               std::function<void()> regularCallback,
-                               std::string logFilePrefix, int angleBias, std::vector<int> networkDelaysPerPrio)
+                               std::string receiverHost, int receiverPort, std::string teensyInitializationString,
+                               std::function<void()> regularCallback, std::string logFilePrefix, int angleBias,
+                               std::vector<int> networkDelaysPerPrio)
                                : regularCallback(regularCallback) {
     this->serialDeviceName = serialDeviceName;
     receiverAddress = inet_address(receiverHost, receiverPort);
@@ -20,10 +18,7 @@ PendulumSender::PendulumSender(PriorityDeterminer* priorityDeterminer, std::stri
     serialSensor.SetTimeout(-1);
 
     this->priorityDeterminer = priorityDeterminer;
-    this->teensyHistorySize = teensyHistorySize;
-    this->teensySamplingPeriods = teensySamplingPeriods;
-    this->samplingPeriodSensitivityFactor = samplingPeriodSensitivityFactor;
-    this->samplingPeriodSensitivityOffset = samplingPeriodSensitivityOffset;
+    this->teensyInitializationString = teensyInitializationString;
     this->logger = new PendulumLogger(logFilePrefix);
     this->angleBias = angleBias;
     this->networkDelaysPerPrio = networkDelaysPerPrio;
@@ -40,18 +35,8 @@ void PendulumSender::start() {
         serialSensor.Read(serialInputBuffer);
     }
 
-    // Send Teensy history size:
-    std::cout << "Sending Teensy history size: " << teensyHistorySize << std::endl;
-    // Create string of form "H:sensitivityFactor;sensitivityOffset;historySize;period1;period2;period3;...\n"
-    std::string teensyInitParams = "H:"
-            + std::to_string(samplingPeriodSensitivityFactor) + ";"
-            + std::to_string(samplingPeriodSensitivityOffset) + ";"
-            + std::to_string(teensyHistorySize) + ";";
-    for (int period : teensySamplingPeriods) {
-        teensyInitParams += std::to_string(period) + ";";
-    }
-    teensyInitParams += "\n";
-    serialSensor.Write(teensyInitParams);
+    // Send initialization parameters to Teensy:
+    serialSensor.Write(teensyInitializationString);
 
     // Wait for first serial values to arrive, before going into main loop:
     std::cout << "Waiting for first sensor value" << std::endl;

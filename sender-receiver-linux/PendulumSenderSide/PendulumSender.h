@@ -30,12 +30,8 @@ private:
     SerialPort serialSensor;
     PendulumLogger* logger;
     std::string serialInputBuffer;
-    int teensyHistorySize;
     int angleBias;
-    std::vector<int> teensySamplingPeriods;
-    float samplingPeriodSensitivityFactor;
-    float samplingPeriodSensitivityOffset;
-
+    std::string teensyInitializationString;
     uint64_t startTime;
 
     unsigned long long packetCount = 0;
@@ -48,8 +44,7 @@ private:
 
 public:
     PendulumSender(PriorityDeterminer* priorityDeterminer, std::string serialDeviceName, std::string receiverHost,
-                   int receiverPort, int teensyHistorySize, std::vector<int> teensySamplingPeriods,
-                   float samplingPeriodSensitivityFactor, float samplingPeriodSensitivityOffset,
+                   int receiverPort, std::string teensyInitializationString,
                    std::function<void()> regularCallback, std::string logFilePrefix, int angleBias,
                    std::vector<int> networkDelaysPerPrio);
     void start();
