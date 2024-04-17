@@ -37,12 +37,17 @@ SenderMultiConfig::SenderMultiConfig(std::string filename) {
         bias = 0; // default value
     }
 
-    if(configJson["sendTriggeringApproach"] == "slidingWindow") {
-        sendTriggeringApproach = SLIDING_WINDOW;
-    } else if(configJson["sendTriggeringApproach"] == "simpleThreshold") {
-        sendTriggeringApproach = SIMPLE_THRESHOLD;
+    if(configJson.contains("sendTriggeringApproach")) {
+        if (configJson["sendTriggeringApproach"] == "slidingWindow") {
+            sendTriggeringApproach = SLIDING_WINDOW;
+        } else if (configJson["sendTriggeringApproach"] == "simpleThreshold") {
+            sendTriggeringApproach = SIMPLE_THRESHOLD;
+        } else {
+            throw std::runtime_error(
+                    "Missing or wrong config option: sendTriggeringApproach must be either slidingWindow or simpleThreshold");
+        }
     } else {
-        throw std::runtime_error("sendTriggeringApproach must be either SLIDING_WINDOW or SIMPLE_THRESHOLD");
+        sendTriggeringApproach = SLIDING_WINDOW; // default value
     }
 
     if(sendTriggeringApproach == SLIDING_WINDOW){
