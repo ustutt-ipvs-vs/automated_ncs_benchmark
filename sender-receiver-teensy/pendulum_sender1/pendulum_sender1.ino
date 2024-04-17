@@ -8,8 +8,6 @@ unsigned long transmissionPeriodMillis = 50;
 unsigned long sensorPeekPeriodMillis = 10;
 constexpr int encoderNumSteps = 2400;
 
-int previousEncoderValue;
-
 float compareValue = 0;
 
 unsigned long lastTransmissionTime = 0;
@@ -24,17 +22,19 @@ enum sendTriggeringApproaches {
   SIMPLE_THRESHOLD
 } sendTriggeringApproach = SLIDING_WINDOW;
 
-// SLIDING_WINDOW:
 int historySize = 0;
 int* samplesHistory;  // Acts as ring buffer
+int historyPosition = 0;
+
+// SLIDING_WINDOW:
 #define NUM_SAMPLING_PERIODS 10
 int samplingPeriodsMillis[NUM_SAMPLING_PERIODS];
 float sensitivityFactor = 1.0;
 float sensitivityOffset = 0.0;
-int historyPosition = 0;
 
 // SIMPLE_THRESHOLD
 float angleTransmissionThreshold; // in degrees
+const float simpleThresholdMinDelayBetweenSamples = 50;
 
 double angleSpeed;
 
@@ -85,8 +85,6 @@ void readInitializationValues() {
           for (int i = 0; i < NUM_SAMPLING_PERIODS; i++) {
             samplingPeriodsMillis[i] = Serial.readStringUntil(';').toInt();
           }
-          receivedHistorySize = true;
-          samplesHistory = new int[historySize];
 
           // Echo received values to computer for validation:
           Serial.println("Approach: SLIDING_WINDOW");
@@ -99,20 +97,24 @@ void readInitializationValues() {
           Serial.printf("Received sensitivity factor:%f, offset: %f\n", sensitivityFactor, sensitivityOffset);
         } else if(sendTriggeringApproach == SIMPLE_THRESHOLD){
           angleTransmissionThreshold = Serial.readStringUntil(';').toFloat();
+          historySize = 2; // needed for angular velocity calculation
 
           Serial.println("Approach: SIMPLE_THRESHOLD");
           Serial.printf("Received threshold: %f°\n", angleTransmissionThreshold);
         }
       }
       Serial.read();  // Remove \n
+
+      samplesHistory = new int[historySize];
+      receivedHistorySize = true;
     }
   }
 }
 
 void loop() {
+  updateHistoryAndSamplingPeriod();
   switch(sendTriggeringApproach){
     case SLIDING_WINDOW:
-      calculateTransmissionPeriod();
       sendSampleIfDelayOver();
       break;
     case SIMPLE_THRESHOLD:
@@ -122,42 +124,43 @@ void loop() {
   checkAndHandleFeedback();
 }
 
-void calculateTransmissionPeriod() {
+void updateHistoryAndSamplingPeriod() {
   unsigned long currentTime = millis();
   if (lastSensorPeekTime + sensorPeekPeriodMillis <= currentTime) {
     int currentEncoderValue = encoder.read();
     lastSensorPeekTime = currentTime;
 
-
-    //compareValue = getHistoryMaxChangeOfCurrent(currentEncoderValue);
+    // if(sendTriggeringApproach == SLIDING_WINDOW){
+    //   compareValue = getHistoryMaxChangeOfCurrent(currentEncoderValue);
+    // }
 
     samplesHistory[historyPosition] = currentEncoderValue;
     historyPosition = (historyPosition + 1) % historySize;
 
-    compareValue = getHistoryMaxChange();
+    if(sendTriggeringApproach == SLIDING_WINDOW){
+      compareValue = getHistoryMaxChange();
 
-    previousEncoderValue = currentEncoderValue;
-
-    if (compareValue <= 1.0 * sensitivityFactor + sensitivityOffset) {
-      transmissionPeriodMillis = samplingPeriodsMillis[0];
-    } else if (compareValue <= 2.0 * sensitivityFactor + sensitivityOffset) {
-      transmissionPeriodMillis = samplingPeriodsMillis[1];
-    } else if (compareValue <= 3.0 * sensitivityFactor + sensitivityOffset) {
-      transmissionPeriodMillis = samplingPeriodsMillis[2];
-    } else if (compareValue <= 4.0 * sensitivityFactor + sensitivityOffset) {
-      transmissionPeriodMillis = samplingPeriodsMillis[3];
-    } else if (compareValue <= 5.0 * sensitivityFactor + sensitivityOffset) {
-      transmissionPeriodMillis = samplingPeriodsMillis[4];
-    } else if (compareValue <= 6.0 * sensitivityFactor + sensitivityOffset) {
-      transmissionPeriodMillis = samplingPeriodsMillis[5];
-    } else if (compareValue <= 7.0 * sensitivityFactor + sensitivityOffset) {
-      transmissionPeriodMillis = samplingPeriodsMillis[6];
-    } else if (compareValue <= 8.0 * sensitivityFactor + sensitivityOffset) {
-      transmissionPeriodMillis = samplingPeriodsMillis[7];
-    } else if (compareValue <= 9.0 * sensitivityFactor + sensitivityOffset) {
-      transmissionPeriodMillis = samplingPeriodsMillis[8];
-    } else {
-      transmissionPeriodMillis = samplingPeriodsMillis[9];
+      if (compareValue <= 1.0 * sensitivityFactor + sensitivityOffset) {
+        transmissionPeriodMillis = samplingPeriodsMillis[0];
+      } else if (compareValue <= 2.0 * sensitivityFactor + sensitivityOffset) {
+        transmissionPeriodMillis = samplingPeriodsMillis[1];
+      } else if (compareValue <= 3.0 * sensitivityFactor + sensitivityOffset) {
+        transmissionPeriodMillis = samplingPeriodsMillis[2];
+      } else if (compareValue <= 4.0 * sensitivityFactor + sensitivityOffset) {
+        transmissionPeriodMillis = samplingPeriodsMillis[3];
+      } else if (compareValue <= 5.0 * sensitivityFactor + sensitivityOffset) {
+        transmissionPeriodMillis = samplingPeriodsMillis[4];
+      } else if (compareValue <= 6.0 * sensitivityFactor + sensitivityOffset) {
+        transmissionPeriodMillis = samplingPeriodsMillis[5];
+      } else if (compareValue <= 7.0 * sensitivityFactor + sensitivityOffset) {
+        transmissionPeriodMillis = samplingPeriodsMillis[6];
+      } else if (compareValue <= 8.0 * sensitivityFactor + sensitivityOffset) {
+        transmissionPeriodMillis = samplingPeriodsMillis[7];
+      } else if (compareValue <= 9.0 * sensitivityFactor + sensitivityOffset) {
+        transmissionPeriodMillis = samplingPeriodsMillis[8];
+      } else {
+        transmissionPeriodMillis = samplingPeriodsMillis[9];
+      }
     }
   }
 }
@@ -171,14 +174,12 @@ void sendSampleIfDelayOver() {
 
 void sendSampleIfAngleThresholdExceeded(){
   unsigned long currentTime = millis();
-  if (lastSensorPeekTime + sensorPeekPeriodMillis <= currentTime) { // Only check sensor once every peek period
-    lastSensorPeekTime = currentTime;
-
+  if(lastTransmissionTime + simpleThresholdMinDelayBetweenSamples <= currentTime){
     int encoderValue = encoder.read();
     encoderValue = ((encoderValue % 2400) + 2400) % 2400; // Make sure encoderValue is in [0, 2400)
     const double DEG_PER_ESTEP = 360.0 / 2400.0;
     double poleAngle = DEG_PER_ESTEP * (encoderValue-1200);
-    if(abs(poleAngle) > angleTransmissionThreshold){
+    if(abs(poleAngle) >= angleTransmissionThreshold){
       sendSample();
     }
   }
