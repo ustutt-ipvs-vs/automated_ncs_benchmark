@@ -4,8 +4,6 @@
 #include <iostream>
 #include <chrono>
 
-const int RESTRICT_LOGGING_TO_MS = 50;
-
 PendulumSender::PendulumSender(PriorityDeterminer* priorityDeterminer, std::string serialDeviceName,
                                std::string receiverHost, int receiverPort, std::string teensyInitializationString,
                                std::function<void()> regularCallback, std::string logFilePrefix, int angleBias,
