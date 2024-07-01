@@ -3,6 +3,7 @@ This project will contain the source code, hardware schematics, 3D printing file
 
 The video below shows a demo of an automated evaluation with 15 configurations and re-swing-ups between each configuration.
 
-https://github.com/ustutt-ipvs-vs/automated_ncs_benchmark/assets/69897594/ed92bd6e-32ab-41f6-a10f-3e420f1abf9c
+[Demo_low_quality.webm](https://github.com/ustutt-ipvs-vs/automated_ncs_benchmark/assets/69897594/da2cac4a-8f67-4f81-817d-bd36dadb8c46)
+
 
 
