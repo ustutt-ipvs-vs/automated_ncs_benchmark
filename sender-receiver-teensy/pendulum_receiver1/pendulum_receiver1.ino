@@ -4,7 +4,6 @@
 #include "KalmanAndMLQRParameters.h"
 
 #include <BasicLinearAlgebra.h>
-using BLA::operator<<;  // Required for printing matrices to Serial
 
 #define FeedbackSerial Serial1
 
