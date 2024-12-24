@@ -1,4 +1,11 @@
-# Overview
+# Automated NCS Benchmark Setup
+This repository contains the source code, hardware schematics, 3D printing files, and documentation of the open source benchmark setup described in the paper "Combining Dynamic Deterministic Latency Bounds and Networked Control Systems".
+
+The video below shows a demo of an automated evaluation with 15 configurations and re-swing-ups between each configuration.
+
+[Demo Video](https://github.com/ustutt-ipvs-vs/automated_ncs_benchmark/assets/69897594/da2cac4a-8f67-4f81-817d-bd36dadb8c46)
+
+## Overview
 This repository is structured as follows:
 
 - `sender-receiver-linux`: Software components for the sender side and receiver side computers
