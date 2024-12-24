@@ -1,11 +1,5 @@
 # Network Configuration Scripts for VLANs:
 
-The devices must be wired like this:
-
-![](network-interface-topology.png)
-
-Please note the names of the interfaces.
-
 ## Scripts:
 Run the scripts on the devices respectively to set up the correct network config.
 
