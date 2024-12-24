@@ -28,6 +28,7 @@ sudo apt install build-essential
 ```
 git clone https://github.com/fpagliughi/sockpp.git
 cd sockpp
+git checkout f3100f575b38e83a1f2464ca54228bebb1282679
 mkdir build
 cd build
 cmake ..
@@ -40,6 +41,7 @@ sudo cmake --build . --target install
 ```
 git clone https://github.com/gbmhunter/CppLinuxSerial.git
 cd CppLinuxSerial
+git checkout ae3c8f7c5e90b3c64e9a3114159923bf45e63e23
 mkdir build
 cd build
 cmake ..
